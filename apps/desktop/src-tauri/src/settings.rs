@@ -88,11 +88,7 @@ pub struct RootExclude {
 impl Default for AppSettings {
     fn default() -> Self {
         Self {
-            global_shortcut: if cfg!(target_os = "macos") {
-                "Option+Space".to_string()
-            } else {
-                "Ctrl+Alt+S".to_string()
-            },
+            global_shortcut: DEFAULT_GLOBAL_SHORTCUT.to_string(),
             search_scope: vec!["~".to_string()],
             enable_model_fallback: true,
             enable_tracing: false,
@@ -232,6 +228,10 @@ pub(crate) fn resolve_exclude_globs(raw: &[String]) -> Vec<String> {
 /// 语义相似度下限默认值（全仓单一默认源）。
 pub(crate) const DEFAULT_SIMILARITY_FLOOR: f32 = 0.30;
 pub(crate) const DEFAULT_AUTO_INDEX_INTERVAL_MINUTES: u32 = 30;
+/// 全局唤起快捷键默认值：跨平台统一为 `Ctrl+Space`（此前 macOS/Windows 各写死一份、
+/// 且不可改；用户可在「常规」设置里通过 `shortcut::update_global_shortcut` 自定义，
+/// 遇到与其他程序冲突时不必等发版改默认值，自己换一个组合即可）。
+pub(crate) const DEFAULT_GLOBAL_SHORTCUT: &str = "Ctrl+Space";
 
 /// 把设置里的原始下限值规整：有限值 clamp 到 [0,1]；None / 非有限 → 默认。
 pub(crate) fn resolve_similarity_floor(raw: Option<f32>) -> f32 {
@@ -323,6 +323,22 @@ pub(crate) fn read_search_match_all_conditions(settings_path: &Option<PathBuf>) 
 #[cfg(target_os = "windows")]
 pub(crate) fn read_close_to_tray(settings_path: &Option<PathBuf>) -> bool {
     read_settings_or_default(settings_path).close_to_tray
+}
+
+/// 从 settings.json live-read 全局唤起快捷键（应用启动期注册用）。缺字段 / 空串 /
+/// 读取或解析失败 → 默认 `Ctrl+Space`（不因配置损坏导致启动期注册直接失败）。
+pub(crate) fn read_global_shortcut(settings_path: &Option<PathBuf>) -> String {
+    let raw = settings_path
+        .as_ref()
+        .and_then(|p| fs::read_to_string(p).ok())
+        .and_then(|s| serde_json::from_str::<AppSettings>(&s).ok())
+        .map(|v| v.global_shortcut)
+        .unwrap_or_default();
+    if raw.trim().is_empty() {
+        DEFAULT_GLOBAL_SHORTCUT.to_string()
+    } else {
+        raw
+    }
 }
 
 /// BETA-53：best-effort 读取完整 `AppSettings`（`settings_path` 指向 settings.json）。
@@ -733,6 +749,35 @@ mod tests {
         std::fs::remove_dir_all(&dir).ok();
     }
 
+    /// 全局快捷键同款保护：`shortcut::update_global_shortcut` 绕开设置表单直接改磁盘现值；
+    /// 随后若表单又保存了任意其他字段，携带挂载期旧快捷键快照的全量覆写不得把它冲回去。
+    #[test]
+    fn update_settings_preserves_backend_managed_global_shortcut() {
+        let dir = std::env::temp_dir().join(format!("scout-shortcutmerge-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let f = dir.join("settings.json");
+
+        // 磁盘现值：用户刚通过快捷键录制器把它改成了自定义组合。
+        let mut on_disk = AppSettings::default();
+        on_disk.global_shortcut = "Ctrl+Alt+F".to_string();
+        write_settings(&f, &on_disk).unwrap();
+
+        // 前端旧快照：挂载时读到的仍是默认值，同时改了个无关字段。
+        let mut incoming = AppSettings::default();
+        incoming.global_shortcut = DEFAULT_GLOBAL_SHORTCUT.to_string();
+        incoming.enable_tracing = true;
+        update_settings_at(&f, incoming).unwrap();
+
+        let after = read_settings_or_default(&Some(f));
+        assert_eq!(
+            after.global_shortcut, "Ctrl+Alt+F",
+            "自定义快捷键不得被表单旧快照冲回默认值"
+        );
+        assert!(after.enable_tracing, "无关字段应按前端快照正常写入");
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
     /// 磁盘无 settings.json（首次保存）时，`update_settings_at` 不因缺文件失败，
     /// 直接按前端快照写入（此时 MCP 字段本就是默认值、无可保留）。
     #[test]
@@ -747,6 +792,40 @@ mod tests {
         assert!(after.enable_tracing);
         assert!(!after.mcp_service_enabled);
         assert!(after.mcp_service_token.is_none());
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn global_shortcut_defaults_to_ctrl_space() {
+        assert_eq!(AppSettings::default().global_shortcut, "Ctrl+Space");
+        // 结构体级 `#[serde(default)]` 缺字段时取整个 `AppSettings::default()`，
+        // 与其他字段（如 enable_everything 默认 true）同一套机制，故旧配置缺
+        // global_shortcut 字段时也回退到 "Ctrl+Space" 而非 String 原生空串默认。
+        let json = r#"{"search_scope":["~"]}"#;
+        let s: AppSettings = serde_json::from_str(json).unwrap();
+        assert_eq!(
+            s.global_shortcut, "Ctrl+Space",
+            "旧配置缺字段 → 默认 Ctrl+Space"
+        );
+    }
+
+    #[test]
+    fn read_global_shortcut_reads_or_defaults() {
+        assert_eq!(read_global_shortcut(&None), DEFAULT_GLOBAL_SHORTCUT);
+        let dir = std::env::temp_dir().join(format!("scout-shortcut-read-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let f = dir.join("settings.json");
+        std::fs::write(&f, r#"{"global_shortcut":"Ctrl+Alt+F"}"#).unwrap();
+        assert_eq!(read_global_shortcut(&Some(f.clone())), "Ctrl+Alt+F");
+        // 空串（理论上不该出现在磁盘上，防御一下）→ 回退默认。
+        std::fs::write(&f, r#"{"global_shortcut":""}"#).unwrap();
+        assert_eq!(
+            read_global_shortcut(&Some(f.clone())),
+            DEFAULT_GLOBAL_SHORTCUT
+        );
+        // 配置损坏 → 回退默认。
+        std::fs::write(&f, "not json").unwrap();
+        assert_eq!(read_global_shortcut(&Some(f)), DEFAULT_GLOBAL_SHORTCUT);
         std::fs::remove_dir_all(&dir).ok();
     }
 
@@ -1005,21 +1084,28 @@ pub fn get_extraction_failures() -> Result<Vec<ExtractionFailureJson>, String> {
 /// 的 token / enabled 会把后端刚写的新值冲掉；此时运行中的 axum server 仍持内存里的旧
 /// token → 磁盘 token 静默失效（401）、外部 client 无感退回 grep。
 ///
-/// 解决：以**磁盘现值为准**合并这两字段，让磁盘 settings.json 成为其唯一信源、设置表单
-/// 永远不动它们。其余字段仍按前端快照全量写入（语义不变）。
-fn merge_backend_managed_mcp_fields(incoming: &mut AppSettings, on_disk: &AppSettings) {
+/// `global_shortcut` 同款风险：`shortcut::update_global_shortcut` 命令绕开设置表单、直接
+/// 校验 + 重新注册 + 落盘（这样用户按下新组合的瞬间就知道是否与其他程序冲突，不必等重启才
+/// 发现死快捷键）。若不在此处同款保护，用户改完快捷键后若又保存了表单里任意其他字段，
+/// 表单挂载时的旧快照会把刚生效的新快捷键冲回旧值——下次启动时又变回去，而运行中的
+/// 全局快捷键监听却仍是新值，磁盘与实际生效状态从此对不上。
+///
+/// 解决：以**磁盘现值为准**合并这些字段，让磁盘 settings.json 成为其唯一信源、设置表单
+/// 永远不直接覆写它们。其余字段仍按前端快照全量写入（语义不变）。
+fn merge_backend_managed_fields(incoming: &mut AppSettings, on_disk: &AppSettings) {
     incoming.mcp_service_enabled = on_disk.mcp_service_enabled;
     incoming.mcp_service_token = on_disk.mcp_service_token.clone();
+    incoming.global_shortcut = on_disk.global_shortcut.clone();
 }
 
 /// `update_settings` 的路径化内核（便于单测，不依赖 `AppHandle`）。
-/// 写盘前先读磁盘现值、合并回后端带外管理的 MCP 字段（见 [`merge_backend_managed_mcp_fields`]）。
+/// 写盘前先读磁盘现值、合并回后端带外管理的字段（见 [`merge_backend_managed_fields`]）。
 fn update_settings_at(path: &std::path::Path, mut settings: AppSettings) -> Result<(), String> {
     if let Some(on_disk) = fs::read_to_string(path)
         .ok()
         .and_then(|c| serde_json::from_str::<AppSettings>(&c).ok())
     {
-        merge_backend_managed_mcp_fields(&mut settings, &on_disk);
+        merge_backend_managed_fields(&mut settings, &on_disk);
     }
     let content = serde_json::to_string_pretty(&settings)
         .map_err(|e| format!("Failed to serialize settings: {}", e))?;

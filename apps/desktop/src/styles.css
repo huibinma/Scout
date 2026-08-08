@@ -360,6 +360,28 @@ body {
   color: var(--muted);
 }
 
+/* 全局唤起快捷键录制器（ShortcutRecorder）的当前值展示，非文本输入框——
+   录制态改走 accent 边框，跟「修改」按钮点开后的等待状态呼应。 */
+.prefs-kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.32rem 0.6rem;
+  min-width: 140px;
+  font-family: inherit;
+  font-size: var(--text-base);
+  font-weight: 600;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+}
+
+.prefs-kbd.recording {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 /* 2026-07-06（cycle 9 真机反馈二轮）：三行卡片式——纵向排（路径 / 统计 / 操作），
    单行 flex 会把路径挤到极窄逐字断行。卡片间用下边框分隔。 */
 .prefs-root-row {

@@ -1,5 +1,6 @@
 import { AppSettings } from "../../hooks/useAppSettings";
 import { EverythingPane } from "./EverythingPane";
+import { ShortcutRecorder } from "./ShortcutRecorder";
 import { IS_WINDOWS } from "./shared";
 import { WindowsPane } from "./WindowsPane";
 
@@ -21,19 +22,7 @@ export function GeneralPane({
 }) {
   return (
     <div className="prefs-form">
-      <div className="prefs-field">
-        <label className="prefs-label">全局唤起快捷键</label>
-        <input
-          type="text"
-          className="prefs-input"
-          value={settings.global_shortcut}
-          onChange={(e) =>
-            setSettings({ ...settings, global_shortcut: e.target.value })
-          }
-          disabled
-        />
-        <p className="prefs-hint">当前版本暂不支持修改快捷键。</p>
-      </div>
+      <ShortcutRecorder initialValue={settings.global_shortcut} />
       <div className="prefs-field">
         <label className="prefs-label">多条件检索匹配方式</label>
         <select

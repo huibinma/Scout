@@ -873,8 +873,9 @@ fn main() {
                     }
                 }
             });
-            // 全局快捷键是锦上添花：注册失败（如 Ctrl+Alt+S 被其他程序占用）只告警，
-            // 绝不让整个 app 崩溃——否则用户表现为「双击没反应 / 闪退」。
+            // 全局快捷键是锦上添花：注册失败（如默认 Ctrl+Space 被其他程序占用）只告警，
+            // 绝不让整个 app 崩溃——否则用户表现为「双击没反应 / 闪退」。用户可在「常规」
+            // 设置里通过 shortcut::update_global_shortcut 改用其他组合避开冲突。
             if let Err(err) = shortcut::register_global_shortcut(&app.handle().clone()) {
                 eprintln!("global shortcut: 注册失败，已跳过（不影响搜索主功能）: {err}");
             }
@@ -906,6 +907,7 @@ fn main() {
             settings::get_index_overview,
             settings::purge_root_from_db,
             settings::get_extraction_failures,
+            shortcut::update_global_shortcut,
             privacy::get_privacy_overview,
             privacy::clear_local_index,
             uninstall::uninstall_cleanup,
