@@ -1,0 +1,24 @@
+[package]
+name = "scout-search-backend"
+description = "SearchBackend trait + 公共类型（SearchIntent / SearchResult / SearchError / BackendKind / ImplementationStatus）"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+futures-core.workspace = true
+futures-util.workspace = true
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = { version = "0.4", default-features = false, features = ["serde", "std"] }
+
+# PROTO-03 接入：jsonschema crate（独立 JSON Schema 文件机器校验）
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }

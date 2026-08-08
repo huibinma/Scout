@@ -1,0 +1,856 @@
+[
+  {
+    "doc_id": "e00001",
+    "lang": "zh",
+    "title": "第一次开庭庭审笔录（扫描）",
+    "body": "北岭机械制造有限公司诉蓝湾贸易有限公司买卖合同纠纷一案，于虚构日期在示例区人民法院第三法庭公开开庭审理。原告称被告未按约定时间交付定制冲压设备，迟延超过九十日；被告辩称迟延系原告变更技术图纸所致。双方围绕交货时间的约定与变更是否有效展开质证，审判长归纳争议焦点为迟延责任的归属与违约金计算基数。",
+    "scenario": "lawfirm",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00002",
+    "lang": "zh",
+    "title": "设备买卖合同（扫描件）",
+    "body": "出卖人蓝湾贸易有限公司，买受人北岭机械制造有限公司。标的为定制冲压设备两台，货款支付方式为分期支付，签约后支付约三成预付款，验收合格后支付尾款。交货期为合同生效后一百二十日内，逾期每日按合同总价万分之五计付违约金。本件为归档扫描，个别字迹因原件折痕识别为口，以原件为准。",
+    "scenario": "lawfirm",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00003",
+    "lang": "zh",
+    "title": "送货单及签收凭证（扫描）",
+    "body": "送货单编号 SD-示例-0031。货物名称：冲压设备主机一台，随机附件一批。送达地点为北岭机械厂区仓库。签收栏由仓库管理员王样本签字，签收日期与合同约定交货期相差九十三日。备注栏手写注明外包装完好、未开箱验机。",
+    "scenario": "lawfirm",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00004",
+    "lang": "zh",
+    "title": "律师函（催告交货）扫描件",
+    "body": "本所受北岭机械制造有限公司委托，就贵司迟延交付定制设备事宜致函催告：请于收函后十五日内完成全部交付并配合验收，否则我方当事人将依合同追究迟延违约责任，包括但不限于解除合同并索赔。函件以邮政特快专递寄出并留存回执。",
+    "scenario": "lawfirm",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00005",
+    "lang": "zh",
+    "title": "一审民事判决书（扫描）",
+    "body": "示例区人民法院判决：一、被告蓝湾贸易有限公司于判决生效后十日内向原告北岭机械制造有限公司支付迟延交货违约金，以合同总价为基数按日万分之五计算九十三日；二、驳回原告解除合同的诉讼请求。本院认为，技术图纸变更经双方邮件确认顺延三十日，其余迟延无正当理由，被告应承担违约责任。案件受理费由被告负担约七成。",
+    "scenario": "lawfirm",
+    "doc_type": "scanned",
+    "dup_group": "g-law-01"
+  },
+  {
+    "doc_id": "e00006",
+    "lang": "zh",
+    "title": "一审民事判决书（重复扫描副本）",
+    "body": "示例区人民法院判决：一、被告蓝湾贸易有限公司于判决生效后十日内向原告北岭机械制造有限公司支付迟延交货违约金，以合同总价为基数按日万分之五计算九十三日；二、驳回原告解除合同的诉讼请求。本院认为，技术图纸变更经双方邮件确认顺延三十日，其余迟延无正当理由，被告应承担违约责任。案件受理费由被告负担约七成。（页脚：由示例扫描仪于归档日重扫）",
+    "scenario": "lawfirm",
+    "doc_type": "scanned",
+    "dup_group": "g-law-01"
+  },
+  {
+    "doc_id": "e00007",
+    "lang": "zh",
+    "title": "一审判决书（复印再扫描件）",
+    "body": "示例区人民法院判决：一、被告蓝湾贸易有限公司于判决生效后十日内向原告北岭机械制造有限公司支付迟延交货违约金，以合同总价为基数按日万分之五计算九十三日；二、驳回原告解除合同的诉讼请求。本院认为，技术图纸变更经双方邮件确认顺延三十日，其余迟延无正当理由，被告应承担违约口任。复印件边缘个别字缺失。",
+    "scenario": "lawfirm",
+    "doc_type": "scanned",
+    "dup_group": "g-law-01"
+  },
+  {
+    "doc_id": "e00008",
+    "lang": "zh",
+    "title": "民事起诉状",
+    "body": "原告北岭机械制造有限公司诉被告蓝湾贸易有限公司买卖合同纠纷。诉讼请求：一、判令被告支付迟延交货违约金；二、判令解除双方签订的设备买卖合同；三、诉讼费用由被告承担。事实与理由：被告迟延交付定制冲压设备逾九十日，经催告仍未足额履行，已构成根本违约。",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00009",
+    "lang": "zh",
+    "title": "民事答辩状",
+    "body": "答辩人蓝湾贸易有限公司答辩称：迟延交付系因原告在履行期内两次变更技术图纸，导致生产计划重排，属于原告自身原因；且双方邮件往来已就顺延交货达成一致。原告主张解除合同缺乏依据，违约金计算基数与天数亦有误。请求驳回原告全部诉讼请求。",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00010",
+    "lang": "zh",
+    "title": "证据清单（原告）",
+    "body": "证据一：设备买卖合同原件，证明双方约定的交货期与违约金标准。证据二：送货单及签收凭证，证明实际交货日期。证据三：律师函及邮寄回执，证明已履行催告程序。证据四：双方往来邮件打印件，证明图纸变更与顺延协商过程。证据五：银行付款回单，证明预付款已支付。",
+    "scenario": "lawfirm",
+    "doc_type": "plain",
+    "dup_group": "g-law-03"
+  },
+  {
+    "doc_id": "e00011",
+    "lang": "zh",
+    "title": "代理意见（一审）",
+    "body": "代理人认为：第一，交货期约定明确，图纸变更仅顺延三十日，被告仍迟延九十三日；第二，被告未提交生产计划重排的证据，其抗辩不能成立；第三，违约金按日万分之五未超过法定上限，无需调减。综上，请求法院支持原告关于违约金的全部主张。",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00012",
+    "lang": "zh",
+    "title": "法律检索备忘：迟延交货违约金调减标准",
+    "body": "围绕迟延交货违约金是否过高的调减规则做检索：裁判口径普遍以实际损失为基础，兼顾合同履行情况与当事人过错，超过实际损失约三成的部分法院倾向调减。另检索了图纸变更是否构成情势变更的类案，多数认定属于普通合同变更而非情势变更。建议庭审强调实际损失举证。",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00013",
+    "lang": "zh",
+    "title": "会见客户谈话记录",
+    "body": "与北岭机械法务负责人李示例会谈。客户关切点：一是设备迟延导致下游订单违约，希望违约金覆盖转产损失；二是不愿彻底解除合同，设备仍需使用；三是尽量在两个开庭周期内结案。告知客户解除合同的诉请存在风险，建议以违约金为主攻方向。",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00014",
+    "lang": "zh",
+    "title": "往来邮件：对方代理人提出调解方案",
+    "body": "发件人：对方代理律师（示例所）opposing@example.com；收件人：本所经办 counsel@example.com；主题：关于北岭案的调解建议。正文：我方当事人愿意在违约金总额上让步至按六十日计算，并承担已发生的检测费用，换取贵方放弃解除合同的主张。如贵方有意向，可约在下周任一工作日面谈细化条款。",
+    "scenario": "lawfirm",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00015",
+    "lang": "zh",
+    "title": "客户邮件：确认和解底线",
+    "body": "发件人：北岭机械法务 legal@example.com；主题：和解授权范围。正文：经管理层讨论，同意以违约金不低于按七十五日计算为底线接受调解；如对方愿另行承担设备加急调试费用，天数可再让五日。解除合同的诉请可以放弃。请代理人据此谈判，超出范围须回报确认。",
+    "scenario": "lawfirm",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00016",
+    "lang": "zh",
+    "title": "内部邮件：开庭准备分工",
+    "body": "发件人：主办律师；收件人：项目组；主题：北岭案第二次开庭准备。正文：质证意见由王样本初稿、我复核；证人出庭申请书周三前提交法院；损失计算表请与客户财务再核一遍口径；模拟法庭安排在开庭前两日下午，重点演练对方关于图纸变更的交叉询问。",
+    "scenario": "lawfirm",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00017",
+    "lang": "zh",
+    "title": "附件：和解协议草案",
+    "body": "甲方北岭机械制造有限公司与乙方蓝湾贸易有限公司就买卖合同纠纷达成如下和解：一、乙方按六十八日标准一次性支付迟延违约金；二、乙方免费提供为期一年的设备延保与两次上门保养；三、甲方撤回起诉，双方互不再就本纠纷主张其他权利。本协议经双方签章并经法院出具调解书后生效。",
+    "scenario": "lawfirm",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00018",
+    "lang": "zh",
+    "title": "附件：损失计算表说明",
+    "body": "本表按三个口径测算迟延损失：口径一为合同违约金条款（日万分之五乘以迟延天数）；口径二为下游订单转产的实际损失（含外协加工差价与运费，取约整数）；口径三为设备闲置期间的资金占用成本。建议庭审主张口径一，口径二作为违约金不过高的佐证材料。",
+    "scenario": "lawfirm",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00019",
+    "lang": "en",
+    "title": "Supply Agreement Summary (Northridge Machinery)",
+    "body": "Summary prepared for the file: Northridge Machinery Ltd. purchased two custom stamping machines from Bluebay Trading Co. Delivery was due within one hundred and twenty days of signing, with liquidated damages accruing daily for late delivery. A thirty-day extension was agreed by email after the buyer revised the technical drawings. The remaining delay of roughly three months is the core of the dispute.",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00020",
+    "lang": "zh",
+    "title": "供货协议要点中文摘要",
+    "body": "本案合同要点：北岭机械向蓝湾贸易采购定制冲压设备两台；交货期一百二十日；迟延按日计付违约金；图纸变更后双方邮件确认顺延三十日。付款节奏为预付约三成、验收后付尾款。争议集中在剩余约三个月迟延的责任归属。",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00021",
+    "lang": "zh",
+    "title": "案件登记表（名称对照）",
+    "body": "案件编号：示例所 2025-民-007。委托人：北岭机械制造有限公司（英文名 Northridge Machinery Ltd.）。对方当事人：蓝湾贸易有限公司（英文名 Bluebay Trading Co.）。案由：买卖合同纠纷。受理法院：示例区人民法院。主办律师与协办人员见内部分工表。涉外沟通一律使用英文名称，归档使用中文名称。",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00022",
+    "lang": "en",
+    "title": "Email from opposing counsel: settlement outline",
+    "body": "From: opposing@example.com. Subject: Bluebay Trading / settlement outline. Body: Our client is prepared to discuss a lump-sum payment for the delay, calculated on a reduced day count, provided your client withdraws the claim for termination of the contract. We would also cover the inspection fees already incurred. Please let us know whether Northridge is open to a meeting next week.",
+    "scenario": "lawfirm",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00023",
+    "lang": "en",
+    "title": "Expert note on delay damages",
+    "body": "Note for the Northridge file: the measurable loss from the ninety-odd day delay consists of the price difference paid to an outside workshop to keep downstream orders alive, plus idle-capital cost on the prepayment. The contractual daily rate produces a figure moderately above that actual loss, which the court may trim by roughly one third if challenged. Recommend documenting the outsourcing invoices carefully.",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00024",
+    "lang": "zh",
+    "title": "证人证言（扫描件）",
+    "body": "证人为北岭机械仓库管理员王样本。证言要点：设备到货当日外包装完好，但随机的技术资料与备件清单不全，厂家调试人员迟至到货后第二十日方才到场；开箱验机时发现控制柜面板与图纸版本不一致，遂拍照留存并当场向送货司机口头提出。本页由庭审录音整理并经证人签字确认。",
+    "scenario": "lawfirm",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00025",
+    "lang": "zh",
+    "title": "银行付款回单（预付款）扫描",
+    "body": "付款人：北岭机械制造有限公司；收款人：蓝湾贸易有限公司；用途栏注明设备预付款，金额为合同总价约三成（约整数）。回单加盖银行业务章，交易流水号 TX-示例-8842。该回单用于证明原告已依约支付预付款、不存在先履行抗辩。",
+    "scenario": "lawfirm",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00026",
+    "lang": "zh",
+    "title": "上诉状（二审）",
+    "body": "上诉人蓝湾贸易有限公司不服示例区人民法院一审判决，提起上诉。上诉请求：撤销原判第一项，改判按三十日计算违约金或发回重审。理由：一审对图纸两次变更只认定一次顺延，事实认定不清；违约金未按实际损失调减，适用法律错误。",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00027",
+    "lang": "zh",
+    "title": "法院邮件：开庭传票电子送达",
+    "body": "发件人：示例区人民法院送达平台 court@example.org；主题：开庭传票（电子送达）。正文：北岭机械诉蓝湾贸易买卖合同纠纷一案定于虚构日期上午九时三十分在第三法庭开庭，请当事人及代理人携证据原件准时到庭。电子送达与纸质送达具有同等效力，回执请于三日内确认。",
+    "scenario": "lawfirm",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00028",
+    "lang": "zh",
+    "title": "附件：证据目录（随内部邮件分发）",
+    "body": "证据一：设备买卖合同原件，证明双方约定的交货期与违约金标准。证据二：送货单及签收凭证，证明实际交货日期。证据三：律师函及邮寄回执，证明已履行催告程序。证据四：双方往来邮件打印件，证明图纸变更与顺延协商过程。证据五：银行付款回单，证明预付款已支付。（本目录为随邮件分发的附件版本）",
+    "scenario": "lawfirm",
+    "doc_type": "attachment",
+    "dup_group": "g-law-03"
+  },
+  {
+    "doc_id": "e00029",
+    "lang": "zh",
+    "title": "财产保全申请书",
+    "body": "申请人北岭机械制造有限公司请求对被申请人蓝湾贸易有限公司名下银行账户及应收账款在违约金主张范围内予以冻结。理由：被申请人近期注销分支机构并转移主要经营设备，存在转移财产逃避债务的现实风险。申请人愿以现金或保函方式提供担保。",
+    "scenario": "lawfirm",
+    "doc_type": "plain",
+    "dup_group": "g-law-02"
+  },
+  {
+    "doc_id": "e00030",
+    "lang": "zh",
+    "title": "财产保全申请书（终稿存档副本）",
+    "body": "（终稿）申请人北岭机械制造有限公司请求对被申请人蓝湾贸易有限公司名下银行账户及应收账款在违约金主张范围内予以冻结。理由：被申请人近期注销分支机构并转移主要经营设备，存在转移财产逃避债务的现实风险。申请人愿以现金或保函方式提供担保。",
+    "scenario": "lawfirm",
+    "doc_type": "plain",
+    "dup_group": "g-law-02"
+  },
+  {
+    "doc_id": "e00031",
+    "lang": "en",
+    "title": "Litigation hold notice",
+    "body": "To all custodians on the Northridge matter: preserve all emails, drawings, delivery records and chat logs relating to the stamping machine purchase, including revisions of the technical drawings and any discussion of schedule extensions. Do not delete or alter potentially relevant material until the hold is lifted in writing by the supervising partner.",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00032",
+    "lang": "zh",
+    "title": "庭审争议焦点归纳",
+    "body": "焦点一：图纸变更导致的顺延天数应认定为三十日还是六十日；焦点二：迟延违约金是否应以实际损失为限调减；焦点三：原告是否有权解除合同。对焦点一我方有邮件确认在手，对焦点二需补强外协加工的损失票据，焦点三一审已判驳回、二审维持概率高。",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00033",
+    "lang": "zh",
+    "title": "公证书（网页证据保全）扫描",
+    "body": "示例公证处出具：申请人代理律师在公证员监督下，使用公证处计算机登录被申请人官方网站，对其产品交付周期宣传页面进行截图并刻录光盘封存。公证书证明该页面宣称同类设备交付周期为九十日内，用于反驳被告关于行业惯例交付周期更长的抗辩。",
+    "scenario": "lawfirm",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00034",
+    "lang": "zh",
+    "title": "结案报告",
+    "body": "北岭机械诉蓝湾贸易案以调解方式结案：对方按六十八日标准支付违约金并提供一年延保，我方撤回解除合同主张。经验沉淀：一是交货期变更务必书面固定顺延天数，避免庭审争执；二是损失票据在诉前即应归集；三是保全措施对促成调解作用明显。卷宗按所内规范归档并设置信息墙权限。",
+    "scenario": "lawfirm",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00035",
+    "lang": "zh",
+    "title": "审批链邮件：猎户座项目设备采购申请",
+    "body": "发件人：采购部经办 procurement@example.com；抄送：部门负责人、财务复核。主题：猎户座采购项目——办公一体机与耗材采购审批。正文：拟向晨星办公用品有限公司采购一体机二十台及全年耗材，报价见附件对比表，预算内。请各审批人在系统内三个工作日完成会签。后附三级审批的同意回复记录。",
+    "scenario": "audit",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00036",
+    "lang": "zh",
+    "title": "财务复核邮件：付款申请异常提示",
+    "body": "发件人：财务复核岗 finance@example.com；主题：关于猎户座项目第二笔付款的疑点。正文：本笔付款申请的收款账户与合同约定账户不一致，且未附入库验收单。另外单价较上季度同类采购上浮约一成五。在补齐验收材料并说明账户变更原因前，暂缓付款。请经办人书面回复。",
+    "scenario": "audit",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00037",
+    "lang": "en",
+    "title": "Vendor quotation email (Morningstar Office Supplies)",
+    "body": "From: sales@example.com. Subject: Quotation for Project Orion office equipment. Body: Please find our quotation for twenty all-in-one machines plus a twelve-month consumables package. The unit price includes delivery and on-site setup. This offer is valid for thirty days. We can shorten the lead time to two weeks if the purchase order is confirmed within this week.",
+    "scenario": "audit",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00038",
+    "lang": "zh",
+    "title": "附件：采购合同（随审批邮件）",
+    "body": "买方为公司行政部，卖方为晨星办公用品有限公司。标的：办公一体机二十台及全年耗材包。合同价款按报价单执行，货到验收合格后三十日内付款至合同指定账户。卖方承诺两年质保、次日上门维修。合同变更须双方书面确认，任何口头承诺不构成合同内容。",
+    "scenario": "audit",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00039",
+    "lang": "zh",
+    "title": "附件：报价单对比表",
+    "body": "三家供应商比价：晨星办公用品报价居中但含上门安装与次日维修；另两家（示例甲、示例乙）单价略低但交期四周以上且质保仅一年。综合评分晨星第一。备注：晨星联系人与我司采购经办为同一高校校友会成员，评分表未披露该关系。",
+    "scenario": "audit",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00040",
+    "lang": "zh",
+    "title": "附件：付款申请单",
+    "body": "申请部门：行政部。事由：猎户座项目设备采购第二期款项。收款单位：晨星办公用品有限公司。申请金额为合同尾款（约整数）。随附材料：合同复印件、发票两张；入库验收单标注为补交。审批栏：部门负责人已签，财务复核意见为暂缓，总经理栏空白。",
+    "scenario": "audit",
+    "doc_type": "attachment",
+    "dup_group": "g-aud-03"
+  },
+  {
+    "doc_id": "e00041",
+    "lang": "zh",
+    "title": "增值税专用发票（扫描件）",
+    "body": "销售方：晨星办公用品有限公司；购买方：示例科技有限公司。货物名称：办公一体机，数量二十台，单价与合同一致，税率按现行标准。发票号码 INV-示例-2201。备注栏注明猎户座采购项目。扫描件右上角二维码区域反光，识别为模糊色块。",
+    "scenario": "audit",
+    "doc_type": "scanned",
+    "dup_group": "g-aud-01"
+  },
+  {
+    "doc_id": "e00042",
+    "lang": "zh",
+    "title": "银行电汇凭证（扫描）",
+    "body": "汇款人：示例科技有限公司；收款人：晨星办公用品有限公司。用途：猎户座项目设备采购首期款。凭证加盖银行受理章，流水号 TX-示例-5510。注意：该笔汇款收款账号与合同约定账号一致，与第二笔付款申请中的新账号不同，差异原因待查。",
+    "scenario": "audit",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00043",
+    "lang": "zh",
+    "title": "入库验收单（扫描件）",
+    "body": "验收物资：办公一体机。应到二十台，实到十八台，缺两台由供应商出具欠货说明、承诺两周内补齐。验收结论：合格（按实到数量）。仓管员与使用部门代表签字，验收日期晚于第一笔付款约二十日。扫描件左下角有仓库收发章，章内文字部分识别不清。",
+    "scenario": "audit",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00044",
+    "lang": "zh",
+    "title": "增值税发票扫描件（重复归档副本一）",
+    "body": "销售方：晨星办公用品有限公司；购买方：示例科技有限公司。货物名称：办公一体机，数量二十台，单价与合同一致，税率按现行标准。发票号码 INV-示例-2201。备注栏注明猎户座采购项目。此副本由报销归档时再次扫描，色彩偏灰。",
+    "scenario": "audit",
+    "doc_type": "scanned",
+    "dup_group": "g-aud-01"
+  },
+  {
+    "doc_id": "e00045",
+    "lang": "zh",
+    "title": "增值税发票扫描件（迁移盘副本二）",
+    "body": "销售方：晨星办公用品有限公司；购买方：示例科技有限公司。货物名称：办公一体机，数量二十台，单价与合同一致，税率按现行标准。发票号码 INV-示例-2201。备注栏注明猎户座采购项目。本件为旧共享盘迁移时展开的压缩包副本。",
+    "scenario": "audit",
+    "doc_type": "scanned",
+    "dup_group": "g-aud-01"
+  },
+  {
+    "doc_id": "e00046",
+    "lang": "zh",
+    "title": "审计工作底稿：采购流程穿行测试",
+    "body": "选取猎户座项目采购全流程做穿行测试：申请、比价、审批、合同、收货、付款六个环节逐一核对单据。发现：比价环节未披露经办人与供应商的私人关系；付款环节存在先付款后验收；收款账户中途变更无书面审批。控制缺陷初步评级为高，纳入重点核查事项。",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00047",
+    "lang": "zh",
+    "title": "访谈纪要：采购经办人访谈",
+    "body": "受访人：采购经办（匿名编号 P-01）。要点：其承认与晨星办公用品联系人相识多年，但称比价程序合规；对收款账户变更的解释是供应商口头告知开户行升级，未留书面记录；对单价上浮的解释是含安装服务。访谈人提示其如实陈述义务，纪要经受访人阅后签字。",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00048",
+    "lang": "zh",
+    "title": "异常事项清单",
+    "body": "一、采购单价高于市场同类均价约一成五，无议价记录；二、收款账户变更未经书面审批；三、第二批两台设备欠货超承诺期仍未补齐；四、比价评分人与供应商存在未披露的私人关系；五、部分耗材领用登记与实际库存不符。以上事项均需取得书面解释与佐证。",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00049",
+    "lang": "zh",
+    "title": "审计报告初稿要点",
+    "body": "结论倾向：猎户座项目采购存在利益冲突未申报、付款控制失效两项主要缺陷；未发现资金体外循环的直接证据。建议：一、暂停该供应商新增订单；二、追回多付价差或折抵后续耗材款；三、修订采购制度，明确关联关系申报与账户变更审批要求；四、经办人调离采购岗位。",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00050",
+    "lang": "zh",
+    "title": "匿名举报邮件：供应商关联关系",
+    "body": "发件人：匿名转发信箱 tipline@example.com；主题：关于行政采购的情况反映。正文：反映采购经办与晨星办公用品的销售负责人过从甚密，多次私下聚餐；本次一体机采购价格明显偏高，且验收数量与合同不符仍照常付款。请审计部门核实。附言称必要时可提供聚餐时间地点线索。",
+    "scenario": "audit",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00051",
+    "lang": "zh",
+    "title": "供应商登记表（名称对照）",
+    "body": "供应商编号 V-017：晨星办公用品有限公司，英文名 Morningstar Office Supplies Co.，主营办公设备与耗材。关联采购项目：猎户座采购项目（英文名 Project Orion）。合同账户信息以采购系统登记为准，任何账户变更须重新走供应商信息变更审批。年度评价：待审计结论出具后更新。",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00052",
+    "lang": "en",
+    "title": "Internal control assessment memo",
+    "body": "Memo on Project Orion procurement controls: segregation of duties between requisition, price comparison and payment approval exists on paper but was bypassed in practice. Payment was released before goods receipt, and a change of beneficiary account was accepted on verbal notice. Both are high-severity gaps. Recommend mandatory dual sign-off for any vendor bank detail change and a system block on payment without a goods receipt note.",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00053",
+    "lang": "en",
+    "title": "Follow-up email: missing goods receipt",
+    "body": "From: audit@example.com. Subject: Outstanding items for the Orion purchase review. Body: We still have not received the goods receipt note for the second payment, nor a written explanation for the change of the beneficiary account. Please provide both by Friday. If the documents cannot be located, state so in writing so we can record it as a control exception.",
+    "scenario": "audit",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00054",
+    "lang": "zh",
+    "title": "附件：供应商资质文件说明",
+    "body": "随邮件转交晨星办公用品的资质材料扫描汇总：营业执照、税务登记、一般纳税人资格、品牌授权书各一份，均在有效期内。核对发现品牌授权书授权范围不含本次采购的一体机型号，已要求供应商补充说明。资质原件存档于供应商档案柜第三格。",
+    "scenario": "audit",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00055",
+    "lang": "zh",
+    "title": "合同签署页（骑缝章）扫描",
+    "body": "本页为采购合同签署页扫描：买方加盖公司合同专用章，卖方晨星办公用品加盖公章，双方经办人签字，并沿装订边加盖骑缝章以防换页。扫描时骑缝章跨页部分仅存半枚，另半枚见合同正文页扫描件。签署日期与审批完成日期相差两日，属正常范围。",
+    "scenario": "audit",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00056",
+    "lang": "zh",
+    "title": "资金流向梳理笔记",
+    "body": "梳理猎户座项目两笔付款：首期款流向合同账户，无异常；第二笔按申请将流向新账户，经查该账户开户主体与晨星办公用品名称相同但开户行不同，开户时间在付款申请前一周。已发协查函核实新账户真实性，结果未回。资金尚未支付，风险可控。",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00057",
+    "lang": "zh",
+    "title": "检索留痕说明",
+    "body": "本次取证检索的留痕记录：检索人、检索时间、关键词（供应商名称、发票号、账户尾号）、命中文件清单与哈希值均已登记至取证台账。所有原始文件只读封存，工作副本另存于取证专用目录。后续任何人再次检索须同样登记，保证证据链可追溯。",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00058",
+    "lang": "zh",
+    "title": "邮件：审批补签说明",
+    "body": "发件人：行政部经办；主题：关于猎户座采购总经理审批补签的说明。正文：因总经理出差，第二期付款申请当时仅完成部门与财务两级审批，现补交总经理签批。财务已回复：按制度付款前必须完成全部审批，补签不能追认已发生的流程缺陷，本单仍按暂缓处理。",
+    "scenario": "audit",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00059",
+    "lang": "en",
+    "title": "Procurement policy excerpt",
+    "body": "Excerpt applicable to Project Orion: any purchase above the quarterly threshold requires three written quotations and a documented scoring sheet; evaluators must declare any personal relationship with a bidder; vendor bank details may only be changed through the vendor master data process with dual approval; payment shall not be released before a signed goods receipt note is filed.",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00060",
+    "lang": "zh",
+    "title": "差旅报销汇总表",
+    "body": "行政部本季度差旅报销汇总：出差申请单十二张、报销单十二张，逐笔核对发票与行程。两笔住宿超标已按制度差额自理；一笔打车票连号待经办说明。汇总表口径：按报销日期归集、含税金额、约整数列示。表尾附财务复核签字与归档编号。",
+    "scenario": "audit",
+    "doc_type": "plain",
+    "dup_group": "g-aud-02"
+  },
+  {
+    "doc_id": "e00061",
+    "lang": "zh",
+    "title": "差旅报销汇总表（迁移盘副本）",
+    "body": "（旧共享盘迁移副本，表头多导出注记）行政部本季度差旅报销汇总：出差申请单十二张、报销单十二张，逐笔核对发票与行程。两笔住宿超标已按制度差额自理；一笔打车票连号待经办说明。汇总表口径：按报销日期归集、含税金额、约整数列示。表尾附财务复核签字与归档编号。",
+    "scenario": "audit",
+    "doc_type": "plain",
+    "dup_group": "g-aud-02"
+  },
+  {
+    "doc_id": "e00062",
+    "lang": "zh",
+    "title": "零星采购收据（扫描）",
+    "body": "收据两张：一为文件柜钥匙补配，二为会议室白板笔与板擦，均为小额零星采购，收款方为楼下文具店（示例商户）。收据无税号，按制度以收据入账需部门负责人签字确认。扫描件字迹为手写，金额大写部分个别笔画识别为口。",
+    "scenario": "audit",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00063",
+    "lang": "zh",
+    "title": "盘点差异说明",
+    "body": "年中盘点发现耗材库存与领用登记差异：硒鼓账面余量十二支、实盘九支。追查领用记录，三支为跨部门借用未登记，已补录并由借用部门确认。整改：耗材领用改为扫码登记，月末由行政与财务联合抽盘一次。本差异不涉及金额调整。",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00064",
+    "lang": "zh",
+    "title": "IT 部门邮件：日志调取授权",
+    "body": "发件人：IT 运维 it@example.com；主题：关于审计调取邮箱与采购系统日志的授权确认。正文：已收到审计部盖章的调取申请，范围为采购系统操作日志与相关人员工作邮箱元数据（不含私人邮件正文），期限为项目立项至今。按信息安全制度，调取过程双人操作并全程录屏，导出件加密交付。",
+    "scenario": "audit",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00065",
+    "lang": "zh",
+    "title": "附件：系统操作日志摘录说明",
+    "body": "随邮件附上采购系统日志摘录：比价评分表在审批发起前一小时由经办人账号修改过一次，改动字段为交期评分；付款申请的收款账户字段在提交后经系统管理员账号变更一次，变更未走供应商信息变更流程。完整日志已加密存档，摘录仅用于工作底稿引用。",
+    "scenario": "audit",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00066",
+    "lang": "zh",
+    "title": "舞弊风险评估要点",
+    "body": "按舞弊三角评估本项目：动机方面经办人近期有大额消费传闻（未证实）；机会方面采购与验收岗位曾由同一人兼任两个月；合理化方面访谈中出现价高服务好等说法。综合评级：中高。取证优先级：账户变更书面痕迹、评分表修改记录、聚餐线索核实。",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00067",
+    "lang": "en",
+    "title": "Attachment: vendor master data change log summary",
+    "body": "Attached summary of the vendor master data change log for Morningstar Office Supplies: one bank account change recorded, initiated by a system administrator account outside the vendor change workflow, with no approval reference attached. All other master data fields unchanged during the review period. The raw export is kept in the evidence folder with its hash recorded.",
+    "scenario": "audit",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00068",
+    "lang": "zh",
+    "title": "整改建议清单",
+    "body": "一、供应商银行信息变更纳入系统强制双审批，管理员账号禁用直接改库；二、付款单未挂验收单时系统直接拦截；三、比价评分表提交后锁定，修改留版本；四、采购与验收岗位强制分离并轮岗；五、利益冲突年度申报全员覆盖。以上整改由内控部跟踪，季度复查一次。",
+    "scenario": "audit",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00069",
+    "lang": "zh",
+    "title": "离职交接清单（李示例）",
+    "body": "交接人李示例，接收人王样本，监交人为部门负责人。交接范围：一、灯塔项目全部设计文档与代码仓库权限；二、鲲鹏结算系统运维职责与值班排期；三、供应商与外部接口联系人；四、未结事项清单（含三个遗留缺陷）。文档移交以知识库目录为准，账号权限由 IT 按清单逐项回收后新开。",
+    "scenario": "offboarding",
+    "doc_type": "plain",
+    "dup_group": "g-off-04"
+  },
+  {
+    "doc_id": "e00070",
+    "lang": "zh",
+    "title": "灯塔项目架构设计文档",
+    "body": "灯塔项目为对外数据服务网关：接入层做鉴权与限流，路由层按租户分发，落地层对接鲲鹏结算系统与报表库。关键设计取舍：网关无状态、配置集中下发；对结算接口的调用一律走异步补偿队列，避免月结高峰把网关拖垮。容量按当前峰值三倍预留。",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00071",
+    "lang": "zh",
+    "title": "鲲鹏结算系统运维手册节选",
+    "body": "鲲鹏结算系统每月一日凌晨跑月结批任务，运行窗口约四小时。值班要点：批任务失败先查上游对账文件是否到齐，再查数据库连接池；重跑必须使用带幂等参数的重跑脚本，禁止手工改库。常用巡检脚本与告警阈值清单见附录，数据库账号申请走权限系统。",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00072",
+    "lang": "zh",
+    "title": "项目周报（灯塔 第四十周）",
+    "body": "本周进展：网关限流规则灰度到三成流量，无误伤投诉；与鲲鹏结算的对账接口联调通过。风险：外部供应商接口证书月底到期，若未及时换证会导致对账中断，已发函催办。下周计划：限流全量、遗留缺陷修复两个、编写值班手册初稿。",
+    "scenario": "offboarding",
+    "doc_type": "plain",
+    "dup_group": "g-off-01"
+  },
+  {
+    "doc_id": "e00073",
+    "lang": "zh",
+    "title": "项目周报（灯塔 第四十周）个人盘副本",
+    "body": "（个人工作盘留存副本）本周进展：网关限流规则灰度到三成流量，无误伤投诉；与鲲鹏结算的对账接口联调通过。风险：外部供应商接口证书月底到期，若未及时换证会导致对账中断，已发函催办。下周计划：限流全量、遗留缺陷修复两个、编写值班手册初稿。",
+    "scenario": "offboarding",
+    "doc_type": "plain",
+    "dup_group": "g-off-01"
+  },
+  {
+    "doc_id": "e00074",
+    "lang": "zh",
+    "title": "离职邮件：工作交接安排",
+    "body": "发件人：李示例 lishili@example.com；收件人：部门全员；主题：离职交接安排。正文：本人最后工作日为月底，交接按三条线进行：灯塔项目文档与代码由王样本接手，鲲鹏结算值班从下周起移交，外部联系人本周内拉群介绍。知识库已按目录整理，遗留问题单独成文。感谢大家。",
+    "scenario": "offboarding",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00075",
+    "lang": "zh",
+    "title": "往来邮件：外部供应商接口联调",
+    "body": "发件人：示例数据服务商 partner@example.com；主题：对账接口联调结果确认。正文：贵司灯塔网关与我方对账接口三轮联调全部通过，压测峰值下无丢单。请注意我方接口证书月底轮换，新证书指纹将提前五个工作日邮件通知，请贵司值班同事及时更新信任库，避免对账中断。",
+    "scenario": "offboarding",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00076",
+    "lang": "zh",
+    "title": "附件：数据库账号与权限清单说明",
+    "body": "随交接邮件附上鲲鹏结算相关账号清单：应用连接账号两个（读写与只读）、巡检账号一个、报表拉数账号一个。清单只列账号名与用途，不含任何口令；口令一律走密码保管系统移交，交接完成后原持有人权限由 IT 回收。个人名下不得留存共享账号。",
+    "scenario": "offboarding",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00077",
+    "lang": "zh",
+    "title": "附件：对外接口对接说明文档",
+    "body": "随邮件附上灯塔网关对外接口说明：鉴权采用双向证书加签名头；对账文件每日两批，命名规则含租户号与批次号；重传窗口为收到失败回执后两小时内。对接新租户时先在沙箱环境跑通全流程再切生产，沙箱地址与测试租户号见文档末页。",
+    "scenario": "offboarding",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00078",
+    "lang": "zh",
+    "title": "保密协议签署页（扫描件）",
+    "body": "本页为李示例入职时签署的保密与知识产权协议签署页扫描：员工承诺在职期间及离职后两年内对公司技术资料、客户信息、经营数据负保密义务；因职务产生的成果归公司所有。签署栏有员工签名与公司人事章，日期为入职当日。原件存人事档案袋。",
+    "scenario": "offboarding",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00079",
+    "lang": "zh",
+    "title": "离职交接确认单（扫描）",
+    "body": "确认单载明：文档交接、系统权限移交、设备归还、财务无欠款四项均已完成，交接人李示例、接收人王样本、部门负责人与人事逐栏签字。备注栏注明遗留缺陷三项已列入接收人工作计划，不影响离职手续办理。扫描件盖人事部骑缝章。",
+    "scenario": "offboarding",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00080",
+    "lang": "zh",
+    "title": "项目代号对照表",
+    "body": "部门项目代号中英文对照：灯塔项目，英文名 Lighthouse，对外数据服务网关；鲲鹏结算系统，英文名 Kunpeng Settlement System，月结与对账核心系统；另有历史项目银杏（英文 Ginkgo，已下线归档）。对外文档与英文邮件使用英文代号，内部归档使用中文名。",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00081",
+    "lang": "en",
+    "title": "Lighthouse project retrospective",
+    "body": "Retrospective for the Lighthouse gateway rollout: what went well — the async compensation queue kept month-end settlement spikes away from the gateway; staged rate-limit rollout avoided customer impact. What to improve — certificate rotation for the partner reconciliation interface was tracked in one person's head and nearly missed; move it to the on-call checklist. Action items assigned with owners and due dates.",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00082",
+    "lang": "en",
+    "title": "Handover follow-up email",
+    "body": "From: wangyangben@example.com. Subject: Handover follow-up, week two. Body: Taking stock after the first two weeks of the handover: on-call for the settlement system went smoothly, one batch rerun executed with the idempotent script as documented. Still open — the partner certificate rotation drill, and access to the reporting database which IT has not yet re-granted. Will chase both this week.",
+    "scenario": "offboarding",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00083",
+    "lang": "zh",
+    "title": "常见故障排查笔记：结算对账不平",
+    "body": "对账不平的排查顺序：先核对账文件批次是否缺批（占比最高），再查汇率或口径参数当日是否变更，最后查补偿队列是否有滞留消息。历史案例：某次不平系上游重发文件带旧批次号，被幂等逻辑跳过，处理办法是用带强制参数的补录脚本单批重放。切忌直接改结果表。",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00084",
+    "lang": "zh",
+    "title": "供应商联系人清单",
+    "body": "外部合作方联系人（均为虚构占位）：示例数据服务商，技术对接窗口 partner@example.com，工单响应两小时；示例短信通道商，值班电话见内网通讯录；证书签发机构，续期提前十个工作日申请。联系人变动时更新本清单并同步值班群公告。",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00085",
+    "lang": "zh",
+    "title": "部署发布流程说明",
+    "body": "灯塔网关发布流程：代码合入主干后由流水线自动构建镜像，先发灰度组两台观察三十分钟，核心指标（错误率、延迟、限流命中）无异常再全量。回滚采用镜像回切，两分钟内完成。月结窗口前后二十四小时冻结发布，紧急修复需双人审批。",
+    "scenario": "offboarding",
+    "doc_type": "plain",
+    "dup_group": "g-off-02"
+  },
+  {
+    "doc_id": "e00086",
+    "lang": "zh",
+    "title": "部署发布流程说明（压缩包展开副本）",
+    "body": "灯塔网关发布流程：代码合入主干后由流水线自动构建镜像，先发灰度组两台观察三十分钟，核心指标（错误率、延迟、限流命中）无异常再全量。回滚采用镜像回切，两分钟内完成。月结窗口前后二十四小时冻结发布，紧急修复需双人审批。（文末注：本文件由归档压缩包展开导出）",
+    "scenario": "offboarding",
+    "doc_type": "plain",
+    "dup_group": "g-off-02"
+  },
+  {
+    "doc_id": "e00087",
+    "lang": "zh",
+    "title": "邮件：密码与密钥移交流程",
+    "body": "发件人：信息安全组 security@example.com；主题：离职人员口令与密钥移交规范。正文：一律通过密码保管系统完成移交，禁止邮件、聊天工具传递任何明文口令；证书私钥由系统托管重新授权，不做文件拷贝；移交完成后原账号立即禁用，四十八小时内复核一次访问日志。",
+    "scenario": "offboarding",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00088",
+    "lang": "zh",
+    "title": "附件：月度结算报表口径说明",
+    "body": "随邮件附上报表口径：营收按权责发生制、以对账确认日归属月份；退款冲减当月而非追溯；跨境交易按月末牌价折算并单列汇兑差异。报表字段与鲲鹏结算库表的映射关系见文末对照表，口径调整须经财务与数据两方会签后才能改脚本。",
+    "scenario": "offboarding",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00089",
+    "lang": "zh",
+    "title": "会议纪要：交接评审会",
+    "body": "参会：部门负责人、交接双方、IT 与信息安全代表。结论：一、知识库目录验收通过，缺口两处（故障演练记录、容量评估底稿）限期补齐；二、值班移交采取两周陪跑制，前一周李示例主值、后一周王样本主值；三、外部联系人介绍会定于本周五。下次跟进会在两周后。",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00090",
+    "lang": "zh",
+    "title": "设备归还单（扫描件）",
+    "body": "归还设备：笔记本电脑一台（资产编号 AS-示例-0450）、门禁卡一张、UKey 一枚。IT 检查记录：硬盘已按流程整机加密擦除，外观正常。归还人李示例签字，IT 经办与行政资产管理员会签。扫描件右下角资产条码清晰可读。",
+    "scenario": "offboarding",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00091",
+    "lang": "en",
+    "title": "On-call runbook excerpt (Kunpeng Settlement System)",
+    "body": "Excerpt from the on-call runbook for the Kunpeng Settlement System: when the monthly batch fails, first verify that all upstream reconciliation files have arrived, then check the database connection pool. Reruns must use the idempotent rerun script; never patch tables by hand. Escalate to the data team if the same batch fails twice. Alert thresholds and health-check scripts are listed in the appendix.",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00092",
+    "lang": "zh",
+    "title": "培训材料：新人接手指引",
+    "body": "面向接手灯塔项目的新同事：第一周读架构文档与接口说明并在沙箱走通全流程；第二周跟一次发布、跟一次值班；第三周独立处理低危工单。学习资料按知识库首页索引顺序阅读，遇到文档与实际不符的地方直接改文档并在评审会提出，保持文档就是现状。",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00093",
+    "lang": "zh",
+    "title": "邮件：遗留缺陷清单",
+    "body": "发件人：李示例；主题：离职前遗留问题说明。正文：三个未结缺陷——一、对账文件偶发迟到时告警重复发送，烦扰值班；二、限流规则热更新在极端并发下有一次未生效记录，未复现；三、报表库一张宽表查询慢，需加索引但要等月结窗口后操作。明细与复现步骤见附件。",
+    "scenario": "offboarding",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00094",
+    "lang": "zh",
+    "title": "附件：遗留缺陷明细说明",
+    "body": "缺陷一：告警重复——对账文件迟到触发的告警未做收敛，同一批次可重复发送多条，建议按批次号去重；缺陷二：限流热更新偶发未生效——疑似配置下发与规则加载竞态，附当时日志片段；缺陷三：报表宽表慢查询——执行计划全表扫描，建议对账期字段建复合索引，改动需在月结窗口外执行。",
+    "scenario": "offboarding",
+    "doc_type": "attachment"
+  },
+  {
+    "doc_id": "e00095",
+    "lang": "zh",
+    "title": "数据字典节选（结算核心表）",
+    "body": "结算流水表字段节选：批次号（含租户与日期段）、对账状态（初始、已对平、差异、人工核）、金额字段一律分位存储整数、汇率字段仅跨境记录使用。差异表与流水表按批次号关联。字段含义变更须同步更新本字典与报表口径说明，两处不一致时以字典为准。",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00096",
+    "lang": "zh",
+    "title": "客户对账流程说明",
+    "body": "对外客户对账流程：每日两批接收对账文件，系统自动核对后生成差异清单；差异两个工作日内由运营初核、数据复核；确认为我方原因的当月调整，对方原因的发差异函。月末出对账确认书，双方盖章归档。全流程节点在工单系统留痕。",
+    "scenario": "offboarding",
+    "doc_type": "plain",
+    "dup_group": "g-off-03"
+  },
+  {
+    "doc_id": "e00097",
+    "lang": "zh",
+    "title": "客户对账流程说明（旧版留存副本）",
+    "body": "（旧版留存，仅供追溯）对外客户对账流程：每日两批接收对账文件，系统自动核对后生成差异清单；差异三个工作日内由运营初核、数据复核；确认为我方原因的当月调整，对方原因的发差异函。月末出对账确认书，双方盖章归档。全流程节点在工单系统留痕。",
+    "scenario": "offboarding",
+    "doc_type": "plain",
+    "dup_group": "g-off-03"
+  },
+  {
+    "doc_id": "e00098",
+    "lang": "en",
+    "title": "Data retention note",
+    "body": "Retention note for departing staff archives: project documents and mailboxes of former employees are moved to the cold archive share within thirty days of departure, kept read-only for the retention period defined per document class, and indexed for search so that successors can locate material without knowing how the original owner organised it. Deletion requires a signed disposal request.",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00099",
+    "lang": "zh",
+    "title": "工牌与门禁注销回执（扫描）",
+    "body": "回执载明：员工李示例的工牌已收回销毁，门禁权限于最后工作日十八时整批注销，机房生物识别记录同步删除。行政与信息安全双方经办签字，附门禁系统注销操作截图打印页。扫描件用于离职档案归档。",
+    "scenario": "offboarding",
+    "doc_type": "scanned"
+  },
+  {
+    "doc_id": "e00100",
+    "lang": "zh",
+    "title": "知识库首页索引（灯塔项目）",
+    "body": "灯塔项目知识库目录：一、架构设计（含取舍记录）；二、接口对接说明与沙箱指引；三、部署发布与回滚；四、值班手册与故障排查笔记；五、周报归档；六、遗留问题与改进清单。各节负责人与最近更新时间在目录页标注，超过一季未更新的条目会被标记待复核。",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00101",
+    "lang": "en",
+    "title": "Client email: settlement discrepancy",
+    "body": "From: client-ops@example.com. Subject: Discrepancy in yesterday's reconciliation batch. Body: Our reconciliation shows three transactions in yesterday's second batch marked as mismatched on your side while our records show them settled. Could you confirm whether the batch was reprocessed? If a rerun occurred, please share the new batch reference so we can align our ledger before the month-end statement.",
+    "scenario": "offboarding",
+    "doc_type": "email"
+  },
+  {
+    "doc_id": "e00102",
+    "lang": "zh",
+    "title": "离职面谈纪要",
+    "body": "人事与李示例离职面谈要点：离职原因为个人发展，与团队无矛盾；对公司建议两条——值班补偿机制透明化、新人文档再精简；确认知悉保密义务与竞业条款范围；愿意在离职后一个月内就交接遗留问题提供远程咨询（每周不超过两小时）。纪要双方签字。",
+    "scenario": "offboarding",
+    "doc_type": "plain"
+  },
+  {
+    "doc_id": "e00103",
+    "lang": "zh",
+    "title": "附件：付款申请单（报销盘副本）",
+    "body": "（报销归档盘副本）申请部门：行政部。事由：猎户座项目设备采购第二期款项。收款单位：晨星办公用品有限公司。申请金额为合同尾款（约整数）。随附材料：合同复印件、发票两张；入库验收单标注为补交。审批栏：部门负责人已签，财务复核意见为暂缓，总经理栏空白。",
+    "scenario": "audit",
+    "doc_type": "attachment",
+    "dup_group": "g-aud-03"
+  },
+  {
+    "doc_id": "e00104",
+    "lang": "zh",
+    "title": "离职交接清单（李示例）旧共享盘副本",
+    "body": "（旧共享盘迁移副本）交接人李示例，接收人王样本，监交人为部门负责人。交接范围：一、灯塔项目全部设计文档与代码仓库权限；二、鲲鹏结算系统运维职责与值班排期；三、供应商与外部接口联系人；四、未结事项清单（含三个遗留缺陷）。文档移交以知识库目录为准，账号权限由 IT 按清单逐项回收后新开。",
+    "scenario": "offboarding",
+    "doc_type": "plain",
+    "dup_group": "g-off-04"
+  }
+]

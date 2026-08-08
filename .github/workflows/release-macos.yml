@@ -1,0 +1,97 @@
+name: Release macOS
+
+# 触发：推送 v* 标签自动构建；或在 Actions 页手动触发（workflow_dispatch）。
+# 与 release-windows.yml 同触发条件（同一 v* tag），两 workflow 并行各产各平台安装包，
+# 由 tauri-action 挂到**同一个** tag 的 Release 上（tauri-action 对已存在的 Release 幂等追加
+# 资产）。真实 changelog 仍按 CONVENTIONS §8 发版后统一 `gh release edit <tag> --notes-file`
+# 补全，不依赖本 workflow 的占位 releaseBody（谁先跑谁建 Release、body 会被最终 edit 覆盖）。
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release 标签（如 v0.1.0），手动触发时必填"
+        required: true
+
+jobs:
+  build-macos:
+    # macos-14 = Apple Silicon runner。与 release-daemon.yml 同款抉择：不 CI build Intel
+    # （macos-13 runner 池长期紧张、排队 2h+ 阻塞发版；已实证 daemon-v0.1.0 cycle）。Intel Mac
+    # 用户从源码构建（见 docs/install.md「从源码构建」节）。daemon workflow 已在 macos-14 上
+    # 成功编 llama-cpp-4（scoutd 走同款 path dep），故桌面 app 带 llama features 同样可编。
+    runs-on: macos-14
+    permissions:
+      contents: write # tauri-action 创建 / 追加 Release 需要写权限
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "apps/desktop/src-tauri -> target"
+          key: macos-aarch64
+
+      - name: Install frontend deps
+        working-directory: apps/desktop
+        run: npm install # 仓库未追踪 package-lock.json，故用 install 而非 ci（与 windows 一致）
+
+      # 与 release-windows.yml 同款守门：`cargo metadata --locked` 在 lock 缺 / 不一致 /
+      # Cargo.toml 改了 dep 但 lock 没同步时 fail-fast，防 CI 静默重生 lock 漂移本地 dep set。
+      - name: Verify Cargo.lock pin (--locked)
+        working-directory: apps/desktop/src-tauri
+        shell: bash
+        run: cargo metadata --locked --format-version 1 > /dev/null
+
+      # 构建说明（与 release-windows.yml 对齐，平台差异见下）：
+      #   - `args: --features model-fallback,semantic-recall -- --locked`：同时启用模型 fallback
+      #     真推理（BETA-23/24）+ 语义召回 embedding（BETA-15B-1），两者共用 llama-cpp 后端。
+      #     macOS 走 Metal 后端（区别于 Windows 的 CPU 推理）；macos-14 runner 自带 cmake + clang，
+      #     llama-cpp-4 build.rs 编 ggml 无需额外依赖（daemon workflow 已实证 macos-14 可编）。
+      #   - `-- --locked` 把 `--locked` 透给底层 cargo build，保 release binary 与 Cargo.lock 一致。
+      #   - 未做代码签名 / 公证（开源免费分发）：首次运行触发 Gatekeeper 拦截，用户按
+      #     docs/install.md「Gatekeeper 放行」节右键打开或 `xattr -dr com.apple.quarantine` 放行。
+      #   - 两个模型文件均不打包进 DMG；用户手动放置到 `~/Library/Application Support/Scout/models/`
+      #     （即 dirs::data_dir()/Scout/models/），或用应用内「快速入门」一键下载。不放置则各自
+      #     静默降级（fallback→parser-only / 语义召回→FTS-only）。
+      - name: Build Tauri app + create/append Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop # 含 src-tauri 与前端 package.json
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: "Scout ${{ github.event.inputs.tag || github.ref_name }}"
+          # 占位模板：真实 changelog 按 CONVENTIONS §8 发版后用 `gh release edit <tag> --notes-file`
+          # 补全（勿依赖此静态文案）。macOS 侧强调 Gatekeeper 放行（区别 Windows SmartScreen）。
+          releaseBody: |
+            Scout macOS 测试版（DMG，Apple Silicon / aarch64）。
+
+            - 由 GitHub Actions 在 macos-14（Apple Silicon）上自动构建。
+            - 未做代码签名 / 公证（开源免费分发），首次运行 macOS Gatekeeper 会拦截：
+              右键点击 App →「打开」，或终端执行 `xattr -dr com.apple.quarantine /Applications/Scout.app`。
+            - Intel Mac 用户请从源码构建。放行步骤 / SHA256 校验 / 从源码构建：见
+              [安装指南](https://github.com/huibinma/Scout/blob/main/docs/install.md)。
+
+            **模型文件（均可选，首选应用内「快速入门」一键下载；也可手动放置到 `~/Library/Application Support/Scout/models/`）：**
+            - `embeddinggemma-300m-q8_0.gguf` —— 语义召回 embedding 模型（启用「按意思找到」/ 跨语言）。缺失则语义召回降级纯关键词（FTS）。
+            - `qwen3-0.6b-q4_k_m.gguf` —— 生成模型 fallback（复杂查询 AI 解析）。缺失则降级 parser-only。
+
+            两者均不放置也可正常使用（纯关键词搜索）。「选项 → 常规 / 语义召回」可查看各模型状态。
+
+            （详细 changelog 发版后补全）
+          releaseDraft: false
+          prerelease: true
+          args: --features model-fallback,semantic-recall -- --locked

@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://scout.dev/schema/search-intent/v1.json",
+  "title": "Scout Search Intent",
+  "type": "object",
+  "required": ["schema_version", "intent"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "intent": { "enum": ["file_search", "media_search", "file_action", "refine", "clarify"] },
+    "language": { "enum": ["zh", "en", "mixed", "unknown"] }
+  },
+  "allOf": [
+    { "if": { "properties": { "intent": { "const": "file_search" } } },
+      "then": { "$ref": "#/$defs/FileSearch" } },
+    { "if": { "properties": { "intent": { "const": "media_search" } } },
+      "then": { "$ref": "#/$defs/MediaSearch" } },
+    { "if": { "properties": { "intent": { "const": "file_action" } } },
+      "then": { "$ref": "#/$defs/FileAction" } },
+    { "if": { "properties": { "intent": { "const": "refine" } } },
+      "then": { "$ref": "#/$defs/Refine" } },
+    { "if": { "properties": { "intent": { "const": "clarify" } } },
+      "then": { "$ref": "#/$defs/Clarify" } }
+  ],
+
+  "$defs": {
+
+    "TimeExpression": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type":  { "const": "relative" },
+            "value": { "enum": ["today", "yesterday", "last_3_days", "last_7_days", "last_14_days", "last_30_days", "this_week", "last_week", "this_month", "last_month", "this_year", "last_year"] }
+          } },
+        { "type": "object", "additionalProperties": false,
+          "required": ["type", "from", "to"],
+          "properties": {
+            "type": { "const": "absolute" },
+            "from": { "type": "string", "format": "date" },
+            "to":   { "type": "string", "format": "date" }
+          } },
+        { "type": "object", "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type":  { "enum": ["before", "after"] },
+            "value": { "type": "string", "format": "date" }
+          } }
+      ]
+    },
+
+    "SizeExpression": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false,
+          "required": ["type", "value", "unit"],
+          "properties": {
+            "type":  { "enum": ["greater_than", "less_than"] },
+            "value": { "type": "number", "exclusiveMinimum": 0 },
+            "unit":  { "enum": ["B", "KB", "MB", "GB", "s", "m", "h"] }
+          } },
+        { "type": "object", "additionalProperties": false,
+          "required": ["type", "min", "max", "unit"],
+          "properties": {
+            "type": { "const": "between" },
+            "min":  { "type": "number", "minimum": 0 },
+            "max":  { "type": "number", "exclusiveMinimum": 0 },
+            "unit": { "enum": ["B", "KB", "MB", "GB", "s", "m", "h"] }
+          } }
+      ]
+    },
+
+    "Location": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "hint":    { "type": ["string", "null"] },
+        "include": { "type": ["array", "null"], "items": { "type": "string" } },
+        "exclude": { "type": ["array", "null"], "items": { "type": "string" } }
+      }
+    },
+
+    "FileType": {
+      "enum": ["document", "spreadsheet", "presentation", "image", "screenshot", "video", "audio", "archive", "code", "executable"]
+    },
+
+    "FileTypeOrSet": {
+      "comment": "BETA-18：file_type 接受单个标量或数组（跨范畴多类型，如 [\"image\",\"video\"]）；单值与 schema v1.0 标量 wire 兼容。",
+      "oneOf": [
+        { "$ref": "#/$defs/FileType" },
+        { "type": "array", "items": { "$ref": "#/$defs/FileType" } }
+      ]
+    },
+
+    "SortOrder": {
+      "enum": ["relevance_desc", "modified_desc", "modified_asc", "created_desc", "created_asc", "accessed_desc", "size_desc", "size_asc", "name_asc", "name_desc"]
+    },
+
+    "TargetRef": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false,
+          "required": ["source", "selector"],
+          "properties": {
+            "source":   { "const": "last_results" },
+            "selector": { "$ref": "#/$defs/TargetSelector" }
+          } },
+        { "type": "object", "additionalProperties": false,
+          "required": ["source", "value"],
+          "properties": {
+            "source": { "const": "path" },
+            "value":  { "type": "string", "minLength": 1 }
+          } }
+      ]
+    },
+
+    "TargetSelector": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false,
+          "required": ["type", "value"],
+          "properties": {
+            "type":  { "const": "index" },
+            "value": { "type": "integer", "minimum": 1 }
+          } },
+        { "type": "object", "additionalProperties": false,
+          "required": ["type", "values"],
+          "properties": {
+            "type":   { "const": "indices" },
+            "values": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "minItems": 1 }
+          } },
+        { "type": "object", "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "all" }
+          } }
+      ]
+    },
+
+    "FileSearch": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_version":      { "const": "1.0" },
+        "intent":              { "const": "file_search" },
+        "language":            { "enum": ["zh", "en", "mixed", "unknown"] },
+        "keywords":            { "type": "array", "items": { "type": "string" } },
+        "extensions":          { "type": "array", "items": { "type": "string" } },
+        "file_type":           { "$ref": "#/$defs/FileTypeOrSet" },
+        "location":            { "$ref": "#/$defs/Location" },
+        "modified_time":       { "$ref": "#/$defs/TimeExpression" },
+        "created_time":        { "$ref": "#/$defs/TimeExpression" },
+        "accessed_time":       { "$ref": "#/$defs/TimeExpression" },
+        "size":                { "$ref": "#/$defs/SizeExpression" },
+        "exclude_extensions":  { "type": "array", "items": { "type": "string" } },
+        "exclude_file_type":   { "type": "array", "items": { "$ref": "#/$defs/FileType" } },
+        "sort":                { "$ref": "#/$defs/SortOrder" },
+        "limit":               { "type": "integer", "minimum": 1, "maximum": 500 }
+      }
+    },
+
+    "MediaSearch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["media_type"],
+      "properties": {
+        "schema_version":      { "const": "1.0" },
+        "intent":              { "const": "media_search" },
+        "language":            { "enum": ["zh", "en", "mixed", "unknown"] },
+        "media_type":          { "enum": ["audio", "image", "video", "screenshot"] },
+        "artist":              { "type": ["string", "null"] },
+        "title":               { "type": ["string", "null"] },
+        "album":               { "type": ["string", "null"] },
+        "genre":               { "type": ["string", "null"] },
+        "quality":             { "enum": ["lossless", "high", "standard", "low", null] },
+        "duration":            { "$ref": "#/$defs/SizeExpression" },
+        "keywords":            { "type": "array", "items": { "type": "string" } },
+        "extensions":          { "type": "array", "items": { "type": "string" } },
+        "file_type":           { "$ref": "#/$defs/FileTypeOrSet" },
+        "location":            { "$ref": "#/$defs/Location" },
+        "modified_time":       { "$ref": "#/$defs/TimeExpression" },
+        "created_time":        { "$ref": "#/$defs/TimeExpression" },
+        "accessed_time":       { "$ref": "#/$defs/TimeExpression" },
+        "size":                { "$ref": "#/$defs/SizeExpression" },
+        "exclude_extensions":  { "type": "array", "items": { "type": "string" } },
+        "exclude_file_type":   { "type": "array", "items": { "$ref": "#/$defs/FileType" } },
+        "sort":                { "$ref": "#/$defs/SortOrder" },
+        "limit":               { "type": "integer", "minimum": 1, "maximum": 500 }
+      }
+    },
+
+    "FileAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "target_ref", "requires_confirmation"],
+      "properties": {
+        "schema_version":        { "const": "1.0" },
+        "intent":                { "const": "file_action" },
+        "language":              { "enum": ["zh", "en", "mixed", "unknown"] },
+        "action":                { "enum": ["open", "locate", "copy", "move", "rename", "delete"] },
+        "target_ref":            { "$ref": "#/$defs/TargetRef" },
+        "destination":           { "type": ["string", "null"] },
+        "new_name":              { "type": ["string", "null"] },
+        "requires_confirmation": { "type": "boolean" }
+      },
+      "allOf": [
+        { "if": { "properties": { "action": { "enum": ["copy", "move"] } }, "required": ["action"] },
+          "then": { "required": ["destination"],
+                    "properties": { "destination": { "type": "string", "minLength": 1 } } } },
+        { "if": { "properties": { "action": { "const": "rename" } }, "required": ["action"] },
+          "then": { "required": ["new_name"],
+                    "properties": { "new_name": { "type": "string", "minLength": 1 } } } },
+        { "if": { "properties": { "action": { "enum": ["copy", "move", "rename", "delete"] } }, "required": ["action"] },
+          "then": { "properties": { "requires_confirmation": { "const": true } } } }
+      ]
+    },
+
+    "Refine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_ref", "delta"],
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "intent":         { "const": "refine" },
+        "language":       { "enum": ["zh", "en", "mixed", "unknown"] },
+        "base_ref":       { "const": "last_intent" },
+        "delta":          { "$ref": "#/$defs/RefineDelta" },
+        "clear":          { "type": ["array", "null"],
+                            "items": { "enum": ["location", "extensions", "file_type", "keywords", "modified_time", "created_time", "accessed_time", "size", "exclude_extensions", "exclude_file_type", "artist", "title", "album", "genre", "quality", "duration"] } }
+      }
+    },
+
+    "RefineDelta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "keywords":            { "type": "array", "items": { "type": "string" } },
+        "extensions":          { "type": "array", "items": { "type": "string" } },
+        "file_type":           { "$ref": "#/$defs/FileTypeOrSet" },
+        "location":            { "$ref": "#/$defs/Location" },
+        "modified_time":       { "$ref": "#/$defs/TimeExpression" },
+        "created_time":        { "$ref": "#/$defs/TimeExpression" },
+        "accessed_time":       { "$ref": "#/$defs/TimeExpression" },
+        "size":                { "$ref": "#/$defs/SizeExpression" },
+        "exclude_extensions":  { "type": "array", "items": { "type": "string" } },
+        "exclude_file_type":   { "type": "array", "items": { "$ref": "#/$defs/FileType" } },
+        "artist":              { "type": ["string", "null"] },
+        "title":               { "type": ["string", "null"] },
+        "album":               { "type": ["string", "null"] },
+        "genre":               { "type": ["string", "null"] },
+        "quality":             { "enum": ["lossless", "high", "standard", "low", null] },
+        "duration":            { "$ref": "#/$defs/SizeExpression" },
+        "sort":                { "$ref": "#/$defs/SortOrder" },
+        "limit":               { "type": "integer", "minimum": 1, "maximum": 500 }
+      }
+    },
+
+    "Clarify": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reason", "question"],
+      "properties": {
+        "schema_version": { "const": "1.0" },
+        "intent":         { "const": "clarify" },
+        "language":       { "enum": ["zh", "en", "mixed", "unknown"] },
+        "reason":         { "enum": ["ambiguous_time", "ambiguous_location", "ambiguous_type", "ambiguous_action", "unsafe_action", "unknown"] },
+        "question":       { "type": "string", "minLength": 1 },
+        "options":        { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

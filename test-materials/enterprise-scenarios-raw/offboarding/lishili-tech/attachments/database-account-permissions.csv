@@ -1,0 +1,5 @@
+account_name,system,purpose,permission_scope,password_note
+kunpeng_readonly,Kunpeng Settlement,值班查询日志和批处理状态,read-only,不保存口令
+kunpeng_batch_ops,Kunpeng Settlement,暂停或恢复批处理任务,limited-ops,不保存口令
+lighthouse_report_reader,Lighthouse,查看月度报表聚合结果,read-only,不保存口令
+

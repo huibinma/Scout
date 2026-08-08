@@ -1,0 +1,23 @@
+[package]
+name = "scout-search-backend-spotlight"
+description = "Spotlight SearchBackend implementation using mdfind"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+chrono = { version = "0.4", default-features = false, features = ["std"] }
+scout-platform-macos = { path = "../../../platform/macos" }
+scout-search-backend = { path = "../common" }
+
+[dev-dependencies]
+futures-executor.workspace = true
+futures-util.workspace = true
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

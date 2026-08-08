@@ -1,0 +1,869 @@
+[
+  {
+    "id": "v09-d4-zh-001",
+    "query": "周杰伦的歌",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "周杰伦",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-002",
+    "query": "放首李荣浩唱的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "李荣浩",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-003",
+    "query": "找邓紫棋的歌曲",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "邓紫棋",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-004",
+    "query": "播放 晴天",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "title": "晴天",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-005",
+    "query": "找一首叫 七里香 的歌",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "title": "七里香",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-006",
+    "query": "来一首 平凡之路",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "title": "平凡之路",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-007",
+    "query": "周杰伦《范特西》专辑里的歌",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "周杰伦",
+      "album": "范特西",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-008",
+    "query": "陈奕迅 浮夸 这首歌",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "陈奕迅",
+      "title": "浮夸",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-009",
+    "query": "薛之谦《绅士》专辑",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "薛之谦",
+      "album": "绅士",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-010",
+    "query": "找一些爵士乐",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "genre": "爵士",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-011",
+    "query": "来点摇滚歌曲",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "genre": "摇滚",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-012",
+    "query": "放点古典音乐",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "genre": "古典",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-013",
+    "query": "找一些民谣",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "genre": "民谣",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-014",
+    "query": "无损音乐",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "quality": "lossless",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-015",
+    "query": "找一些高品质的歌",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "quality": "high",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-016",
+    "query": "无损格式的歌曲",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "quality": "lossless",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-017",
+    "query": "超过5分钟的歌",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "duration": {
+        "type": "greater_than",
+        "value": 5,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-018",
+    "query": "时长不到3分钟的歌曲",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "duration": {
+        "type": "less_than",
+        "value": 3,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-019",
+    "query": "找超过一小时的音频",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "duration": {
+        "type": "greater_than",
+        "value": 1,
+        "unit": "h"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-020",
+    "query": "周杰伦超过4分钟的无损歌曲",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "周杰伦",
+      "quality": "lossless",
+      "duration": {
+        "type": "greater_than",
+        "value": 4,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-021",
+    "query": "找林俊杰的无损音乐",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "林俊杰",
+      "quality": "lossless",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-022",
+    "query": "王菲的爵士风格歌曲",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "王菲",
+      "genre": "爵士",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-023",
+    "query": "找五月天短于4分钟的歌",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "五月天",
+      "duration": {
+        "type": "less_than",
+        "value": 4,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-024",
+    "query": "音乐目录里周杰伦的歌",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "周杰伦",
+      "location": {
+        "hint": "音乐"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-025",
+    "query": "下载目录里的无损歌曲",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "quality": "lossless",
+      "location": {
+        "hint": "下载"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-026",
+    "query": "找毛不易《消愁》",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "毛不易",
+      "title": "消愁",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-027",
+    "query": "来点轻音乐",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "genre": "轻音乐",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-028",
+    "query": "找一些说唱歌曲",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "genre": "说唱",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-029",
+    "query": "周杰伦《叶惠美》专辑里超过4分钟的歌",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "周杰伦",
+      "album": "叶惠美",
+      "duration": {
+        "type": "greater_than",
+        "value": 4,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-zh-030",
+    "query": "找最近拍的视频",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "video",
+      "modified_time": {
+        "type": "relative",
+        "value": "last_7_days"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-001",
+    "query": "songs by Adele",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "artist": "Adele",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-002",
+    "query": "play songs by Ed Sheeran",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "artist": "Ed Sheeran",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-003",
+    "query": "find tracks by Coldplay",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "artist": "Coldplay",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-004",
+    "query": "play the song Hello",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "title": "Hello",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-005",
+    "query": "find a song called Yesterday",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "title": "Yesterday",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-006",
+    "query": "the album 1989",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "album": "1989",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-007",
+    "query": "songs from the album Thriller",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "album": "Thriller",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-008",
+    "query": "Adele songs from the album 25",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "artist": "Adele",
+      "album": "25",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-009",
+    "query": "find some jazz music",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "genre": "jazz",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-010",
+    "query": "play some rock songs",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "genre": "rock",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-011",
+    "query": "find some classical music",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "genre": "classical",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-012",
+    "query": "play some hip hop",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "genre": "hip hop",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-013",
+    "query": "lossless music",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "quality": "lossless",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-014",
+    "query": "find high quality songs",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "quality": "high",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-015",
+    "query": "songs under 3 minutes",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "duration": {
+        "type": "less_than",
+        "value": 3,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-016",
+    "query": "songs longer than 5 minutes",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "duration": {
+        "type": "greater_than",
+        "value": 5,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-017",
+    "query": "audio files longer than 2 hours",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "duration": {
+        "type": "greater_than",
+        "value": 2,
+        "unit": "h"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-018",
+    "query": "lossless songs by Taylor Swift over 4 minutes",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "artist": "Taylor Swift",
+      "quality": "lossless",
+      "duration": {
+        "type": "greater_than",
+        "value": 4,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-019",
+    "query": "jazz songs by Norah Jones",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "artist": "Norah Jones",
+      "genre": "jazz",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-020",
+    "query": "high quality songs by Bruno Mars",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "artist": "Bruno Mars",
+      "quality": "high",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-021",
+    "query": "find lossless tracks in the music folder",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "quality": "lossless",
+      "location": {
+        "hint": "music"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-022",
+    "query": "Beatles songs under 4 minutes",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "artist": "Beatles",
+      "duration": {
+        "type": "less_than",
+        "value": 4,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-023",
+    "query": "play the song Shape of You by Ed Sheeran",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "artist": "Ed Sheeran",
+      "title": "Shape of You",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-en-024",
+    "query": "screenshots from yesterday",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "created_time": {
+        "type": "relative",
+        "value": "yesterday"
+      },
+      "sort": "created_desc",
+      "media_type": "screenshot"
+    }
+  },
+  {
+    "id": "v09-d4-en-025",
+    "query": "videos longer than 10 minutes",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "video",
+      "duration": {
+        "type": "greater_than",
+        "value": 10,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-mixed-001",
+    "query": "播放 Adele 的歌",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "media_type": "audio",
+      "artist": "Adele",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-mixed-002",
+    "query": "找一首叫 Hello 的歌",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "media_type": "audio",
+      "title": "Hello",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-mixed-003",
+    "query": "来点 jazz 音乐",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "media_type": "audio",
+      "genre": "jazz",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-mixed-004",
+    "query": "找 Taylor Swift 的无损歌曲",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "media_type": "audio",
+      "artist": "Taylor Swift",
+      "quality": "lossless",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d4-mixed-005",
+    "query": "Coldplay 超过5分钟的歌",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "media_type": "audio",
+      "artist": "Coldplay",
+      "duration": {
+        "type": "greater_than",
+        "value": 5,
+        "unit": "m"
+      },
+      "sort": "relevance_desc"
+    }
+  }
+]

@@ -1,0 +1,38 @@
+[package]
+name = "spike-retrieval"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# BETA-26 起源的语义检索探针；BETA-15B-6 起转为「本地现实校准锤」——
+# 用真实 home 数据（gitignored）周期性核对合成评测集（packages/evals）是否同向。
+# 默认构建不编 llama-cpp（仅 embed-corpus/run-retrieval 经 --features llama-cpp/metal 启用）。
+
+[dependencies]
+indexer = { package = "scout-indexer", path = "../indexer" }
+model-runtime = { package = "scout-model-runtime", path = "../model-runtime" }
+rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+walkdir = "2"
+anyhow = "1"
+
+[features]
+default = []
+llama-cpp = ["model-runtime/llama-cpp"]
+metal = ["llama-cpp", "model-runtime/metal"]
+# 注：indexer/model-runtime 真实包名为 scout-*，此处经 package 重命名为 indexer/model-runtime，便于后续 task 直接 use。
+
+[[bin]]
+name = "build-corpus"
+path = "src/bin/build_corpus.rs"
+
+[[bin]]
+name = "embed-corpus"
+path = "src/bin/embed_corpus.rs"
+required-features = ["llama-cpp"]
+
+[[bin]]
+name = "run-retrieval"
+path = "src/bin/run_retrieval.rs"
+required-features = ["llama-cpp"]

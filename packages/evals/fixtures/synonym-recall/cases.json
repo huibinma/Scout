@@ -1,0 +1,296 @@
+[
+  {
+    "id": "recall-zh-office-01",
+    "query": "找之前做的工作汇报，上次老板让我发给他的",
+    "language": "zh",
+    "bucket": "office",
+    "expected_hits": ["f-zhishu-ppt", "f-niandu-docx", "f-jidu-pdf", "f-yueduhui-ppt"]
+  },
+  {
+    "id": "recall-zh-office-02",
+    "query": "找述职文件，下周汇报要用",
+    "language": "zh",
+    "bucket": "office",
+    "expected_hits": ["f-zhishu-ppt", "f-niandu-docx", "f-jidu-pdf", "f-yueduhui-ppt"]
+  },
+  {
+    "id": "recall-zh-office-03",
+    "query": "上周交的周报在哪儿",
+    "language": "zh",
+    "bucket": "office",
+    "expected_hits": ["f-zhouzj-docx", "f-zhouxj-txt"]
+  },
+  {
+    "id": "recall-zh-office-04",
+    "query": "找周总结，最近几周的都要",
+    "language": "zh",
+    "bucket": "office",
+    "expected_hits": ["f-zhouzj-docx", "f-zhouxj-txt"]
+  },
+  {
+    "id": "recall-zh-office-05",
+    "query": "我之前投递工作时做的简历在哪",
+    "language": "zh",
+    "bucket": "office",
+    "expected_hits": ["f-geren-jl-pdf", "f-qiuzhi-jl-pdf"]
+  },
+  {
+    "id": "recall-zh-office-06",
+    "query": "找个人简历，上次更新过的那个版本",
+    "language": "zh",
+    "bucket": "office",
+    "expected_hits": ["f-geren-jl-pdf", "f-qiuzhi-jl-pdf"]
+  },
+  {
+    "id": "recall-zh-office-07",
+    "query": "工作计划文件在哪，要汇报给部门领导",
+    "language": "zh",
+    "bucket": "office",
+    "expected_hits": ["f-xingdong-xlsx", "f-renwu-docx"]
+  },
+  {
+    "id": "recall-zh-office-08",
+    "query": "找上次开完会的会议纪要",
+    "language": "zh",
+    "bucket": "office",
+    "expected_hits": ["f-huiyi-jl-docx", "f-huiyi-bw-txt"]
+  },
+  {
+    "id": "recall-zh-office-09",
+    "query": "我交了一个提案上去，能帮我找到吗",
+    "language": "zh",
+    "bucket": "office",
+    "expected_hits": ["f-fangan-jy-pdf", "f-tiyi-docx"]
+  },
+  {
+    "id": "recall-zh-office-10",
+    "query": "找那个项目方案，上周刚写完的",
+    "language": "zh",
+    "bucket": "office",
+    "expected_hits": ["f-shishi-pdf", "f-jiejue-docx"]
+  },
+  {
+    "id": "recall-zh-doc-01",
+    "query": "找我们之前签的合同，跟乙方那份",
+    "language": "zh",
+    "bucket": "document",
+    "expected_hits": ["f-xieyi-pdf"]
+  },
+  {
+    "id": "recall-zh-doc-02",
+    "query": "协议文件在哪里，要打印出来",
+    "language": "zh",
+    "bucket": "document",
+    "expected_hits": ["f-xieyi-pdf"]
+  },
+  {
+    "id": "recall-zh-doc-03",
+    "query": "发票找不到了，出差那次的",
+    "language": "zh",
+    "bucket": "document",
+    "expected_hits": ["f-shouju-jpg"]
+  },
+  {
+    "id": "recall-zh-doc-04",
+    "query": "找购物收据，上次双十一买的东西",
+    "language": "zh",
+    "bucket": "document",
+    "expected_hits": ["f-shouju-jpg"]
+  },
+  {
+    "id": "recall-zh-doc-05",
+    "query": "报销申请在哪里，上个月出差的",
+    "language": "zh",
+    "bucket": "document",
+    "expected_hits": ["f-baozha-xlsx", "f-feiyong-bx-pdf"]
+  },
+  {
+    "id": "recall-zh-doc-06",
+    "query": "找通知文件，上次公司发的",
+    "language": "zh",
+    "bucket": "document",
+    "expected_hits": ["f-gonggao-pdf"]
+  },
+  {
+    "id": "recall-zh-doc-07",
+    "query": "公告发给我了吗，在哪个文件夹",
+    "language": "zh",
+    "bucket": "document",
+    "expected_hits": ["f-gonggao-pdf"]
+  },
+  {
+    "id": "recall-zh-doc-08",
+    "query": "邀请函还没发出去，能帮我找到原件吗",
+    "language": "zh",
+    "bucket": "document",
+    "expected_hits": ["f-yaoqing-xin-docx", "f-yaoqing-shu-pdf"]
+  },
+  {
+    "id": "recall-zh-doc-09",
+    "query": "找报告，竞品那个方向的",
+    "language": "zh",
+    "bucket": "document",
+    "expected_hits": ["f-diaoyan-pdf", "f-fenxi-pdf"]
+  },
+  {
+    "id": "recall-zh-doc-10",
+    "query": "调研报告在哪里，上季度市场部出的那份",
+    "language": "zh",
+    "bucket": "document",
+    "expected_hits": ["f-diaoyan-pdf", "f-fenxi-pdf"]
+  },
+  {
+    "id": "recall-zh-personal-01",
+    "query": "找我的笔记，读三体那本书的时候记的",
+    "language": "zh",
+    "bucket": "personal",
+    "expected_hits": ["f-zhaji-md", "f-dushu-bj-md"]
+  },
+  {
+    "id": "recall-zh-personal-02",
+    "query": "札记在哪里，我随手记的那些",
+    "language": "zh",
+    "bucket": "personal",
+    "expected_hits": ["f-zhaji-md", "f-dushu-bj-md"]
+  },
+  {
+    "id": "recall-zh-personal-03",
+    "query": "找设计稿，上次移动端那个版本",
+    "language": "zh",
+    "bucket": "personal",
+    "expected_hits": ["f-sheji-wj-fig", "f-sheji-tu-png"]
+  },
+  {
+    "id": "recall-zh-personal-04",
+    "query": "日记在哪，去年写的那些",
+    "language": "zh",
+    "bucket": "personal",
+    "expected_hits": ["f-rizhi-txt", "f-siren-rj-md"]
+  },
+  {
+    "id": "recall-zh-personal-05",
+    "query": "找食谱，之前收藏的川菜做法",
+    "language": "zh",
+    "bucket": "personal",
+    "expected_hits": ["f-caipu-pdf", "f-pengren-sr-docx"]
+  },
+  {
+    "id": "recall-zh-personal-06",
+    "query": "菜谱文件在哪里，想做个新菜",
+    "language": "zh",
+    "bucket": "personal",
+    "expected_hits": ["f-caipu-pdf", "f-pengren-sr-docx"]
+  },
+  {
+    "id": "recall-zh-personal-07",
+    "query": "旅行计划找不到了，明年去日本的那份",
+    "language": "zh",
+    "bucket": "personal",
+    "expected_hits": ["f-lvyou-gl-pdf", "f-chuxing-jh-docx"]
+  },
+  {
+    "id": "recall-zh-personal-08",
+    "query": "健康报告在哪，今年的体检",
+    "language": "zh",
+    "bucket": "personal",
+    "expected_hits": ["f-tijian-jg-pdf"]
+  },
+  {
+    "id": "recall-en-doc-01",
+    "query": "find the contract we signed with the vendor last quarter",
+    "language": "en",
+    "bucket": "document",
+    "expected_hits": ["f-agreement-pdf"]
+  },
+  {
+    "id": "recall-en-doc-02",
+    "query": "where is the agreement for the partnership deal",
+    "language": "en",
+    "bucket": "document",
+    "expected_hits": ["f-agreement-pdf"]
+  },
+  {
+    "id": "recall-en-doc-03",
+    "query": "I need my invoice from last month's trip",
+    "language": "en",
+    "bucket": "document",
+    "expected_hits": ["f-receipt-pdf"]
+  },
+  {
+    "id": "recall-en-doc-04",
+    "query": "find my resume, the one I updated for job applications",
+    "language": "en",
+    "bucket": "document",
+    "expected_hits": ["f-cv-pdf"]
+  },
+  {
+    "id": "recall-en-doc-05",
+    "query": "where did I save the proposal for the new product",
+    "language": "en",
+    "bucket": "document",
+    "expected_hits": ["f-pitch-pdf"]
+  },
+  {
+    "id": "recall-en-doc-06",
+    "query": "find my cover letter for the Google position",
+    "language": "en",
+    "bucket": "document",
+    "expected_hits": ["f-application-docx"]
+  },
+  {
+    "id": "recall-en-office-01",
+    "query": "find the meeting notes from last week's standup",
+    "language": "en",
+    "bucket": "office",
+    "expected_hits": ["f-minutes-docx"]
+  },
+  {
+    "id": "recall-en-office-02",
+    "query": "where are the minutes from the October all-hands",
+    "language": "en",
+    "bucket": "office",
+    "expected_hits": ["f-minutes-docx"]
+  },
+  {
+    "id": "recall-en-office-03",
+    "query": "find the budget spreadsheet for next year's planning",
+    "language": "en",
+    "bucket": "office",
+    "expected_hits": ["f-forecast-xlsx", "f-projection-xlsx"]
+  },
+  {
+    "id": "recall-en-office-04",
+    "query": "where is the onboarding document for new hires",
+    "language": "en",
+    "bucket": "office",
+    "expected_hits": ["f-orientation-pdf"]
+  },
+  {
+    "id": "recall-en-office-05",
+    "query": "find the style guide for our brand assets",
+    "language": "en",
+    "bucket": "office",
+    "expected_hits": ["f-branding-pdf"]
+  },
+  {
+    "id": "recall-en-personal-01",
+    "query": "find my journal from last year",
+    "language": "en",
+    "bucket": "personal",
+    "expected_hits": ["f-diary-txt"]
+  },
+  {
+    "id": "recall-en-personal-02",
+    "query": "where did I save the recipe collection",
+    "language": "en",
+    "bucket": "personal",
+    "expected_hits": ["f-cookbook-pdf"]
+  },
+  {
+    "id": "recall-en-personal-03",
+    "query": "find my itinerary for the Europe trip next year",
+    "language": "en",
+    "bucket": "personal",
+    "expected_hits": ["f-travelplan-pdf"]
+  }
+]

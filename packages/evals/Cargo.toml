@@ -1,0 +1,84 @@
+[package]
+name = "scout-evals"
+description = "Scout 评测集与评测脚本（含 PROTO-05A 合成 fixture 生成器）"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+scout-search-backend = { path = "../search-backends/common" }
+scout-search-backend-spotlight = { path = "../search-backends/spotlight" }
+scout-intent-parser = { path = "../intent-parser" }
+scout-model-runtime = { path = "../model-runtime" }
+scout-harness = { path = "../harness" }
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+anyhow = "1"
+clap = { version = "4", features = ["derive", "env"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+rusqlite = { version = "0.32", features = ["bundled"] }
+scout-indexer = { path = "../indexer" }
+# BETA-38 cycle 4：规模化基准直接驱动语义召回后端（缓存 vs 暴力重载）。
+scout-semantic-index = { path = "../search-backends/semantic-index" }
+scout-result-normalizer = { path = "../result-normalizer" }
+# BETA-32 T12：daemon-mode evals 需要 async runtime + HTTP client + spawn 子进程。
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "process", "time", "net", "sync"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+tempfile = "3"
+
+[features]
+default = []
+# 开启此 feature 后 model-runtime 启用 llama-cpp 后端；evals --with-fallback 即可加载真实 GGUF 模型。
+# 不开此 feature 时，--with-fallback 走 StubLoader（仅验证 wiring，不产生有效 intent）。
+# CMake 是 llama-cpp build 前置：brew install cmake libomp
+model-fallback = ["scout-model-runtime/llama-cpp"]
+# macOS Metal GPU 加速。叠加在 model-fallback 之上；其他平台不要开。
+model-fallback-metal = ["model-fallback", "scout-model-runtime/metal"]
+# Windows/Linux Vulkan GPU 加速（含 Intel 核显）。叠加在 model-fallback 之上；需装 Vulkan SDK。
+model-fallback-vulkan = ["model-fallback", "scout-model-runtime/vulkan"]
+# BETA-15B-6：semantic_quality --embed 调真实 embedding 模型重算向量缓存（需 cmake + GGUF）。
+semantic-recall = ["scout-model-runtime/llama-cpp"]
+# semantic-recall 的 macOS Metal 叠加。
+semantic-recall-metal = ["semantic-recall", "scout-model-runtime/metal"]
+
+[[bin]]
+name = "fixtures"
+path = "src/bin/fixtures.rs"
+
+[[bin]]
+name = "evals"
+path = "src/bin/evals.rs"
+
+[[bin]]
+name = "perf"
+path = "src/bin/perf.rs"
+
+[[bin]]
+name = "fallback_probe"
+path = "src/bin/fallback_probe.rs"
+required-features = ["model-fallback"]
+
+[[bin]]
+name = "synonym_recall"
+path = "src/bin/synonym_recall.rs"
+
+[[bin]]
+name = "semantic_quality"
+path = "src/bin/semantic_quality.rs"
+
+[[bin]]
+# BETA-38 cycle 4：语义向量检索十万级规模化基准（缓存 vs 暴力重载 p95 + 内存 + 去重正确性）。
+name = "bench_semantic"
+path = "src/bin/bench_semantic.rs"
+
+[[bin]]
+# BETA-40 收尾：企业三场景 daemon 端到端评测（queries.tsv → 真 scoutd → 信息墙 + top-K 命中）。
+name = "enterprise_scenarios"
+path = "src/bin/enterprise_scenarios.rs"

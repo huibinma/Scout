@@ -1,0 +1,67 @@
+[workspace]
+resolver = "2"
+members = [
+    "apps/desktop/src-tauri",
+    "apps/scout-cli",
+    "packages/search-backends/common",
+    "packages/search-backends/spotlight",
+    "packages/search-backends/windows-search",
+    "packages/search-backends/everything",
+    "platform/macos",
+    "platform/windows",
+    "packages/intent-parser",
+    "packages/evals",
+    "packages/harness",
+    "packages/model-runtime",
+    "packages/indexer",
+    "packages/result-normalizer",
+    "packages/ranker",
+    "packages/search-backends/local-index",
+    "packages/search-backends/semantic-index",
+    "packages/spike-retrieval",
+    "packages/scout-server",
+    "apps/daemon",
+]
+
+# 后续 task 解锁的 package 在此追加。M1 起步：harness（MVP-01）+ model-runtime（MVP-14）+ windows-search/everything/platform-windows（MVP-11/12 骨架）已加。
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.80"
+license = "MIT"
+authors = ["Scout Project"]
+description = "Local-first semantic file search for AI agents via MCP, with a cross-platform desktop app for humans too."
+repository = "https://github.com/huibinma/Scout"
+
+[workspace.dependencies]
+futures-channel = "0.3.32"
+futures-core = "0.3.32"
+futures-executor = { version = "0.3.32", default-features = false, features = ["std"] }
+futures-util = { version = "0.3.32", default-features = false, features = ["std"] }
+tokio = { version = "1.52.3", features = ["rt"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_debug_implementations = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+
+# pedantic 里几个噪声大的关掉
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = "symbols"

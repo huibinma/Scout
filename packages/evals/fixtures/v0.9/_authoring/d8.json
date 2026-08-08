@@ -1,0 +1,498 @@
+[
+  {
+    "id": "v09-d8-zh-001",
+    "query": "最近的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "ambiguous_time",
+      "question": "你想找最近的什么文件？能说下类型或内容吗？",
+      "options": [
+        "今天",
+        "过去 3 天",
+        "过去一周",
+        "过去一个月"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-zh-002",
+    "query": "前几天那个",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "ambiguous_time",
+      "question": "前几天的哪个文件？方便说下大概是什么吗？",
+      "options": [
+        "今天",
+        "过去 3 天",
+        "过去一周",
+        "过去一个月"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-zh-003",
+    "query": "昨天的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "ambiguous_type",
+      "question": "你想找昨天的什么类型的文件？",
+      "options": [
+        "文档",
+        "图片",
+        "视频",
+        "音乐"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-zh-004",
+    "query": "那个东西在哪",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "ambiguous_type",
+      "question": "你说的那个东西是什么文件呢？",
+      "options": [
+        "文档",
+        "图片",
+        "视频",
+        "音乐"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-zh-005",
+    "query": "放在那个文件夹里的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "ambiguous_location",
+      "question": "哪个文件夹？能告诉我具体位置吗？",
+      "options": [
+        "全盘搜索",
+        "下载",
+        "文稿",
+        "桌面",
+        "取消"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-zh-006",
+    "query": "帮我看看",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "unknown",
+      "question": "你想看什么？能再具体描述一下吗？"
+    }
+  },
+  {
+    "id": "v09-d8-zh-007",
+    "query": "处理一下这个",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "ambiguous_action",
+      "question": "你想对它做什么操作？打开、移动还是删除？",
+      "options": [
+        "打开",
+        "移动",
+        "删除",
+        "重命名"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-zh-008",
+    "query": "之前存的那些",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "ambiguous_time",
+      "question": "之前是大概什么时候？想找哪类文件？",
+      "options": [
+        "今天",
+        "过去 3 天",
+        "过去一周",
+        "过去一个月"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-zh-009",
+    "query": "随便找点东西",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "unknown",
+      "question": "你具体想找什么呢？给点线索我帮你找。"
+    }
+  },
+  {
+    "id": "v09-d8-zh-010",
+    "query": "弄好它",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "ambiguous_action",
+      "question": "你希望我怎么处理这个文件？",
+      "options": [
+        "打开",
+        "移动",
+        "删除",
+        "取消"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-zh-011",
+    "query": "昨天的ppt",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "presentation",
+      "modified_time": {
+        "type": "relative",
+        "value": "yesterday"
+      },
+      "sort": "modified_desc",
+      "extensions": [
+        "ppt",
+        "pptx"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-zh-012",
+    "query": "下载目录里最近的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "location": {
+        "hint": "下载"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d8-zh-013",
+    "query": "周杰伦的歌",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "artist": "周杰伦",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d8-zh-014",
+    "query": "桌面上的发票",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "发票"
+      ],
+      "location": {
+        "hint": "桌面"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d8-zh-015",
+    "query": "上个月的合同",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "合同"
+      ],
+      "modified_time": {
+        "type": "relative",
+        "value": "last_month"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d8-en-001",
+    "query": "the recent stuff",
+    "language": "en",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "en",
+      "reason": "ambiguous_type",
+      "question": "What kind of recent files are you looking for?",
+      "options": [
+        "Documents",
+        "Images",
+        "Videos",
+        "Music"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-en-002",
+    "query": "old ones",
+    "language": "en",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "en",
+      "reason": "ambiguous_time",
+      "question": "Older than what? And what type of files do you mean?",
+      "options": [
+        "Today",
+        "Past 3 days",
+        "Past week",
+        "Past month"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-en-003",
+    "query": "find it",
+    "language": "en",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "en",
+      "reason": "unknown",
+      "question": "Find what exactly? Can you give me more details?"
+    }
+  },
+  {
+    "id": "v09-d8-en-004",
+    "query": "somewhere on my disk",
+    "language": "en",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "en",
+      "reason": "ambiguous_location",
+      "question": "Which folder should I look in, and what are we searching for?",
+      "options": [
+        "Whole disk",
+        "Downloads",
+        "Documents",
+        "Desktop",
+        "Cancel"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-en-005",
+    "query": "do something with these",
+    "language": "en",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "en",
+      "reason": "ambiguous_action",
+      "question": "What would you like me to do with them?",
+      "options": [
+        "open",
+        "move",
+        "copy",
+        "delete"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-en-006",
+    "query": "that thing from before",
+    "language": "en",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "en",
+      "reason": "ambiguous_type",
+      "question": "Which thing do you mean? What kind of file was it?",
+      "options": [
+        "Documents",
+        "Images",
+        "Videos",
+        "Music"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-en-007",
+    "query": "help me out here",
+    "language": "en",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "en",
+      "reason": "unknown",
+      "question": "Sure, what are you trying to find or do?"
+    }
+  },
+  {
+    "id": "v09-d8-en-008",
+    "query": "in that folder",
+    "language": "en",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "en",
+      "reason": "ambiguous_location",
+      "question": "Which folder are you referring to?",
+      "options": [
+        "Whole disk",
+        "Downloads",
+        "Documents",
+        "Desktop",
+        "Cancel"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-en-009",
+    "query": "yesterday's pdf",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "extensions": [
+        "pdf"
+      ],
+      "modified_time": {
+        "type": "relative",
+        "value": "yesterday"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d8-en-010",
+    "query": "recent files in downloads",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "location": {
+        "hint": "downloads"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d8-en-011",
+    "query": "songs by Adele",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "audio",
+      "artist": "Adele",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d8-en-012",
+    "query": "screenshots from last week",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "created_time": {
+        "type": "relative",
+        "value": "last_week"
+      },
+      "sort": "created_desc",
+      "media_type": "screenshot"
+    }
+  },
+  {
+    "id": "v09-d8-mixed-001",
+    "query": "那个 file 在哪",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "reason": "ambiguous_type",
+      "question": "你说的那个 file 是什么类型的呢？",
+      "options": [
+        "文档",
+        "图片",
+        "视频",
+        "音乐"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-mixed-002",
+    "query": "处理下这些 documents",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "reason": "ambiguous_action",
+      "question": "你想对这些 documents 做什么操作？",
+      "options": [
+        "打开",
+        "移动",
+        "删除",
+        "取消"
+      ]
+    }
+  },
+  {
+    "id": "v09-d8-mixed-003",
+    "query": "Taylor Swift 的歌",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "media_type": "audio",
+      "artist": "Taylor Swift",
+      "sort": "relevance_desc"
+    }
+  }
+]

@@ -1,0 +1,74 @@
+[
+  {
+    "bucket": "synonym",
+    "n": 12,
+    "fts_recall": 0.16666666666666666,
+    "vec_recall": 1.0,
+    "hybrid_recall": 1.0,
+    "fts_ndcg": 0.23621990211882618,
+    "vec_ndcg": 0.972200805255203,
+    "hybrid_ndcg": 0.972200805255203,
+    "hybrid_routed_recall": 1.0,
+    "hybrid_routed_ndcg": 0.972200805255203
+  },
+  {
+    "bucket": "concept",
+    "n": 12,
+    "fts_recall": 0.3194444444444445,
+    "vec_recall": 1.0,
+    "hybrid_recall": 1.0,
+    "fts_ndcg": 0.3227433385447687,
+    "vec_ndcg": 0.8392153930545955,
+    "hybrid_ndcg": 0.8228774862515568,
+    "hybrid_routed_recall": 1.0,
+    "hybrid_routed_ndcg": 0.8228774862515568
+  },
+  {
+    "bucket": "crosslang",
+    "n": 14,
+    "fts_recall": 0.34523809523809523,
+    "vec_recall": 1.0,
+    "hybrid_recall": 1.0,
+    "fts_ndcg": 0.09302841704183941,
+    "vec_ndcg": 0.7075270001856897,
+    "hybrid_ndcg": 0.6186058333703154,
+    "hybrid_routed_recall": 1.0,
+    "hybrid_routed_ndcg": 0.6858269610184756
+  },
+  {
+    "bucket": "content-not-name",
+    "n": 32,
+    "fts_recall": 0.625,
+    "vec_recall": 0.921875,
+    "hybrid_recall": 0.90625,
+    "fts_ndcg": 0.8257522178881642,
+    "vec_ndcg": 0.8650921253106171,
+    "hybrid_ndcg": 0.8659564106181816,
+    "hybrid_routed_recall": 0.921875,
+    "hybrid_routed_ndcg": 0.8692610802128587
+  },
+  {
+    "bucket": "exact-name",
+    "n": 11,
+    "fts_recall": 1.0,
+    "vec_recall": 1.0,
+    "hybrid_recall": 1.0,
+    "fts_ndcg": 1.0,
+    "vec_ndcg": 1.0,
+    "hybrid_ndcg": 1.0,
+    "hybrid_routed_recall": 1.0,
+    "hybrid_routed_ndcg": 1.0
+  },
+  {
+    "bucket": "OVERALL",
+    "n": 81,
+    "fts_recall": 0.51440329218107,
+    "vec_recall": 0.9691358024691358,
+    "hybrid_recall": 0.9629629629629629,
+    "fts_ndcg": 0.5609139222095079,
+    "vec_ndcg": 0.8682138320031721,
+    "hybrid_ndcg": 0.8507657568524363,
+    "hybrid_routed_recall": 0.9691358024691358,
+    "hybrid_routed_ndcg": 0.8636897718413731
+  }
+]

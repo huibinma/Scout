@@ -1,0 +1,30 @@
+From: lishili@example.com
+To: wangyangben@example.com
+Date: Thu, 2 Jul 2026 10:00:00 +0800
+Subject: =?UTF-8?B?56a76IGM5YmN6YGX55WZ6Zeu6aKY6K+05piO?=
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="scout-fixture-boundary"
+
+--scout-fixture-boundary
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: base64
+
+5LiJ5Liq5pyq57uT57y66Zm34oCU4oCU5LiA44CB5a+56LSm5paH5Lu25YG25Y+R6L+f5Yiw5pe2
+5ZGK6K2m6YeN5aSN5Y+R6YCB77yM54Om5omw5YC854+t77yb5LqM44CB6ZmQ5rWB6KeE5YiZ54Ot
+5pu05paw5Zyo5p6B56uv5bm25Y+R5LiL5pyJ5LiA5qyh5pyq55Sf5pWI6K6w5b2V77yM5pyq5aSN
+546w77yb5LiJ44CB5oql6KGo5bqT5LiA5byg5a696KGo5p+l6K+i5oWi77yM6ZyA5Yqg57Si5byV
+5L2G6KaB562J5pyI57uT56qX5Y+j5ZCO5pON5L2c44CC5piO57uG5LiO5aSN546w5q2l6aqk6KeB
+6ZmE5Lu244CC
+--scout-fixture-boundary
+Content-Type: text/plain; charset=utf-8; name="e00094-open-bugs-detail.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="e00094-open-bugs-detail.txt"
+
+57y66Zm35LiA77ya5ZGK6K2m6YeN5aSN4oCU4oCU5a+56LSm5paH5Lu26L+f5Yiw6Kem5Y+R55qE
+5ZGK6K2m5pyq5YGa5pS25pWb77yM5ZCM5LiA5om55qyh5Y+v6YeN5aSN5Y+R6YCB5aSa5p2h77yM
+5bu66K6u5oyJ5om55qyh5Y+35Y676YeN77yb57y66Zm35LqM77ya6ZmQ5rWB54Ot5pu05paw5YG2
+5Y+R5pyq55Sf5pWI4oCU4oCU55aR5Ly86YWN572u5LiL5Y+R5LiO6KeE5YiZ5Yqg6L2956ue5oCB
+77yb57y66Zm35LiJ77ya5oql6KGo5a696KGo5oWi5p+l6K+i4oCU4oCU5omn6KGM6K6h5YiS5YWo
+6KGo5omr5o+P77yM5bu66K6u5a+56LSm5pyf5a2X5q615bu65aSN5ZCI57Si5byV77yM5pS55Yqo
+6ZyA5Zyo5pyI57uT56qX5Y+j5aSW5omn6KGM44CC
+--scout-fixture-boundary--

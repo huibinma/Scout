@@ -1,0 +1,1096 @@
+[
+  {
+    "id": "v09-d3-zh-001",
+    "query": "内容里提到季度营收的文档",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "季度营收"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-002",
+    "query": "正文包含张伟的合同",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "张伟"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-003",
+    "query": "找一下里面写了不可抗力条款的合同",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "不可抗力条款"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-004",
+    "query": "内容提到年终奖的 PDF",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "extensions": [
+        "pdf"
+      ],
+      "keywords": [
+        "年终奖"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-005",
+    "query": "正文里写着销售额下滑的报告",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "销售额下滑"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-006",
+    "query": "哪份文档里提到了供应链风险",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "供应链风险"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-007",
+    "query": "内容包含期末考试范围的笔记",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "期末考试范围"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-008",
+    "query": "正文提到光合作用的学习资料",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "光合作用"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-009",
+    "query": "里面有提到甲方乙方的协议文件",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "甲方乙方"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-010",
+    "query": "内容写了项目延期的邮件草稿",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "项目延期"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-011",
+    "query": "截图里写着已支付的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "screenshot",
+      "keywords": [
+        "已支付"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-012",
+    "query": "照片里有发票字样的图片",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "image",
+      "keywords": [
+        "发票"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-013",
+    "query": "截图里写着订单已发货的那张",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "screenshot",
+      "keywords": [
+        "订单已发货"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-014",
+    "query": "图片里有出现金额合计的收据照片",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "image",
+      "keywords": [
+        "金额合计"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-015",
+    "query": "截图里写着余额不足的报错",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "screenshot",
+      "keywords": [
+        "余额不足"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-016",
+    "query": "聊天截图里提到周五开会的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "screenshot",
+      "keywords": [
+        "周五开会"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-017",
+    "query": "照片里有车牌号的图片",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "image",
+      "keywords": [
+        "车牌号"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-018",
+    "query": "截图里写了验证码的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "screenshot",
+      "keywords": [
+        "验证码"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-019",
+    "query": "图片里写着限时优惠的海报",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "image",
+      "keywords": [
+        "限时优惠"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-020",
+    "query": "正文里出现预算超支的 word 文档",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "extensions": [
+        "doc",
+        "docx"
+      ],
+      "keywords": [
+        "预算超支"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-021",
+    "query": "内容提到客户投诉的表格",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "spreadsheet",
+      "keywords": [
+        "客户投诉"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-022",
+    "query": "找正文里写了竞业限制的合同",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "竞业限制"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-023",
+    "query": "内容包含会议纪要四个字的文档",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "会议纪要"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-024",
+    "query": "里面提到知识产权归属的协议",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "知识产权归属"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-025",
+    "query": "正文写了用户增长的 ppt",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "presentation",
+      "keywords": [
+        "用户增长"
+      ],
+      "sort": "modified_desc",
+      "extensions": [
+        "ppt",
+        "pptx"
+      ]
+    }
+  },
+  {
+    "id": "v09-d3-zh-026",
+    "query": "提到李娜的简历",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "李娜"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-027",
+    "query": "内容里有提到退款政策的说明文件",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "退款政策"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-028",
+    "query": "截图里写着登录失败的错误提示",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "screenshot",
+      "keywords": [
+        "登录失败"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-029",
+    "query": "照片里有写身份证号的图片",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "image",
+      "keywords": [
+        "身份证号"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-030",
+    "query": "正文提到碳中和目标的报告 pdf",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "extensions": [
+        "pdf"
+      ],
+      "keywords": [
+        "碳中和目标"
+      ],
+      "sort": "modified_desc",
+      "file_type": "document"
+    }
+  },
+  {
+    "id": "v09-d3-zh-031",
+    "query": "内容同时提到预算和审批流程的文档",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "预算",
+        "审批流程"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-032",
+    "query": "找正文里既有发货又有签收的单据",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "发货",
+        "签收"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-033",
+    "query": "截图里同时出现订单号和金额的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "screenshot",
+      "keywords": [
+        "订单号",
+        "金额"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-034",
+    "query": "内容提到机器学习的学习笔记",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "机器学习"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-035",
+    "query": "图片里有写到此为定金字样的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "image",
+      "keywords": [
+        "此为定金"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-036",
+    "query": "正文里写了试用期三个月的劳动合同",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "keywords": [
+        "试用期三个月"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-037",
+    "query": "哪个截图写着支付成功",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "screenshot",
+      "keywords": [
+        "支付成功"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-038",
+    "query": "内容提到现金流的财务报表",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "spreadsheet",
+      "keywords": [
+        "现金流"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-039",
+    "query": "下载目录里正文提到合规审查的文档",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "location": {
+        "hint": "下载"
+      },
+      "keywords": [
+        "合规审查"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-zh-040",
+    "query": "正文里出现保密协议四个字的文件",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "保密协议"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-001",
+    "query": "documents that mention quarterly revenue",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "keywords": [
+        "quarterly revenue"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-002",
+    "query": "PDF whose text contains force majeure",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "extensions": [
+        "pdf"
+      ],
+      "keywords": [
+        "force majeure"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-003",
+    "query": "the contract that mentions John Smith inside",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "keywords": [
+        "John Smith"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-004",
+    "query": "screenshots that mention error 404",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "screenshot",
+      "keywords": [
+        "error 404"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-005",
+    "query": "photo with the word invoice in it",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "image",
+      "keywords": [
+        "invoice"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-006",
+    "query": "report whose body mentions market share",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "keywords": [
+        "market share"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-007",
+    "query": "the screenshot that says payment successful",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "screenshot",
+      "keywords": [
+        "payment successful"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-008",
+    "query": "documents that talk about data privacy",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "keywords": [
+        "data privacy"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-009",
+    "query": "find the agreement that contains non-compete clause",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "keywords": [
+        "non-compete clause"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-010",
+    "query": "image with the text out of stock",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "image",
+      "keywords": [
+        "out of stock"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-011",
+    "query": "the receipt photo showing total amount",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "image",
+      "keywords": [
+        "total amount"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-012",
+    "query": "spreadsheet that mentions cash flow",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "spreadsheet",
+      "keywords": [
+        "cash flow"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-013",
+    "query": "slides that mention user growth",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "presentation",
+      "keywords": [
+        "user growth"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-014",
+    "query": "the resume that mentions Sarah Lee",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "keywords": [
+        "Sarah Lee"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-015",
+    "query": "screenshot that says insufficient balance",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "screenshot",
+      "keywords": [
+        "insufficient balance"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-016",
+    "query": "the pdf that mentions carbon neutrality target",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "extensions": [
+        "pdf"
+      ],
+      "keywords": [
+        "carbon neutrality target"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-017",
+    "query": "documents whose content includes annual budget",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "keywords": [
+        "annual budget"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-018",
+    "query": "the chat screenshot that mentions meeting on Friday",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "screenshot",
+      "keywords": [
+        "meeting on Friday"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-019",
+    "query": "image containing a license plate number",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "image",
+      "keywords": [
+        "license plate number"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-020",
+    "query": "word document that mentions termination notice",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "extensions": [
+        "doc",
+        "docx"
+      ],
+      "keywords": [
+        "termination notice"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-021",
+    "query": "find documents that mention both onboarding and offboarding",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "keywords": [
+        "onboarding",
+        "offboarding"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-022",
+    "query": "screenshot with both order id and tracking number",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "screenshot",
+      "keywords": [
+        "order id",
+        "tracking number"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-023",
+    "query": "study notes that mention neural networks",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "keywords": [
+        "neural networks"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-024",
+    "query": "pdf in downloads whose text mentions refund policy",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "extensions": [
+        "pdf"
+      ],
+      "keywords": [
+        "refund policy"
+      ],
+      "location": {
+        "hint": "downloads"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-en-025",
+    "query": "the screenshot that shows verification code",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "screenshot",
+      "keywords": [
+        "verification code"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-mixed-001",
+    "query": "正文里提到 quarterly revenue 的文档",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "document",
+      "keywords": [
+        "quarterly revenue"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-mixed-002",
+    "query": "截图里写着 error 404 的",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "screenshot",
+      "keywords": [
+        "error 404"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-mixed-003",
+    "query": "内容提到 KPI 的 ppt",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "presentation",
+      "keywords": [
+        "KPI"
+      ],
+      "sort": "modified_desc",
+      "extensions": [
+        "ppt",
+        "pptx"
+      ]
+    }
+  },
+  {
+    "id": "v09-d3-mixed-004",
+    "query": "the pdf 正文里提到了 数据脱敏",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "document",
+      "extensions": [
+        "pdf"
+      ],
+      "keywords": [
+        "数据脱敏"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d3-mixed-005",
+    "query": "图片里写着 paid 字样的收据",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "image",
+      "keywords": [
+        "paid"
+      ],
+      "sort": "modified_desc"
+    }
+  }
+]

@@ -1,0 +1,20 @@
+[package]
+name = "scout-semantic-index"
+description = "BETA-15B-1 SemanticIndexBackend：本地语义召回（query embed → 暴力 cosine → topK）"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+scout-search-backend = { path = "../common" }
+scout-indexer = { path = "../../indexer" }
+
+[dev-dependencies]
+tempfile = "3"
+serde_json = "1"

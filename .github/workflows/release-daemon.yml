@@ -1,0 +1,107 @@
+name: Release Daemon
+
+# 触发：推送 daemon-v* 标签自动构建并发 prerelease Release；或在 Actions 页手动触发（仅构建产物、不发 Release）。
+# 本 workflow 仅产 headless MCP daemon binary（apps/daemon/src/main.rs → scoutd）
+# 不打安装包、不签名、不公证（团队管理员自行部署、与 BETA-31 桌面安装包 release-windows.yml 分离）。
+on:
+  push:
+    tags:
+      - "daemon-v*"
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build-${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            os: macos-14
+          # NOTE: 不再 CI build macOS x86_64（Intel Mac）。原 matrix 含 `os: macos-13`，
+          # 但 GitHub macos-13 runner 池长期紧张、daemon-v0.1.0 真机 cycle 中遭遇排队 2h+ 未启动、
+          # 阻塞 release job needs:build 永远不发。`continue-on-error` / `timeout-minutes` 都管不了
+          # 队列状态（既不是 success 也不是 failure）；cross-compile（macos-14 上 `--target x86_64-apple-darwin`）
+          # 因 llama-cpp-4 build.rs 调 cc/clang 编 ggml C++ + SDK 链接配置、首跑大概率失败、不在 hardening 范围。
+          # Intel Mac 团队成员请自行 `cargo build --release --target x86_64-apple-darwin --bin scoutd`
+          # （见 apps/daemon/README.md §2.3）。BETA-32 follow-up 仍登记 cross-compile 方案、待 Intel Mac
+          # 需求出现时再启动。
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+          # ubuntu-22.04 而非 ubuntu-latest：glibc 2.35 兜底覆盖 ~3 年 distro
+          # （spec §5.4 部署形态含 Mac mini / NAS / Linux box；ubuntu-latest = 24.04 glibc 2.39 会让
+          #  Ubuntu 22.04 / RHEL 8 / Debian 11 team box 报 `GLIBC_2.39 not found`）。
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 与 release-windows.yml 保持一致：dtolnay/rust-toolchain@stable
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+
+      # scoutd 无 cargo feature 旗（按 apps/daemon/Cargo.toml），直接 build 即可；
+      # 推理 / 语义召回能力随 scout-model-runtime 路径依赖一并编入。
+      # --locked：保 release binary 与 Cargo.lock 一致、防 CI 静默重生 lock 导致与本地 dep set 漂移。
+      - name: Build scoutd
+        run: cargo build --release --locked --bin scoutd --target ${{ matrix.target }}
+
+      # windows-latest 自带 git bash，shell: bash 强制走 bash 避免 powershell 语法差异。
+      - name: Package
+        shell: bash
+        run: |
+          mkdir -p dist
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            cp target/${{ matrix.target }}/release/scoutd.exe dist/scoutd-${{ matrix.target }}.exe
+          else
+            cp target/${{ matrix.target }}/release/scoutd dist/scoutd-${{ matrix.target }}
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: scoutd-${{ matrix.target }}
+          path: dist/*
+
+  # workflow_dispatch（非 tag 触发）跳过本 job，仅产 artifact；
+  # 只有 daemon-v* tag push 才发 Release。
+  release:
+    name: publish-release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/daemon-v')
+    permissions:
+      contents: write
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      # SHA256 checksum（admin 下载后可校验完整性；与 MEMORY BETA-31-v3「模型 SHA256 签名验证」同向）。
+      # download-artifact@v4 默认把每个 artifact 解到与 name 同名的目录、binary 在 scoutd-<target>/ 下。
+      - name: Generate SHA256 checksums
+        run: |
+          sha256sum scoutd-*/scoutd-* > checksums.txt
+          cat checksums.txt
+
+      # 四平台 binary + checksums.txt 一起挂 prerelease；正文用 GitHub 自动 commit 列表
+      # （CONVENTIONS §8 changelog：daemon 仅 binary 分发、团队管理员部署、无 GUI 改动，
+      #  generate_release_notes 自动 commit 列表足够）。
+      # softprops/action-gh-release v2.6.2 pin 到 commit SHA（本 workflow 唯一 contents: write
+      # 权限的 third-party action、最高 supply chain 风险、不能信 floating tag）。
+      - name: Create Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          files: |
+            scoutd-*/*
+            checksums.txt
+          prerelease: true
+          generate_release_notes: true

@@ -1,0 +1,1371 @@
+[
+  {
+    "id": "v09-d5-zh-001",
+    "query": "今天改过的文档",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "modified_time": {
+        "type": "relative",
+        "value": "today"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-002",
+    "query": "昨天编辑过的 PPT",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "presentation",
+      "modified_time": {
+        "type": "relative",
+        "value": "yesterday"
+      },
+      "sort": "modified_desc",
+      "extensions": [
+        "ppt",
+        "pptx"
+      ]
+    }
+  },
+  {
+    "id": "v09-d5-zh-003",
+    "query": "最近三天的截图",
+    "language": "zh",
+    "expected_intent": {
+      "created_time": {
+        "type": "relative",
+        "value": "last_3_days"
+      },
+      "intent": "media_search",
+      "language": "zh",
+      "media_type": "screenshot",
+      "schema_version": "1.0",
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-004",
+    "query": "这周改的表格",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "spreadsheet",
+      "modified_time": {
+        "type": "relative",
+        "value": "this_week"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-005",
+    "query": "上周创建的 Word 文件",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "extensions": [
+        "doc",
+        "docx"
+      ],
+      "created_time": {
+        "type": "relative",
+        "value": "last_week"
+      },
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-006",
+    "query": "这个月新增的 PDF",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "extensions": [
+        "pdf"
+      ],
+      "file_type": "document",
+      "created_time": {
+        "type": "relative",
+        "value": "this_month"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-007",
+    "query": "上个月改过的发票",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "发票"
+      ],
+      "modified_time": {
+        "type": "relative",
+        "value": "last_month"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-008",
+    "query": "今年做的演示文稿",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "presentation",
+      "created_time": {
+        "type": "relative",
+        "value": "this_year"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-009",
+    "query": "去年的年终总结",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "年终总结"
+      ],
+      "modified_time": {
+        "type": "relative",
+        "value": "last_year"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-010",
+    "query": "2026年1月之前创建的合同",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "合同"
+      ],
+      "created_time": {
+        "type": "before",
+        "value": "2026-01-01"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-011",
+    "query": "五月之后改的设计稿",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "设计稿"
+      ],
+      "modified_time": {
+        "type": "after",
+        "value": "2026-05-01"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-012",
+    "query": "5月20到24号之间改过的文件",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "modified_time": {
+        "type": "absolute",
+        "from": "2026-05-20",
+        "to": "2026-05-24"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-013",
+    "query": "我昨天打开过的 Excel",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "spreadsheet",
+      "extensions": [
+        "xls",
+        "xlsx"
+      ],
+      "accessed_time": {
+        "type": "relative",
+        "value": "yesterday"
+      },
+      "sort": "accessed_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-014",
+    "query": "这周访问过的报告",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "报告"
+      ],
+      "accessed_time": {
+        "type": "relative",
+        "value": "this_week"
+      },
+      "sort": "accessed_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-015",
+    "query": "创建于上个月的图片",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "image",
+      "created_time": {
+        "type": "relative",
+        "value": "last_month"
+      },
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-016",
+    "query": "大于100MB的视频",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "language": "zh",
+      "media_type": "video",
+      "schema_version": "1.0",
+      "size": {
+        "type": "greater_than",
+        "unit": "MB",
+        "value": 100
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-017",
+    "query": "小于1个G的安装包",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "keywords": [
+        "安装包"
+      ],
+      "size": {
+        "type": "less_than",
+        "value": 1,
+        "unit": "GB"
+      },
+      "sort": "size_asc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-018",
+    "query": "10到100MB之间的压缩包",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "archive",
+      "size": {
+        "type": "between",
+        "min": 10,
+        "max": 100,
+        "unit": "MB"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-019",
+    "query": "几百KB的小文档",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "size": {
+        "type": "less_than",
+        "value": 1,
+        "unit": "MB"
+      },
+      "sort": "size_asc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-020",
+    "query": "超过2个G的大文件",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "size": {
+        "type": "greater_than",
+        "value": 2,
+        "unit": "GB"
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-021",
+    "query": "比50MB还大的 PDF",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "extensions": [
+        "pdf"
+      ],
+      "file_type": "document",
+      "size": {
+        "type": "greater_than",
+        "value": 50,
+        "unit": "MB"
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-022",
+    "query": "不到500KB的图标",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "图标"
+      ],
+      "size": {
+        "type": "less_than",
+        "value": 500,
+        "unit": "KB"
+      },
+      "sort": "size_asc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-023",
+    "query": "下载文件夹里的电子书",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "电子书"
+      ],
+      "location": {
+        "hint": "下载"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-024",
+    "query": "桌面上的临时文件",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "临时文件"
+      ],
+      "location": {
+        "hint": "桌面"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-025",
+    "query": "文稿目录下的简历",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "简历"
+      ],
+      "location": {
+        "hint": "文稿"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-026",
+    "query": "图片文件夹里的壁纸",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "壁纸"
+      ],
+      "location": {
+        "hint": "图片"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-027",
+    "query": "音乐目录里的无损歌曲",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "audio",
+      "quality": "lossless",
+      "location": {
+        "hint": "音乐"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-028",
+    "query": "影片文件夹里的电影",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "video",
+      "keywords": [
+        "电影"
+      ],
+      "location": {
+        "hint": "影片"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-029",
+    "query": "截图目录里的图片",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "image",
+      "location": {
+        "hint": "截图"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-030",
+    "query": "按名字排序所有的 PDF",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "extensions": [
+        "pdf"
+      ],
+      "sort": "name_asc",
+      "file_type": "document"
+    }
+  },
+  {
+    "id": "v09-d5-zh-031",
+    "query": "把文档按名字倒序排",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "document",
+      "sort": "name_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-032",
+    "query": "最早创建的那批照片",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "image",
+      "sort": "created_asc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-033",
+    "query": "最新创建的报告",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "keywords": [
+        "报告"
+      ],
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-034",
+    "query": "最近访问的文件",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "sort": "accessed_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-035",
+    "query": "最早改动的那几个表格",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "spreadsheet",
+      "sort": "modified_asc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-036",
+    "query": "下载目录里大于200MB的视频",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "language": "zh",
+      "location": {
+        "hint": "下载"
+      },
+      "media_type": "video",
+      "schema_version": "1.0",
+      "size": {
+        "type": "greater_than",
+        "unit": "MB",
+        "value": 200
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-037",
+    "query": "桌面上这周改过的 Word",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "extensions": [
+        "doc",
+        "docx"
+      ],
+      "file_type": "document",
+      "location": {
+        "hint": "桌面"
+      },
+      "modified_time": {
+        "type": "relative",
+        "value": "this_week"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-038",
+    "query": "上个月的截图按名字排",
+    "language": "zh",
+    "expected_intent": {
+      "created_time": {
+        "type": "relative",
+        "value": "last_month"
+      },
+      "intent": "media_search",
+      "language": "zh",
+      "media_type": "screenshot",
+      "schema_version": "1.0",
+      "sort": "name_asc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-039",
+    "query": "今年创建的超过1G的备份文件",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "keywords": [
+        "备份"
+      ],
+      "created_time": {
+        "type": "relative",
+        "value": "this_year"
+      },
+      "size": {
+        "type": "greater_than",
+        "value": 1,
+        "unit": "GB"
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-zh-040",
+    "query": "下载里最近一周的压缩包按大小排",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": "archive",
+      "location": {
+        "hint": "下载"
+      },
+      "modified_time": {
+        "type": "relative",
+        "value": "last_7_days"
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-001",
+    "query": "documents modified today",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "modified_time": {
+        "type": "relative",
+        "value": "today"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-002",
+    "query": "slides I edited yesterday",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "presentation",
+      "modified_time": {
+        "type": "relative",
+        "value": "yesterday"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-003",
+    "query": "screenshots from the last three days",
+    "language": "en",
+    "expected_intent": {
+      "created_time": {
+        "type": "relative",
+        "value": "last_3_days"
+      },
+      "intent": "media_search",
+      "language": "en",
+      "media_type": "screenshot",
+      "schema_version": "1.0",
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-004",
+    "query": "spreadsheets changed this week",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "spreadsheet",
+      "modified_time": {
+        "type": "relative",
+        "value": "this_week"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-005",
+    "query": "Word files created last week",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "extensions": [
+        "doc",
+        "docx"
+      ],
+      "created_time": {
+        "type": "relative",
+        "value": "last_week"
+      },
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-006",
+    "query": "invoices modified last month",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "keywords": [
+        "invoice"
+      ],
+      "modified_time": {
+        "type": "relative",
+        "value": "last_month"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-007",
+    "query": "presentations created this year",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "presentation",
+      "created_time": {
+        "type": "relative",
+        "value": "this_year"
+      },
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-008",
+    "query": "reports from last year",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "keywords": [
+        "report"
+      ],
+      "modified_time": {
+        "type": "relative",
+        "value": "last_year"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-009",
+    "query": "contracts created before January 2026",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "keywords": [
+        "contract"
+      ],
+      "created_time": {
+        "type": "before",
+        "value": "2026-01-01"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-010",
+    "query": "files edited after May 1st",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "modified_time": {
+        "type": "after",
+        "value": "2026-05-01"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-011",
+    "query": "files modified between May 20 and May 24",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "modified_time": {
+        "type": "absolute",
+        "from": "2026-05-20",
+        "to": "2026-05-24"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-012",
+    "query": "Excel files I opened yesterday",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "spreadsheet",
+      "extensions": [
+        "xls",
+        "xlsx"
+      ],
+      "accessed_time": {
+        "type": "relative",
+        "value": "yesterday"
+      },
+      "sort": "accessed_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-013",
+    "query": "PDFs accessed this week",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "document",
+      "extensions": [
+        "pdf"
+      ],
+      "accessed_time": {
+        "type": "relative",
+        "value": "this_week"
+      },
+      "sort": "accessed_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-014",
+    "query": "videos larger than 100MB",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "language": "en",
+      "media_type": "video",
+      "schema_version": "1.0",
+      "size": {
+        "type": "greater_than",
+        "unit": "MB",
+        "value": 100
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-015",
+    "query": "installers smaller than 1 GB",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "keywords": [
+        "installer"
+      ],
+      "size": {
+        "type": "less_than",
+        "value": 1,
+        "unit": "GB"
+      },
+      "sort": "size_asc"
+    }
+  },
+  {
+    "id": "v09-d5-en-016",
+    "query": "archives between 10 and 100 MB",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "archive",
+      "size": {
+        "type": "between",
+        "min": 10,
+        "max": 100,
+        "unit": "MB"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-017",
+    "query": "huge files over 2 gigs",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "size": {
+        "type": "greater_than",
+        "value": 2,
+        "unit": "GB"
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-018",
+    "query": "ebooks in my downloads folder",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "keywords": [
+        "ebook"
+      ],
+      "location": {
+        "hint": "downloads"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-019",
+    "query": "temp files on the desktop",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "keywords": [
+        "temp"
+      ],
+      "location": {
+        "hint": "desktop"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-020",
+    "query": "wallpapers in the pictures folder",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "keywords": [
+        "wallpaper"
+      ],
+      "location": {
+        "hint": "pictures"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-021",
+    "query": "sort all my PDFs by name",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "extensions": [
+        "pdf"
+      ],
+      "sort": "name_asc",
+      "file_type": "document"
+    }
+  },
+  {
+    "id": "v09-d5-en-022",
+    "query": "the oldest photos first",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": "image",
+      "sort": "created_asc"
+    }
+  },
+  {
+    "id": "v09-d5-en-023",
+    "query": "most recently opened files",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "sort": "accessed_desc"
+    }
+  },
+  {
+    "id": "v09-d5-en-024",
+    "query": "screenshots from last month sorted by name",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "screenshot",
+      "created_time": {
+        "type": "relative",
+        "value": "last_month"
+      },
+      "sort": "name_asc"
+    }
+  },
+  {
+    "id": "v09-d5-en-025",
+    "query": "videos in downloads bigger than 200MB sorted by size",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "video",
+      "location": {
+        "hint": "downloads"
+      },
+      "size": {
+        "type": "greater_than",
+        "value": 200,
+        "unit": "MB"
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-001",
+    "query": "今天 modified 的 PDF",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "document",
+      "extensions": [
+        "pdf"
+      ],
+      "modified_time": {
+        "type": "relative",
+        "value": "today"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-002",
+    "query": "last week 改过的 Excel 表格",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "extensions": [
+        "xls",
+        "xlsx"
+      ],
+      "file_type": "spreadsheet",
+      "modified_time": {
+        "type": "relative",
+        "value": "last_week"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-003",
+    "query": "downloads 里大于100MB的 video",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "media_search",
+      "language": "mixed",
+      "location": {
+        "hint": "downloads"
+      },
+      "media_type": "video",
+      "schema_version": "1.0",
+      "size": {
+        "type": "greater_than",
+        "unit": "MB",
+        "value": 100
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-004",
+    "query": "桌面上 smaller than 1MB 的图片",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "image",
+      "location": {
+        "hint": "桌面"
+      },
+      "size": {
+        "type": "less_than",
+        "value": 1,
+        "unit": "MB"
+      },
+      "sort": "size_asc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-005",
+    "query": "这个月 created 的 presentation",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "presentation",
+      "created_time": {
+        "type": "relative",
+        "value": "this_month"
+      },
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-006",
+    "query": "sort 一下所有 PDF by name",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "sort": "name_asc",
+      "file_type": "document",
+      "extensions": [
+        "pdf"
+      ]
+    }
+  },
+  {
+    "id": "v09-d5-mixed-007",
+    "query": "上个月的 screenshots",
+    "language": "mixed",
+    "expected_intent": {
+      "created_time": {
+        "type": "relative",
+        "value": "last_month"
+      },
+      "intent": "media_search",
+      "language": "mixed",
+      "media_type": "screenshot",
+      "schema_version": "1.0",
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-008",
+    "query": "before 2026年1月 创建的合同",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "keywords": [
+        "合同"
+      ],
+      "created_time": {
+        "type": "before",
+        "value": "2026-01-01"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-009",
+    "query": "我昨天 opened 的 documents",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "document",
+      "accessed_time": {
+        "type": "relative",
+        "value": "yesterday"
+      },
+      "sort": "accessed_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-010",
+    "query": "music 目录里的 lossless 歌曲",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "media_type": "audio",
+      "quality": "lossless",
+      "location": {
+        "hint": "music"
+      },
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-011",
+    "query": "最早改的那几个 spreadsheet",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "spreadsheet",
+      "sort": "modified_asc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-012",
+    "query": "今年的 backup 大于1个G",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "keywords": [
+        "backup"
+      ],
+      "modified_time": {
+        "type": "relative",
+        "value": "this_year"
+      },
+      "size": {
+        "type": "greater_than",
+        "value": 1,
+        "unit": "GB"
+      },
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-013",
+    "query": "five月之后 modified 的设计稿",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "keywords": [
+        "设计稿"
+      ],
+      "modified_time": {
+        "type": "after",
+        "value": "2026-05-01"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-014",
+    "query": "documents 里最近三天改的",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "location": {
+        "hint": "documents"
+      },
+      "modified_time": {
+        "type": "relative",
+        "value": "last_3_days"
+      },
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d5-mixed-015",
+    "query": "10到100MB之间的 archive 按 size 排",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "archive",
+      "size": {
+        "type": "between",
+        "min": 10,
+        "max": 100,
+        "unit": "MB"
+      },
+      "sort": "size_desc"
+    }
+  }
+]

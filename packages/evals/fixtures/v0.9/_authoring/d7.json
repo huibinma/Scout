@@ -1,0 +1,654 @@
+[
+  {
+    "id": "v09-d7-zh-001",
+    "query": "只看 pdf 的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "extensions": [
+          "pdf"
+        ],
+        "file_type": "document"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-002",
+    "query": "里面只要 word 文档",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "extensions": [
+          "doc",
+          "docx"
+        ],
+        "file_type": "document"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-003",
+    "query": "换成上周改的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "modified_time": {
+          "type": "relative",
+          "value": "last_week"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-004",
+    "query": "再大一点的，超过 50MB 的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "size": {
+          "type": "greater_than",
+          "value": 50,
+          "unit": "MB"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-005",
+    "query": "只看下载文件夹里的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "location": {
+          "hint": "下载"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-006",
+    "query": "按大小排一下",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "sort": "size_desc"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-007",
+    "query": "按名字排序",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "sort": "name_asc"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-008",
+    "query": "只要周杰伦的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "artist": "周杰伦"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-009",
+    "query": "不限类型了",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {},
+      "clear": [
+        "file_type"
+      ]
+    }
+  },
+  {
+    "id": "v09-d7-zh-010",
+    "query": "时间不限了",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {},
+      "clear": [
+        "modified_time"
+      ]
+    }
+  },
+  {
+    "id": "v09-d7-zh-011",
+    "query": "去掉位置限制",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {},
+      "clear": [
+        "location"
+      ]
+    }
+  },
+  {
+    "id": "v09-d7-zh-012",
+    "query": "换成图片，时间不限",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "file_type": "image"
+      },
+      "clear": [
+        "modified_time"
+      ]
+    }
+  },
+  {
+    "id": "v09-d7-zh-013",
+    "query": "再加上 excel 表格",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "extensions": [
+          "xls",
+          "xlsx"
+        ],
+        "file_type": "spreadsheet"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-014",
+    "query": "只保留上个月的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "modified_time": {
+          "type": "relative",
+          "value": "last_month"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-015",
+    "query": "改成桌面上的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "location": {
+          "hint": "桌面"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-016",
+    "query": "只要超过 1GB 的，按大小排",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "size": {
+          "type": "greater_than",
+          "value": 1,
+          "unit": "GB"
+        },
+        "sort": "size_desc"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-017",
+    "query": "把 ppt 也排除掉，只看视频",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "file_type": "video",
+        "exclude_file_type": [
+          "presentation"
+        ]
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-018",
+    "query": "扩展名换成 docx 的",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "extensions": [
+          "docx"
+        ],
+        "file_type": "document"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-zh-019",
+    "query": "位置不限，类型也不限",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {},
+      "clear": [
+        "location",
+        "file_type"
+      ]
+    }
+  },
+  {
+    "id": "v09-d7-zh-020",
+    "query": "换成今年的，按修改时间倒序",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {
+        "modified_time": {
+          "type": "relative",
+          "value": "this_year"
+        },
+        "sort": "modified_desc"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-001",
+    "query": "only the pdf ones",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "extensions": [
+          "pdf"
+        ],
+        "file_type": "document"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-002",
+    "query": "just keep the word docs",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "extensions": [
+          "doc",
+          "docx"
+        ],
+        "file_type": "document"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-003",
+    "query": "change it to last week instead",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "modified_time": {
+          "type": "relative",
+          "value": "last_week"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-004",
+    "query": "the bigger ones, over 50MB",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "size": {
+          "type": "greater_than",
+          "value": 50,
+          "unit": "MB"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-005",
+    "query": "only the ones in the downloads folder",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "location": {
+          "hint": "downloads"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-006",
+    "query": "sort them by size",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "sort": "size_desc"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-007",
+    "query": "now sort by name",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "sort": "name_asc"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-008",
+    "query": "only the ones by Adele",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "artist": "Adele"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-009",
+    "query": "drop the type filter",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {},
+      "clear": [
+        "file_type"
+      ]
+    }
+  },
+  {
+    "id": "v09-d7-en-010",
+    "query": "forget the time filter",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {},
+      "clear": [
+        "modified_time"
+      ]
+    }
+  },
+  {
+    "id": "v09-d7-en-011",
+    "query": "remove the location restriction",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {},
+      "clear": [
+        "location"
+      ]
+    }
+  },
+  {
+    "id": "v09-d7-en-012",
+    "query": "switch to images and forget the date",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "file_type": "image"
+      },
+      "clear": [
+        "modified_time"
+      ]
+    }
+  },
+  {
+    "id": "v09-d7-en-013",
+    "query": "now only show me the ones from last month",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "modified_time": {
+          "type": "relative",
+          "value": "last_month"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-014",
+    "query": "just the videos, sorted by size",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "file_type": "video",
+        "sort": "size_desc"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-en-015",
+    "query": "change it to the desktop instead",
+    "language": "en",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "en",
+      "base_ref": "last_intent",
+      "delta": {
+        "location": {
+          "hint": "desktop"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-mixed-001",
+    "query": "只看 pdf format 的",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "base_ref": "last_intent",
+      "delta": {
+        "extensions": [
+          "pdf"
+        ],
+        "file_type": "document"
+      }
+    }
+  },
+  {
+    "id": "v09-d7-mixed-002",
+    "query": "换成 last week 的",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "base_ref": "last_intent",
+      "delta": {
+        "modified_time": {
+          "type": "relative",
+          "value": "last_week"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-mixed-003",
+    "query": "只要 downloads 文件夹里的",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "base_ref": "last_intent",
+      "delta": {
+        "location": {
+          "hint": "downloads"
+        }
+      }
+    }
+  },
+  {
+    "id": "v09-d7-mixed-004",
+    "query": "换成 image，time 不限了",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "base_ref": "last_intent",
+      "delta": {
+        "file_type": "image"
+      },
+      "clear": [
+        "modified_time"
+      ]
+    }
+  },
+  {
+    "id": "v09-d7-mixed-005",
+    "query": "按 size 排，只要大于 100MB 的",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "refine",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "base_ref": "last_intent",
+      "delta": {
+        "size": {
+          "type": "greater_than",
+          "value": 100,
+          "unit": "MB"
+        },
+        "sort": "size_desc"
+      }
+    }
+  }
+]

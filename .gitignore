@@ -1,0 +1,125 @@
+# ===== OS =====
+# Synthetic fixtures
+# Models
+*.gguf
+tests/fixtures/files/
+
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ===== Editors / IDEs =====
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ===== Logs / Tmp =====
+*.log
+*.tmp
+*.bak
+*.cache
+logs/
+tmp/
+
+# ===== Rust =====
+target/
+**/target/
+*.rs.bk
+*.pdb
+# 注：Cargo.lock 不忽略。Scout 是 application（最终 CLI + Tauri binary），
+# 按 Cargo 官方建议 application 项目应 commit Cargo.lock，确保多工具协作时依赖版本一致。
+
+# ===== Node / TypeScript =====
+node_modules/
+**/node_modules/
+dist/
+build/
+apps/desktop/dist/
+.next/
+.turbo/
+.parcel-cache/
+.pnpm-store/
+pnpm-lock.yaml      # 视团队约定再决定是否提交
+package-lock.json
+yarn.lock
+
+# ===== Tauri =====
+src-tauri/target/
+src-tauri/Cargo.lock
+src-tauri/WixTools/
+
+# ===== Python (训练侧) =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+.python-version
+pip-wheel-metadata/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# ===== ML / 模型 =====
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.onnx
+
+# ===== 本地索引 / 用户数据（绝对不能进仓库） =====
+# 注：db 文件已由 *.db/*.sqlite 覆盖；下面只锚定仓库根的运行期索引目录，
+# 避免误伤源码 crate packages/search-backends/local-index。
+*.sqlite
+*.sqlite3
+*.db
+/local-index/
+.scout/
+.scout-cache/
+
+# ===== 平台分发产物 =====
+*.dmg
+*.pkg
+*.msi
+*.msix
+*.appx
+*.app
+*.exe
+*.zip
+# 便携版打包输出目录（exe/zip 等构建产物，不入库）
+/release-portable/
+# Claude Code skill / cowork 产物目录（pptx/docx 等技能临时输出，不入库）
+/outputs/
+
+# ===== 凭证 / 密钥（永远不要 commit） =====
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+*.cer
+*.crt
+*.key
+secrets/
+credentials/
+.DS_Store
+
+# BETA-26 探针：真实个人数据语料/向量/评测集不进 git（CONVENTIONS §7 + spec §3.2）
+/packages/spike-retrieval/fixtures/corpus.jsonl
+/packages/spike-retrieval/fixtures/vectors.bin
+/packages/spike-retrieval/fixtures/evalset/cases.json
+/packages/spike-retrieval/fixtures/retrieval-results.json
+# BETA-26 分块实验产出：分块向量 + 分块检索结果同样含真实数据，不进 git
+/packages/spike-retrieval/fixtures/vectors-chunked.bin
+/packages/spike-retrieval/fixtures/retrieval-results-chunked.json

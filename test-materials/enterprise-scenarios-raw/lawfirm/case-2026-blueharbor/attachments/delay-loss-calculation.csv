@@ -1,0 +1,6 @@
+item,period,basis,amount_note
+production_line_idle,2026-03-16 to 2026-03-31,调试计划延期,约整数占位
+warehouse_fee,2026-03-16 to 2026-04-15,临时存储未安装配套设备,约整数占位
+inspection_reschedule,2026-03-20,第三方检测改期,约整数占位
+legal_notice,2026-04-01,催告函与证据整理,约整数占位
+

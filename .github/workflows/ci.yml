@@ -1,0 +1,77 @@
+name: CI
+
+# push 到 main / feat-* 分支 + 所有 PR 触发；轻量验证 Rust-only crate 单测（daemon 的核心
+# library + 检索 / parser / ranker / harness / indexer 等横切 crate）。
+# 不 build llama-cpp（默认 stub backend、Rust-only 编译）、不跑 evals（需要 mac metal）、
+# 不 build 桌面 app（需要 Windows MSVC + node）、不 build daemon binary（需 MSVC linker）。
+#
+# 设计意图：发现的回归类别 = (a) Rust 编译错误（含本 ci 包不到的 crate 因 workspace
+# build 间接发现）；(b) crate 内部 lib + integration test 回归；(c) clippy lint 红线。
+# 不发现的：daemon binary 端到端集成测、桌面 GUI、跨平台真机行为、评测指标、OS-conditional
+# crate（spotlight / windows-search / everything / platform-*）的 OS-specific path。
+#
+# 与 release-daemon.yml / release-windows.yml 分工：本 workflow = 持续 quality gate、
+# 每 push 跑；release-*.yml = tag 触发 + 产分发 binary、不跑测。
+#
+# 范围扩展史：
+# - 2026-06-29 cycle A：仅 -p scout-server（最初接首个 push-trigger CI）
+# - 2026-06-29 cycle B：扩到 6 个 Rust-only crate（本 cycle、ci.yml 范围扩展）
+on:
+  push:
+    branches:
+      - main
+      - "feat-*"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: cargo test (Rust-only crates)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+
+      # 7 个 Rust-only crate 持续守门：
+      # - scout-server：daemon 服务层（HTTP / MCP transport / tool dispatch）
+      # - scout-search-backend：检索类型源（SearchIntent / ExpandedSearchIntent / FileSearch / KeywordGroup）
+      # - scout-harness：fallback_chain / SearchableTool / SupportedIntent
+      # - scout-indexer：FTS / doc_db / music / discovery（OCR fall-through）
+      # - scout-intent-parser：NL → SearchIntent 规则 parser（依赖 model-runtime stub default）
+      # - scout-ranker：rank / RankContext / 跨范畴均衡
+      # - scout-result-normalizer：merge_results / 跨源去重
+      # 默认 stub feature 不拉 llama-cpp；--lib --tests 跑 lib 与 integration tests 但不
+      # 跑 doc tests / benches。后续 cycle 若加新 Rust-only crate（如 spike-retrieval 在
+      # 默认 feature 下）在 -p 列表追加即可。
+      - name: cargo test (7 Rust-only crates) --lib --tests --locked
+        run: |
+          cargo test --locked --lib --tests \
+            -p scout-server \
+            -p scout-search-backend \
+            -p scout-harness \
+            -p scout-indexer \
+            -p scout-intent-parser \
+            -p scout-ranker \
+            -p scout-result-normalizer
+
+      - name: cargo clippy (7 Rust-only crates) -- -D warnings
+        run: |
+          cargo clippy --locked --lib --tests \
+            -p scout-server \
+            -p scout-search-backend \
+            -p scout-harness \
+            -p scout-indexer \
+            -p scout-intent-parser \
+            -p scout-ranker \
+            -p scout-result-normalizer \
+            -- -D warnings
+
+      - name: cargo fmt --all -- --check
+        run: cargo fmt --all -- --check

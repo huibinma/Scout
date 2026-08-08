@@ -1,0 +1,223 @@
+version: 1
+language: en
+
+groups:
+  # ——————————————————————————————————————————
+  # Bucket 1: file type (~10 groups)
+  # ——————————————————————————————————————————
+
+  # Demo query: "find that slides deck"
+  - head: slides
+    aliases: [slideshow, presentation, deck]
+    domain: file_type
+
+  # Demo query: "the excel spreadsheet with numbers"
+  - head: spreadsheet
+    aliases: [worksheet]
+    domain: file_type
+
+  # Demo query: "the doc I wrote last week"
+  - head: document
+    aliases: [doc, file]
+    domain: file_type
+
+  # Demo query: "notebook with my ideas"
+  - head: notebook
+    aliases: [workbook, notepad]
+    domain: file_type
+
+  # Demo query: "working draft not finished yet"
+  - head: draft
+    aliases: [rough draft, working draft]
+    domain: file_type
+
+  # Demo query: "project template folder"
+  - head: template
+    aliases: [boilerplate]
+    domain: file_type
+
+  # Demo query: "event poster image"
+  - head: poster
+    aliases: [flyer, banner]
+    domain: file_type
+
+  # Demo query: "report from last quarter"
+  - head: report
+    aliases: [summary report, analysis]
+    domain: file_type
+
+  # Demo query: "product manual somewhere in downloads"
+  - head: manual
+    aliases: [guide, handbook]
+    domain: file_type
+
+  # Demo query: "user spec requirements doc"
+  - head: spec
+    aliases: [specification, requirements]
+    domain: file_type
+
+  # ——————————————————————————————————————————
+  # Bucket 2: media (~10 groups)
+  # ——————————————————————————————————————————
+
+  # Demo query: "find recent screenshots"
+  - head: screenshot
+    aliases: ["screen capture", screencap]
+    domain: media
+
+  # Demo query: "vacation photos from last summer"
+  - head: photo
+    aliases: [picture, pic, image]
+    domain: media
+
+  # Demo query: "video clip from the trip"
+  - head: video
+    aliases: [movie, clip, recording]
+    domain: media
+
+  # Demo query: "voice memo I left myself"
+  - head: audio
+    aliases: ["voice memo", "voice recording", soundtrack]
+    domain: media
+
+  # Demo query: "profile picture or avatar"
+  - head: avatar
+    aliases: ["profile picture", "profile photo"]
+    domain: media
+
+  # Demo query: "desktop wallpaper files"
+  - head: wallpaper
+    aliases: [background, desktop]
+    domain: media
+
+  # Demo query: "product icon assets"
+  - head: icon
+    aliases: [favicon, logo]
+    domain: media
+
+  # Demo query: "album art for that song"
+  - head: thumbnail
+    aliases: ["album art", cover]
+    domain: media
+
+  # Demo query: "animated gif I downloaded"
+  - head: gif
+    aliases: [animation, animated]
+    domain: media
+
+  # Demo query: "background music for video"
+  - head: music
+    aliases: [song, jingle]
+    domain: media
+
+  # ——————————————————————————————————————————
+  # Bucket 3: document (~8 groups)
+  # ——————————————————————————————————————————
+
+  # Demo query: "service contract for the vendor"
+  - head: contract
+    aliases: [agreement, deal]
+    domain: document
+
+  # Demo query: "find the invoice from last month"
+  - head: invoice
+    aliases: [receipt, bill]
+    domain: document
+
+  # Demo query: "my resume for job applications"
+  - head: resume
+    aliases: [cv]
+    domain: document
+
+  # Demo query: "project proposal I sent over"
+  - head: proposal
+    aliases: [pitch, "pitch deck"]
+    domain: document
+
+  # Demo query: "quick memo about the meeting"
+  - head: memo
+    aliases: [note, reminder]
+    domain: document
+
+  # Demo query: "cover letter for my application"
+  - head: "cover letter"
+    aliases: [application]
+    domain: document
+
+  # Demo query: "terms and conditions file"
+  - head: terms
+    aliases: ["terms of service", policy]
+    domain: document
+
+  # Demo query: "expense claim form"
+  - head: expense
+    aliases: [reimbursement, claim]
+    domain: document
+
+  # ——————————————————————————————————————————
+  # Bucket 4: personal (~6 groups)
+  # ——————————————————————————————————————————
+
+  # Demo query: "journal entry from last year"
+  - head: journal
+    aliases: [diary, "personal log"]
+    domain: personal
+
+  # Demo query: "sketch of the UI wireframe"
+  - head: mockup
+    aliases: [wireframe, prototype]
+    domain: design
+
+  # Demo query: "recipe I saved from the website"
+  - head: recipe
+    aliases: [cookbook]
+    domain: personal
+
+  # Demo query: "travel itinerary for the trip"
+  - head: itinerary
+    aliases: ["travel plan", "trip plan"]
+    domain: personal
+
+  # Demo query: "grocery or shopping checklist"
+  - head: checklist
+    aliases: [list, "to do"]
+    domain: personal
+
+  # Demo query: "address book contacts file"
+  - head: contacts
+    aliases: ["address book", directory]
+    domain: personal
+
+  # ——————————————————————————————————————————
+  # Bucket 5: office / misc (~6 groups)
+  # ——————————————————————————————————————————
+
+  # Demo query: "meeting notes from yesterday"
+  - head: "meeting notes"
+    aliases: [minutes, "meeting minutes"]
+    domain: office
+
+  # Demo query: "budget spreadsheet for Q3"
+  - head: budget
+    aliases: [forecast, projection]
+    domain: office
+
+  # Demo query: "onboarding guide for new hires"
+  - head: onboarding
+    aliases: ["getting started", orientation]
+    domain: office
+
+  # Demo query: "brand style guide"
+  - head: "style guide"
+    aliases: [branding, guidelines]
+    domain: office
+
+  # Demo query: "action items from sprint planning"
+  - head: "action items"
+    aliases: [tasks, todos]
+    domain: office
+
+  # Demo query: "change log for the release"
+  - head: changelog
+    aliases: [release notes, "what is new"]
+    domain: office

@@ -1,0 +1,22 @@
+[package]
+name = "scout-local-index-backend"
+description = "BETA-04 LocalIndexBackend：把音乐/文档本地索引（scout-indexer）包成 SearchBackend"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+scout-search-backend = { path = "../common" }
+scout-indexer = { path = "../../indexer" }
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
+[dev-dependencies]
+tempfile = "3"
+tokio = { version = "1", features = ["rt", "macros"] }
+futures-util = { version = "0.3", default-features = false }

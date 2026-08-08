@@ -1,0 +1,952 @@
+[
+  {
+    "id": "v09-d6-zh-001",
+    "query": "打开第一个",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "open",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-zh-002",
+    "query": "在访达里定位这个文件",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "locate",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-zh-003",
+    "query": "把它复制到桌面",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "copy",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "destination": "~/Desktop",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-004",
+    "query": "移动到文档文件夹",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "move",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "destination": "~/Documents",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-005",
+    "query": "重命名为 终稿",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "rename",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "new_name": "终稿",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-006",
+    "query": "删除这些",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "delete",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "all"
+        }
+      },
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-007",
+    "query": "打开第三个文件",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "open",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 3
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-zh-008",
+    "query": "把第1、3、5个复制到U盘",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "action": "copy",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "indices",
+          "values": [
+            1,
+            3,
+            5
+          ]
+        }
+      },
+      "destination": "/Volumes/USB",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-009",
+    "query": "全部移动到归档文件夹",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "ambiguous_action",
+      "question": "要把上一轮结果里的全部文件移动到归档文件夹吗？批量移动建议先确认目标列表。",
+      "options": [
+        "确认移动全部",
+        "只选择部分",
+        "取消"
+      ]
+    }
+  },
+  {
+    "id": "v09-d6-zh-010",
+    "query": "把第二个重命名成 会议纪要",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "rename",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 2
+        }
+      },
+      "new_name": "会议纪要",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-011",
+    "query": "在文件夹里显示第四个",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "locate",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 4
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-zh-012",
+    "query": "删掉第2和第4个",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "delete",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "indices",
+          "values": [
+            2,
+            4
+          ]
+        }
+      },
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-013",
+    "query": "打开 /Users/me/Documents/report.pdf",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "action": "open",
+      "target_ref": {
+        "source": "path",
+        "value": "/Users/me/Documents/report.pdf"
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-zh-014",
+    "query": "把这些全都复制到桌面",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "copy",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "all"
+        }
+      },
+      "destination": "~/Desktop",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-015",
+    "query": "把最后那个移到回收站",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "delete",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-016",
+    "query": "定位 /Users/me/Downloads/2026预算.xlsx",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "action": "locate",
+      "target_ref": {
+        "source": "path",
+        "value": "/Users/me/Downloads/2026预算.xlsx"
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-zh-017",
+    "query": "请把第五个文件重命名为 合同_最终版",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "rename",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 5
+        }
+      },
+      "new_name": "合同_最终版",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-018",
+    "query": "把它们移动到 /Users/me/Pictures/2026",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "action": "move",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "all"
+        }
+      },
+      "destination": "/Users/me/Pictures/2026",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-019",
+    "query": "第6个在哪，帮我定位一下",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "locate",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 6
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-zh-020",
+    "query": "把第1个到第3个都复制到文档",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "copy",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "indices",
+          "values": [
+            1,
+            2,
+            3
+          ]
+        }
+      },
+      "destination": "~/Documents",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-zh-021",
+    "query": "打开这几个",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "open",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "all"
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-zh-022",
+    "query": "删掉所有东西",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "unsafe_action",
+      "question": "删除所有文件风险较高，你确定要删除当前结果里的全部文件吗？",
+      "options": [
+        "在访达/资源管理器中显示",
+        "取消"
+      ]
+    }
+  },
+  {
+    "id": "v09-d6-zh-023",
+    "query": "把电脑里的文件都删了",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "unsafe_action",
+      "question": "这个操作范围太大也太危险，你具体想删除哪些文件？",
+      "options": [
+        "在访达/资源管理器中显示",
+        "取消"
+      ]
+    }
+  },
+  {
+    "id": "v09-d6-zh-024",
+    "query": "用预览打开第二张图",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "zh",
+      "action": "open",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 2
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-zh-025",
+    "query": "全部清空",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "zh",
+      "reason": "unsafe_action",
+      "question": "你是想删除当前搜索结果里的全部文件吗？这个操作不可撤销。",
+      "options": [
+        "在访达/资源管理器中显示",
+        "取消"
+      ]
+    }
+  },
+  {
+    "id": "v09-d6-en-001",
+    "query": "open the first one",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "open",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-en-002",
+    "query": "reveal this file in Finder",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "locate",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-en-003",
+    "query": "copy it to the desktop",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "copy",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "destination": "~/Desktop",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-en-004",
+    "query": "move them to the Documents folder",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "move",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "all"
+        }
+      },
+      "destination": "~/Documents",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-en-005",
+    "query": "rename it to final-draft",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "rename",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "new_name": "final-draft",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-en-006",
+    "query": "delete these",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "delete",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "all"
+        }
+      },
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-en-007",
+    "query": "open the third file",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "open",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 3
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-en-008",
+    "query": "copy items 1, 3 and 5 to my external drive",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "copy",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "indices",
+          "values": [
+            1,
+            3,
+            5
+          ]
+        }
+      },
+      "destination": "/Volumes/External",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-en-009",
+    "query": "move all of them to the archive folder",
+    "language": "en",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "en",
+      "reason": "ambiguous_action",
+      "question": "Do you want to move all files from the last results to the archive folder? Please confirm the target list before a bulk move.",
+      "options": [
+        "Move all",
+        "Select some",
+        "Cancel"
+      ]
+    }
+  },
+  {
+    "id": "v09-d6-en-010",
+    "query": "rename the second one to meeting-notes",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "rename",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 2
+        }
+      },
+      "new_name": "meeting-notes",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-en-011",
+    "query": "show me where the fourth file is",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "locate",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 4
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-en-012",
+    "query": "delete the 2nd and 4th",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "delete",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "indices",
+          "values": [
+            2,
+            4
+          ]
+        }
+      },
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-en-013",
+    "query": "open /Users/me/Documents/report.pdf",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "open",
+      "target_ref": {
+        "source": "path",
+        "value": "/Users/me/Documents/report.pdf"
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-en-014",
+    "query": "copy all of these to the desktop",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "copy",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "all"
+        }
+      },
+      "destination": "~/Desktop",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-en-015",
+    "query": "move the fifth file to /Users/me/Pictures/2026",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "move",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 5
+        }
+      },
+      "destination": "/Users/me/Pictures/2026",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-en-016",
+    "query": "locate /Users/me/Downloads/budget-2026.xlsx",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "locate",
+      "target_ref": {
+        "source": "path",
+        "value": "/Users/me/Downloads/budget-2026.xlsx"
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-en-017",
+    "query": "rename the first file to contract_final",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "rename",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "new_name": "contract_final",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-en-018",
+    "query": "open all of them",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "open",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "all"
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-en-019",
+    "query": "just erase everything on my computer",
+    "language": "en",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "en",
+      "reason": "unsafe_action",
+      "question": "That would delete a huge number of files and is irreversible. Which files do you actually want to delete?",
+      "options": [
+        "Show in Finder / Explorer",
+        "Cancel"
+      ]
+    }
+  },
+  {
+    "id": "v09-d6-en-020",
+    "query": "copy the third one into /Users/me/Documents/backup",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "en",
+      "action": "copy",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 3
+        }
+      },
+      "destination": "/Users/me/Documents/backup",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-mixed-001",
+    "query": "打开第一个 file",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "action": "open",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 1
+        }
+      },
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "v09-d6-mixed-002",
+    "query": "把第3个 copy 到 Desktop",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "action": "copy",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 3
+        }
+      },
+      "destination": "~/Desktop",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-mixed-003",
+    "query": "把这些全部 move 到 Documents 文件夹",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "clarify",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "reason": "ambiguous_action",
+      "question": "要把上一轮结果里的全部文件移动到 Documents 文件夹吗？批量移动建议先确认目标列表。",
+      "options": [
+        "确认移动全部",
+        "只选择部分",
+        "取消"
+      ]
+    }
+  },
+  {
+    "id": "v09-d6-mixed-004",
+    "query": "把第二个 rename 成 final稿",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "action": "rename",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 2
+        }
+      },
+      "new_name": "final稿",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "v09-d6-mixed-005",
+    "query": "在 Finder 里 locate 第5个文件",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_action",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "action": "locate",
+      "target_ref": {
+        "source": "last_results",
+        "selector": {
+          "type": "index",
+          "value": 5
+        }
+      },
+      "requires_confirmation": false
+    }
+  }
+]

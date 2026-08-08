@@ -1,0 +1,33 @@
+#!/bin/sh
+# Scout pre-commit：文档体积闸门（CONVENTIONS §3 收工流程的自动化执行）
+# 启用方式（每个 clone 一次性）：git config core.hooksPath scripts/hooks
+#
+# 规则 1：STATUS.md 暂存体积超硬上限 15KB → 阻止 commit。
+#         瘦身过渡期放行一次：SCOUT_ALLOW_FAT_STATUS=1 git commit ...
+# 规则 2：ROADMAP.md 暂存体积超 230KB → 仅警告，提示执行 CLEAN-6（已完成卡片压缩归档）。
+
+status_hard_limit=15360      # 15KB（CONVENTIONS §3 硬上限）
+roadmap_warn_limit=235520    # 230KB（膨胀预警线，2026-07-02 时约 222KB）
+
+staged_files=$(git diff --cached --name-only)
+
+if echo "$staged_files" | grep -qx "STATUS.md"; then
+    size=$(git cat-file -s :STATUS.md 2>/dev/null || echo 0)
+    if [ "$size" -gt "$status_hard_limit" ] && [ "$SCOUT_ALLOW_FAT_STATUS" != "1" ]; then
+        echo "✗ [pre-commit] STATUS.md 暂存体积 ${size}B 超过硬上限 15360B（CONVENTIONS §3 收工闸门）。"
+        echo "  修法：摘要留 STATUS（≤15 行/条、≤5 条），溢出旧摘要收工时直接删除（完整历史见 git log）。"
+        echo "  确需放行一次（例如正在做瘦身的中间提交）：SCOUT_ALLOW_FAT_STATUS=1 git commit ..."
+        exit 1
+    fi
+fi
+
+if echo "$staged_files" | grep -qx "ROADMAP.md"; then
+    rsize=$(git cat-file -s :ROADMAP.md 2>/dev/null || echo 0)
+    if [ "$rsize" -gt "$roadmap_warn_limit" ]; then
+        echo "⚠ [pre-commit] ROADMAP.md 暂存体积 ${rsize}B 已超 230KB 预警线。"
+        echo "  建议尽快执行 CLEAN-6：已完成 task 卡片压缩为摘要 + 全文归档（详 ROADMAP 技术债 backlog）。"
+        echo "  仅警告，不阻止提交。"
+    fi
+fi
+
+exit 0

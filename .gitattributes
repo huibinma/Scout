@@ -1,0 +1,22 @@
+# 统一行尾为 LF，避免 macOS 和 Windows 协作时 diff 噪音
+* text=auto eol=lf
+
+# 二进制类型显式标注（防止 CRLF 转换破坏）
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.gguf binary
+*.safetensors binary
+*.bin binary
+*.dmg binary
+*.pkg binary
+*.msi binary
+*.msix binary
+
+# Windows 批处理保持 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf

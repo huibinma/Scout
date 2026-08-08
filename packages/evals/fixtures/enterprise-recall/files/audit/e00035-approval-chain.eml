@@ -1,0 +1,28 @@
+From: procurement@example.com
+To: manager@example.com
+Date: Thu, 2 Jul 2026 10:00:00 +0800
+Subject: =?UTF-8?B?54yO5oi35bqn6YeH6LSt6aG555uu4oCU4oCU5Yqe5YWs5LiA5L2T5py65LiO6ICX5p2Q6YeH6LSt5a6h5om5?=
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="scout-fixture-boundary"
+
+--scout-fixture-boundary
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: base64
+
+5ouf5ZCR5pmo5pif5Yqe5YWs55So5ZOB5pyJ6ZmQ5YWs5Y+46YeH6LSt5LiA5L2T5py65LqM5Y2B
+5Y+w5Y+K5YWo5bm06ICX5p2Q77yM5oql5Lu36KeB6ZmE5Lu25a+55q+U6KGo77yM6aKE566X5YaF
+44CC6K+35ZCE5a6h5om55Lq65Zyo57O757uf5YaF5LiJ5Liq5bel5L2c5pel5a6M5oiQ5Lya562+
+44CC5ZCO6ZmE5LiJ57qn5a6h5om555qE5ZCM5oSP5Zue5aSN6K6w5b2V44CC
+--scout-fixture-boundary
+Content-Type: text/plain; charset=utf-8; name="e00038-procurement-contract.txt"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="e00038-procurement-contract.txt"
+
+5Lmw5pa55Li65YWs5Y+46KGM5pS/6YOo77yM5Y2W5pa55Li65pmo5pif5Yqe5YWs55So5ZOB5pyJ
+6ZmQ5YWs5Y+444CC5qCH55qE77ya5Yqe5YWs5LiA5L2T5py65LqM5Y2B5Y+w5Y+K5YWo5bm06ICX
+5p2Q5YyF44CC5ZCI5ZCM5Lu35qy+5oyJ5oql5Lu35Y2V5omn6KGM77yM6LSn5Yiw6aqM5pS25ZCI
+5qC85ZCO5LiJ5Y2B5pel5YaF5LuY5qy+6Iez5ZCI5ZCM5oyH5a6a6LSm5oi344CC5Y2W5pa55om/
+6K+65Lik5bm06LSo5L+d44CB5qyh5pel5LiK6Zeo57u05L+u44CC5ZCI5ZCM5Y+Y5pu06aG75Y+M
+5pa55Lmm6Z2i56Gu6K6k77yM5Lu75L2V5Y+j5aS05om/6K+65LiN5p6E5oiQ5ZCI5ZCM5YaF5a65
+44CC
+--scout-fixture-boundary--

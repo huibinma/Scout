@@ -1,0 +1,15 @@
+[package]
+name = "scout-result-normalizer"
+description = "BETA-04 多源搜索结果归一化合并（按 canonical path 去重 + 来源溯源）"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+scout-search-backend = { path = "../search-backends/common" }

@@ -1,0 +1,18 @@
+From: lishili@example.com
+To: wang.yangben@example.org
+Date: Tue, 05 May 2026 18:40:00 +0800
+Subject: 未结缺陷与复现步骤
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+王样本：
+
+离职前还有两个问题没有修完：
+
+1. 鲲鹏结算系统夜间批处理偶发重复扣减额度。复现步骤见附件 unresolved-bugs.md。
+2. Lighthouse 项目报表口径说明还没有同步到用户手册。
+
+值班时如果遇到夜间批处理告警，请先查 runbook 中的“重复扣减保护”章节。
+
+李示例
+

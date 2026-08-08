@@ -1,0 +1,552 @@
+[
+  {
+    "id": "1",
+    "title": "查找昨天编辑过的 ppt",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "extensions": ["ppt", "pptx"], "file_type": "presentation",
+      "modified_time": {"type": "relative", "value": "yesterday"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "2",
+    "title": "找最近三天修改的 Excel",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "extensions": ["xls", "xlsx"], "file_type": "spreadsheet",
+      "modified_time": {"type": "relative", "value": "last_3_days"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "3",
+    "title": "找下载目录中大于 100MB 的视频",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "zh",
+      "media_type": "video",
+      "location": {"hint": "下载"},
+      "size": {"type": "greater_than", "value": 100, "unit": "MB"},
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "4",
+    "title": "找名字里有「预算」的文件",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "keywords": ["预算"], "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "5",
+    "title": "找桌面上的 word 文档",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "extensions": ["doc", "docx"], "file_type": "document",
+      "location": {"hint": "桌面"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "6",
+    "title": "找文稿目录里 2025 年的 ppt",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "extensions": ["ppt", "pptx"], "file_type": "presentation",
+      "location": {"hint": "文稿"},
+      "modified_time": {"type": "absolute", "from": "2025-01-01", "to": "2025-12-31"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "7",
+    "title": "找名字以「会议纪要」开头的文档（有损降级）",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "keywords": ["会议纪要"], "file_type": "document",
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "8",
+    "title": "找过去一个月里大于 1GB 的视频",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "zh",
+      "media_type": "video",
+      "modified_time": {"type": "relative", "value": "last_30_days"},
+      "size": {"type": "greater_than", "value": 1, "unit": "GB"},
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "9",
+    "title": "找上周收到的 pdf（按 created_time）",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "extensions": ["pdf"], "file_type": "document",
+      "created_time": {"type": "relative", "value": "last_week"},
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "10",
+    "title": "找最近一周访问过的 markdown",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "extensions": ["md"],
+      "accessed_time": {"type": "relative", "value": "last_7_days"},
+      "sort": "accessed_desc"
+    }
+  },
+  {
+    "id": "11",
+    "title": "找 2026 年 5 月 1 日之前修改的 zip",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "extensions": ["zip"], "file_type": "archive",
+      "modified_time": {"type": "before", "value": "2026-05-01"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "12",
+    "title": "找一首周华健的歌",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "zh",
+      "media_type": "audio",
+      "artist": "周华健",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "13",
+    "title": "找周华健的朋友",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "zh",
+      "media_type": "audio",
+      "artist": "周华健", "title": "朋友",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "14",
+    "title": "找上个月下载的周华健无损音乐",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "zh",
+      "media_type": "audio",
+      "artist": "周华健", "quality": "lossless",
+      "created_time": {"type": "relative", "value": "last_month"},
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "15",
+    "title": "找我昨天截的付款二维码",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "zh",
+      "media_type": "screenshot",
+      "keywords": ["付款", "二维码"],
+      "created_time": {"type": "relative", "value": "yesterday"},
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "16",
+    "title": "找最近一个月超过 10 分钟的视频",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "zh",
+      "media_type": "video",
+      "duration": {"type": "greater_than", "value": 10, "unit": "m"},
+      "modified_time": {"type": "relative", "value": "last_30_days"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "17",
+    "title": "find ppt yesterday edited",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "en",
+      "extensions": ["ppt", "pptx"], "file_type": "presentation",
+      "modified_time": {"type": "relative", "value": "yesterday"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "18",
+    "title": "find pdf modified last week",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "en",
+      "extensions": ["pdf"], "file_type": "document",
+      "modified_time": {"type": "relative", "value": "last_week"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "19",
+    "title": "find files over 100MB in downloads",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "en",
+      "location": {"hint": "downloads"},
+      "size": {"type": "greater_than", "value": 100, "unit": "MB"},
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "20",
+    "title": "find screenshots from last month",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "en",
+      "media_type": "screenshot",
+      "created_time": {"type": "relative", "value": "last_month"},
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "21",
+    "title": "find images on desktop",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "en",
+      "file_type": "image",
+      "location": {"hint": "desktop"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "22",
+    "title": "find Excel modified in the past 7 days",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "en",
+      "extensions": ["xls", "xlsx"], "file_type": "spreadsheet",
+      "modified_time": {"type": "relative", "value": "last_7_days"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "23",
+    "title": "find audio files by Eric Clapton",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "en",
+      "media_type": "audio",
+      "artist": "Eric Clapton",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "24",
+    "title": "find videos larger than 1 GB",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "en",
+      "media_type": "video",
+      "size": {"type": "greater_than", "value": 1, "unit": "GB"},
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "25",
+    "title": "找我 yesterday 改过的 ppt",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "mixed",
+      "extensions": ["ppt", "pptx"], "file_type": "presentation",
+      "modified_time": {"type": "relative", "value": "yesterday"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "26",
+    "title": "找 downloads 里的 mp4",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "mixed",
+      "extensions": ["mp4"], "file_type": "video",
+      "location": {"hint": "downloads"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "27",
+    "title": "找最近的 budget pptx（强约束，不触发 clarify）",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "mixed",
+      "keywords": ["budget"], "extensions": ["pptx"], "file_type": "presentation",
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "28",
+    "title": "find 周华健 的歌",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "mixed",
+      "media_type": "audio", "artist": "周华健",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "29",
+    "title": "find 下载目录 里的大文件",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "mixed",
+      "location": {"hint": "下载"},
+      "size": {"type": "greater_than", "value": 100, "unit": "MB"},
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "30",
+    "title": "show me 上周的 PDF",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "mixed",
+      "extensions": ["pdf"], "file_type": "document",
+      "modified_time": {"type": "relative", "value": "last_week"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "31",
+    "title": "refine：只看下载目录里的",
+    "variant": "Refine",
+    "intent": {
+      "schema_version": "1.0", "intent": "refine", "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {"location": {"hint": "下载"}}
+    }
+  },
+  {
+    "id": "32",
+    "title": "refine：只看 pdf",
+    "variant": "Refine",
+    "intent": {
+      "schema_version": "1.0", "intent": "refine", "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {"extensions": ["pdf"], "file_type": "document"}
+    }
+  },
+  {
+    "id": "33",
+    "title": "refine：排除视频",
+    "variant": "Refine",
+    "intent": {
+      "schema_version": "1.0", "intent": "refine", "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {"exclude_file_type": ["video"]}
+    }
+  },
+  {
+    "id": "34",
+    "title": "refine：show only the pdf ones",
+    "variant": "Refine",
+    "intent": {
+      "schema_version": "1.0", "intent": "refine", "language": "en",
+      "base_ref": "last_intent",
+      "delta": {"extensions": ["pdf"], "file_type": "document"}
+    }
+  },
+  {
+    "id": "35",
+    "title": "refine：按大小倒序",
+    "variant": "Refine",
+    "intent": {
+      "schema_version": "1.0", "intent": "refine", "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {"sort": "size_desc"}
+    }
+  },
+  {
+    "id": "36",
+    "title": "打开第三个",
+    "variant": "FileAction",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_action", "language": "zh",
+      "action": "open",
+      "target_ref": {"source": "last_results", "selector": {"type": "index", "value": 3}},
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "37",
+    "title": "open the third one",
+    "variant": "FileAction",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_action", "language": "en",
+      "action": "open",
+      "target_ref": {"source": "last_results", "selector": {"type": "index", "value": 3}},
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "38",
+    "title": "在访达里显示第一个",
+    "variant": "FileAction",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_action", "language": "zh",
+      "action": "locate",
+      "target_ref": {"source": "last_results", "selector": {"type": "index", "value": 1}},
+      "requires_confirmation": false
+    }
+  },
+  {
+    "id": "39a",
+    "title": "把这些 pdf 复制到桌面（阶段 1 refine 缩小）",
+    "variant": "Refine",
+    "intent": {
+      "schema_version": "1.0", "intent": "refine", "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {"extensions": ["pdf"], "file_type": "document"}
+    }
+  },
+  {
+    "id": "39b",
+    "title": "把这些 pdf 复制到桌面（阶段 2 copy all）",
+    "variant": "FileAction",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_action", "language": "zh",
+      "action": "copy",
+      "target_ref": {"source": "last_results", "selector": {"type": "all"}},
+      "destination": "~/Desktop",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "40",
+    "title": "把第三个改名为 final",
+    "variant": "FileAction",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_action", "language": "zh",
+      "action": "rename",
+      "target_ref": {"source": "last_results", "selector": {"type": "index", "value": 3}},
+      "new_name": "final",
+      "requires_confirmation": true
+    }
+  },
+  {
+    "id": "41",
+    "title": "找最近的（模糊）",
+    "variant": "Clarify",
+    "intent": {
+      "schema_version": "1.0", "intent": "clarify", "language": "zh",
+      "reason": "ambiguous_time",
+      "question": "你说的「最近」是指最近几天？",
+      "options": ["今天", "过去 3 天", "过去一周", "过去一个月"]
+    }
+  },
+  {
+    "id": "42",
+    "title": "全部删掉（高风险）",
+    "variant": "Clarify",
+    "intent": {
+      "schema_version": "1.0", "intent": "clarify", "language": "zh",
+      "reason": "unsafe_action",
+      "question": "删除操作会移到回收站，且 MVP 暂不支持。是否改为在访达 / 资源管理器中显示，由你手动操作？",
+      "options": ["在访达/资源管理器中显示", "取消"]
+    }
+  },
+  {
+    "id": "43",
+    "title": "清空上一轮位置约束（clear 字段）",
+    "variant": "Refine",
+    "intent": {
+      "schema_version": "1.0", "intent": "refine", "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {},
+      "clear": ["location"]
+    }
+  },
+  {
+    "id": "44",
+    "title": "find JPG and PNG screenshots from yesterday",
+    "variant": "MediaSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "media_search", "language": "en",
+      "media_type": "screenshot",
+      "extensions": ["jpg", "png"],
+      "created_time": {"type": "relative", "value": "yesterday"},
+      "sort": "created_desc"
+    }
+  },
+  {
+    "id": "45a",
+    "title": "排除压缩包（refine.exclude_file_type）",
+    "variant": "Refine",
+    "intent": {
+      "schema_version": "1.0", "intent": "refine", "language": "zh",
+      "base_ref": "last_intent",
+      "delta": {"exclude_file_type": ["archive"]}
+    }
+  },
+  {
+    "id": "45b",
+    "title": "排除压缩包合并后（exclude_* 作为通用字段）",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "location": {"hint": "下载"},
+      "size": {"type": "greater_than", "value": 100, "unit": "MB"},
+      "exclude_file_type": ["archive"],
+      "sort": "size_desc"
+    }
+  },
+  {
+    "id": "46a",
+    "title": "找项目归档里的 budget pdf（hint 未识别但有强约束）",
+    "variant": "FileSearch",
+    "intent": {
+      "schema_version": "1.0", "intent": "file_search", "language": "zh",
+      "keywords": ["budget"],
+      "extensions": ["pdf"],
+      "file_type": "document",
+      "location": {"hint": "项目归档"},
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "46b",
+    "title": "找项目归档里的文件（无强约束 → clarify）",
+    "variant": "Clarify",
+    "intent": {
+      "schema_version": "1.0", "intent": "clarify", "language": "zh",
+      "reason": "ambiguous_location",
+      "question": "没找到名为「项目归档」的目录。要不要在哪个范围内搜索？",
+      "options": ["全盘搜索", "下载", "文稿", "桌面", "取消"]
+    }
+  },
+  {
+    "id": "47",
+    "title": "把这些都移动到桌面（target_ref 不明确 → clarify）",
+    "variant": "Clarify",
+    "intent": {
+      "schema_version": "1.0", "intent": "clarify", "language": "zh",
+      "reason": "ambiguous_action",
+      "question": "要移动上一轮的全部结果吗？请先确认目标文件列表。",
+      "options": ["确认全部", "只选择部分", "取消"]
+    }
+  }
+]

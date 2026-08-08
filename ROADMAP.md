@@ -1,0 +1,737 @@
+# Scout 项目 Roadmap
+
+> 状态：**v1.0**（已采纳 Codex + Gemini 双轨审阅意见）。
+> 本文件是项目的**长期任务地图**。
+> 审阅记录：Codex + Gemini；v0.1 → v1.0 修订摘要见本文件最后一节。
+
+## 0. 本文件的位置
+
+| 文档 | 内容 | 节奏 | 更新者 |
+|---|---|---|---|
+| [PROJECT.md](./PROJECT.md) | 项目目标、定位、原则、架构 | 月级 | 用户主导 |
+| **[ROADMAP.md](./ROADMAP.md)（本文件）** | **任务级长期地图：4 阶段任务清单、依赖、估时、验收、里程碑、风险** | **周级** | **任一工具，需经评审** |
+| [STATUS.md](./STATUS.md) | 当前阶段、当前 task ID、下一步、会话日志 | 每次会话 | 收工时由当前工具更新 |
+| [CONVENTIONS.md](./CONVENTIONS.md) | 协作规则、收工流程、编码规范 | 月级 | 用户主导 |
+| [docs/](./docs/) | 详细产品/技术/IP/风险计划 + 设计文档 + 审阅记录 | 按需 | 谨慎修改 |
+
+**任何工具新会话开始时**，按顺序读：PROJECT.md → STATUS.md → ROADMAP.md → CONVENTIONS.md。这 4 份在一起回答："这是什么项目 / 做到哪了 / 接下来要做什么 / 怎么协作"。
+
+## 1. Task 卡片字段约定
+
+```
+ID         独立稳定标识，如 PROTO-05 / MVP-12 / BETA-03 / V10-08
+状态       not_started | in_progress | done | blocked | dropped
+模块       源码 / 文档路径（packages/xxx, docs/xxx, apps/xxx）
+依赖       其他 task ID 列表（DAG，无循环）
+估时       原型期：hours/days；MVP 期：days；Beta/1.0：days/weeks
+验收       客观可观察的判定标准（不能是"做完了"）
+负责工具   可选；若某 task 明显适合某工具（如 Mac LoRA → 任何能跑 MLX 的工具）
+```
+
+ID 命名：`PROTO-NN` / `MVP-NN` / `BETA-NN` / `V10-NN`，两位数序号，预留间隔便于插入。原审阅期间补充的 task 用字母后缀（如 `PROTO-04A` / `MVP-07A`），表示"插在某 task 之后但不打破已有编号"。
+
+**并行约束**（Codex 审阅 should-have #11 落地）：
+
+每个子阶段在表后用单独小节列出"哪些 task 可并行 / 哪些有隐藏依赖"。task 表的"依赖"列只记直接技术依赖；间接 UX/逻辑依赖在并行约束小节说明。
+
+## 2. 阶段总览
+
+| 阶段 | 时长 | 当前状态 | 入场条件 | 出场条件（硬指标） | 演示价值 |
+|---|---|---|---|---|---|
+| **P：技术原型** | 1-2 周（7-10 工作日） | ✅ **已完成**（11/11 task） | Schema v1.0 + Trait v0.1 已采纳审阅 | macOS CLI 跑通 schema §7.1-§7.4 共 30 条用例，端到端准确率 ≥ 80%，简单查询 < 500ms | 内部技术验证（**variant 命中 92%、CLI 4ms ≪ 500ms**） |
+| **M：MVP** | 3-5 周 | 🔄 **进行中**（M1 12/12 ✅、M2 3/3 ✅、M3 4/4 ✅、M4 7/7 ✅、M5 2/4） | P 出场条件全达成 | 双平台 Tauri 应用；三套 SearchBackend；500 条 evals ≥ 85%；双平台 evals 通过率差 < 5% | 早期用户内测 |
+| **B：Beta** | 8-12 周 | 🔄 已开工（BETA-08/09/17 模型侧 + **BETA-01/01A/02 本地索引 + BETA-03 图片 OCR + BETA-04 多源融合 + BETA-05 Ranker + BETA-06 Audit + BETA-07 索引调度 done 2026-06-02，整栈真机验证通过**；正式切换仍待 §8 非代码长周期项） | M 出场条件全达成 | 多源索引可用；1000 条 evals ≥ 90%；macOS DMG + Windows 安装包经 GitHub Releases 可外发（未签名安装口径文档化 + 包管理器渠道，2026-07-04 开源免费拍板） | 公开测试用户 + 企业冷归档场景验证（B7 并行子线，不进出场指标） |
+| **V：1.0** | 4-6 月 | 未开始 | B 出场条件全达成 | 插件系统、本地活动洞察、隐私 UI、自动更新、崩溃恢复全部就绪；LICENSE / Third-party Notices / 隐私说明齐全（商标注册已随 2026-07-04 开源免费拍板取消） | 正式发布 |
+
+详细出场指标见 §6；并行启动的长周期事项见 §5。
+
+## 3. 任务清单
+
+### 3.1 P 阶段：技术原型（macOS 优先）
+
+目标：**在 macOS 上跑通"自然语言 → SearchIntent → mdfind → 结果"的最小闭环**。
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 | 验收 |
+|---|---|---|---|---|---|---|
+| **PROTO-00** | 设计阶段（Schema v1.0 + Trait v0.1 + Codex 审阅 + ROADMAP v1.0） | done | docs/ | — | 完成于 2026-05-25 | 见 [STATUS.md 审阅记录](./STATUS.md) |
+| **PROTO-01** | Rust workspace 骨架 + lint gate | done（详见归档） | — | 0.5d | ✅ Rust 1.95 stable；workspace 含 scout-search-backend + scout-intent-parser 两个占位 crate；rust-toolchain.toml + rustfmt.toml pin 版本；scripts/ci.sh 含 fmt + clippy(-D warnings) + build + test，全套通过 |
+| **PROTO-02** | SearchIntent serde 类型 | done（详见归档） | PROTO-01 | 1d | ✅ 全部类型落地（5 个 intent 变体 + 9 个公共类型）；50 条 fixture 用例（schema §7 全部）反序列化通过；round-trip 一致；`deny_unknown_fields` 在 internally-tagged enum 内部 struct 上生效（关键边界条件验证） |
+| **PROTO-03** | JSON Schema 文件落地 | done（详见归档） | PROTO-01 | 0.5d | ✅ `docs/schema/search-intent.v1.json` 已从 schema md §5 抽出；common crate 增加 schema/serde 交叉测试，50 条 fixture 全过，非法样本覆盖 limit、未知字段、file_action 条件、target index、clarify 空问题；`bash scripts/ci.sh` 通过 |
+| **PROTO-04** | SearchBackend trait + 公共类型 | done | packages/search-backends/common | PROTO-02 | 0.5d | ✅ trait + SearchResult + SearchError（含 `UnsupportedIntent`）+ BackendKind + ImplementationStatus 已落地；BackendRegistry 生产链剔除 stub 的单元测试通过；`bash scripts/ci.sh` 通过 |
+| **PROTO-04A** | macOS location resolver v0.1 | done（详见归档） | PROTO-02 | 0.5d | ✅ `LocationResolver` trait 已落地；macOS resolver 支持 `下载/桌面/文稿/图片/影片/音乐/截屏` hint；截屏目录优先读取 `com.apple.screencapture`，失败 fallback 到 `~/Desktop` 与 `~/Pictures/Screenshots`；`bash scripts/ci.sh` 通过 |
+| **PROTO-05** | SpotlightBackend 首版 | done（详见归档） | PROTO-04, PROTO-04A, PROTO-05A | 3d | ✅ `SpotlightBackend` 已实现 `SearchBackend`；`mdfind` 结构化参数调用、超时 kill、结果端 exclude 过滤、基础 metadata 补全已落地；fixture #1-#30 查询翻译测试与 shell 注入防护单元测试通过；`bash scripts/ci.sh` 通过 |
+| **PROTO-05A** | 合成测试 fixture | done | tests/fixtures（或 packages/evals/fixtures） | PROTO-01 | 1d | ✅ 幂等 Rust 生成器落地；覆盖 18+ 类合成文件；Spotlight 索引验证通过；reindex.sh 就绪 |
+| **PROTO-06** | 规则解析器 v0.1（规则解析，不含模型 fallback） | done（详见归档） | PROTO-02 | 3d | ✅ v0.1 实现 5 路径（file_search / media_search / file_action / refine / clarify）；50 条 fixture 按 variant 命中 46/50 = 92%（≥ 80%）；§3.5 Clarify 触发规则覆盖 unsafe_action / ambiguous_time / ambiguous_location / ambiguous_action；不调用 LLM；字段级精确匹配留到 PROTO-08 evals 硬判定 |
+| **PROTO-07** | 顶层 CLI binary | done（详见归档） | PROTO-05, PROTO-06 | 1d | ✅ `scout-cli "查找昨天编辑过的 ppt"` 可端到端调用 SpotlightBackend；`--json` / `--intent-only` / `--onlyin` / `--help` 已落地；退出码 0/1/2/3/4 区分成功、有无结果、clarify、未支持 intent、backend/系统错误；`bash scripts/ci.sh` 通过 |
+| **PROTO-08** | evals v0.1（50 条用例落库） | done（详见归档） | PROTO-02, PROTO-06, PROTO-05A | 1d | ✅ `cargo run -p scout-evals --bin evals` 输出 Pass/Partial/Fail 报告（总览 + variant 分桶 + language 分桶）；`--case N` / `--json` / `--only-failures` 支持；fixture 路径走 PROTO-05A；当前评测：variant 命中 92%（46/50），字段级精确匹配 42%（21/50）；`bash scripts/ci.sh` 通过 |
+| **PROTO-09** | 原型出场评测 | done（详见归档） | PROTO-05, PROTO-06, PROTO-07, PROTO-08 | 0.5d | ✅ 评测报告落库：variant 命中 46/50 = 92%（≥ 80%）；CLI 端到端 release 4ms（远低于 500ms p95 阈值）；6/8 §6.1 指标 ✅ + 1/8 ⚠️（端到端 mdfind 留 M0 demo）；结论：**P 出场通过，推荐进 M 阶段** |
+
+**P 阶段任务依赖图（v1.0 更新）**
+
+```
+PROTO-01 ─┬→ PROTO-02 ─┬→ PROTO-04 → PROTO-05 ──┬→ PROTO-07 → PROTO-09
+          │            ├→ PROTO-04A ────────────┘             ↑
+          │            ├→ PROTO-06 ──────────────────────────┤
+          │            └→ PROTO-08 ──────────────────────────┘
+          ├→ PROTO-03（与 PROTO-02 并行）
+          └→ PROTO-05A（与 PROTO-02/03/04/04A/06 全并行）
+```
+
+**关键路径**：PROTO-01 → PROTO-02 → PROTO-04 → PROTO-05 → PROTO-07 → PROTO-09，约 7-8 天。
+**并行机会**：PROTO-02 / PROTO-03 并行；PROTO-05A 与多数任务并行；PROTO-06 与 PROTO-04+05 并行；PROTO-08 与 PROTO-06 并行。
+**预期总工期**：8-10 工作日（按 1 人/单工具串行；多工具协作可压缩到 6-7 天）。
+
+> v0.1 关键路径估为 6 天，v1.0 修订为 7-8 天（Codex 审阅指出，补齐 fixture 与 resolver 后更接近真实工期）。
+
+### 3.2 M 阶段：MVP（macOS + Windows 双平台）
+
+目标：**同一份 Tauri 应用在 macOS 与 Windows 上跑通；三套 SearchBackend；基础 Harness；本地小模型**。
+
+#### M1 子阶段：Harness 基础设施
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| MVP-01 | Tool Registry | done | packages/harness | PROTO-09 | 1d |
+| MVP-02 | Schema Validator service | done | packages/harness | MVP-01 | 0.5d |
+| MVP-03 | Policy Engine（权限分级 L0–L5） | done | packages/harness | MVP-01 | 1.5d |
+| MVP-04 | Tool Loop Controller（最大步数 / 超时 / 取消） | done | packages/harness | MVP-01 | 1d |
+| MVP-05 | Intent Router | done | packages/harness | MVP-01 | 1d |
+| MVP-06 | Context Memory（多轮 / target_ref / refine 合并） | done | packages/harness | MVP-01 | 2d |
+| MVP-07 | Streaming 抽象 | done | packages/harness | MVP-04 | 1d |
+| **MVP-07A** | **SearchBackend v0.2：async + streaming 迁移** | done | packages/search-backends/{common,spotlight,windows-search,everything} | MVP-04, MVP-07, MVP-11, MVP-12 | 3d |
+| MVP-08 | Tracing / Hooks | done | packages/harness | MVP-01 | 1d |
+| MVP-09 | Capability Discovery | done | packages/harness | MVP-01 | 1d |
+| MVP-10 | Fallback Chain | done | packages/harness | MVP-09 | 1d |
+| **MVP-10A** | **FileActionTool（open/locate/copy/move/rename，delete 禁用）** | done | packages/harness + platform/{macos,windows} | MVP-03, MVP-06 | 2d |
+
+**MVP-07A 验收**：三个真实 backend（Spotlight / WindowsSearch / Everything）暴露统一 `async fn search(...) -> impl Stream<Item = Result<SearchResult, _>>`；支持取消信号；CLI 与 UI 都能消费；旧同步接口经显式 sunset 删除或保留兼容层（二选一并文档化）。
+
+**MVP-10A 验收**：`open` / `locate` 在 macOS / Windows 上可用；`copy` / `move` / `rename` 经 Policy Engine 确认后执行；`delete` 在 schema 层与 Policy 层双重禁用；target_ref 越界、批量阈值（默认 10）、路径冲突、跨卷 move 均有测试；schema §7.6 用例 #36-#40 端到端通过。
+
+**M1 验收**：refine 合并语义（schema §3.4）单元测试 ≥ 95% 覆盖率；Context Memory 对 schema §7.5、§7.8 #43 / #45 / #46 用例契约测试通过。
+
+#### M2 子阶段：Windows 平移
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| MVP-11 | WindowsSearchBackend（OLE DB / SystemIndex SQL） | done（2026-05-31，详见归档） | packages/search-backends/windows-search | PROTO-04 | 3d |
+| MVP-12 | EverythingBackend（ES CLI 优先） | done（**执行层 Windows 11 真机实测 2026-05-31**：装 ES CLI（winget voidtools.Everything.Cli），EsCliExecutor spawn es.exe 端到端；真机修 1 bug——误加的 `-path` 把搜索项当路径吞掉致 0 结果，已移除） | packages/search-backends/everything | PROTO-04 | 2d |
+| MVP-13 | 跨平台 location resolver（Known Folders / Spotlight 截屏配置） | done（platform/windows 原 windows-rs `SHGetKnownFolderPath` 从未在 Windows 编译过——撞 `unsafe_code=forbid` + API 误用；2026-05-31 改用 dirs crate，零 unsafe，首次 Windows 编译通过） | platform/{macos,windows} | MVP-09 | 2d |
+
+**M2 验收**：30 条 P 阶段用例在 Windows 上端到端跑通；检测到 Everything 时自动切换到 EverythingBackend；macOS / Windows evals 结果差距 < 5%。
+
+#### M3 子阶段：本地模型
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| MVP-14 | llama.cpp 集成 | done（llama-cpp-4 + candle + stub 多后端，stub 默认） | packages/model-runtime | PROTO-09 | 2d |
+| MVP-15 | 模型常驻进程 | done | packages/model-runtime | MVP-14 | 1d |
+| MVP-16 | Prompt 设计 + 5-10 few-shot | done | packages/intent-parser | MVP-14 | 2d |
+| MVP-17 | 模型 fallback（规则解析不足时调用） | done（端到端 wiring + GBNF 基础设施 + v0.3 hybrid 架构全部落地；1.5B 模型在 v0.5 evals 上无净收益，质量提升归 BETA-08 LoRA） | packages/intent-parser | MVP-16 | 1d |
+
+**M3 验收**：本地 Qwen2.5-1.5B Q4_K_M 推理首次加载 < 10s（实测 6.5s ✅），常驻态查询 < 3s（实测 warm 1.6s p95 ✅）；模型输出 JSON 合法率 > 98%（v0.2 实测 90.4%、v0.3 hybrid 58.3% 曾未达 → **BETA-08 v1 LoRA 已闭合：fallback valid_intent 比 8.3% → 100%（86/86），≥ 98% 达标 ✅**，参见 beta-08-lora-v1.md / mvp-17-fallback-evals.md）。
+
+#### M4 子阶段：桌面应用
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| MVP-18 | Tauri 2 应用骨架（macOS + Windows） | done | apps/desktop | MVP-01, MVP-11 | 2d |
+| MVP-19 | 搜索框 UI + 流式结果列表 | done（2026-05-28，详见归档） | apps/desktop | MVP-18, MVP-07 | 3d |
+| MVP-20 | 全局快捷键（macOS ⌥Space / Windows Ctrl+Space） | done | apps/desktop | MVP-18 | 1d |
+| MVP-21 | 后端状态指示 + 错误降级提示 | done | apps/desktop | MVP-10 | 1d |
+| MVP-22 | 设置页 + 隐私管理页 | done | apps/desktop | MVP-18 | 2d |
+| MVP-23 | macOS Full Disk Access 引导 | done | platform/macos | MVP-22 | 1d |
+| MVP-24 | Windows 索引位置加入引导 | done（macOS stub，Windows 真检测 待真机） | platform/windows | MVP-22 | 1d |
+
+#### M5 子阶段：MVP 出场
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| MVP-25 | evals 扩到 500 条 | done（详见归档） | packages/evals | PROTO-08, MVP-17 | 3d |
+| MVP-26 | 跨平台一致性测试 | done（2026-06-01，详见归档） | tests/ | MVP-11, MVP-13, MVP-25 | 1d |
+| MVP-27 | 性能测试（响应时间分布） | done（parser 50us / CLI 7ms / 搜索 20ms 但 Spotlight server disabled 需复测） | tests/ | MVP-19 | 1d |
+| MVP-28 | MVP 出场评测 | done（2026-06-01，详见归档） | — | MVP-25, MVP-26, MVP-27 | 1d |
+
+**M 阶段预期总工期**：3-5 周（按多工具协作）。
+
+**M 阶段并行约束**（Codex 审阅 should-have #11 落地）：
+
+- **可早启**：MVP-18 桌面骨架（独立于 backend）；M1 与 M2 / M3 之间无强依赖。
+- **隐藏依赖（task 表"依赖"列未必体现）**：
+  - **MVP-19 流式结果列表**：除 MVP-18 / MVP-07 外，**实际依赖 MVP-07A async/streaming 迁移完成** + 至少一个 stream-ready backend（推荐 SpotlightBackend 先升）。
+  - **MVP-21 后端状态指示**：依赖 MVP-09 Capability Discovery + MVP-10 Fallback Chain。
+  - **MVP-22 设置 / 隐私页**：可与 backend 并行开发，**但 Full Disk Access 引导（MVP-23）依赖平台权限检测能力**（属 MVP-09 的一部分）。
+  - **文件操作 UI**（在 MVP-19 内）：依赖 MVP-10A FileActionTool。
+- **强串行**：MVP-26 跨平台一致性测试必须等 MVP-11 / MVP-13 / MVP-25 全部 done。
+
+### 3.3 B 阶段：Beta
+
+目标：**多源本地索引可用；开源安装包可外发**（2026-07-04 开源免费拍板：签名分发口径作废）。
+
+#### B0：开源发布审查（原「法务与安全审查」，2026-07-04 开源免费拍板 re-scoped）
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| **BETA-00** | **开源发布审查（LICENSE / Third-party Notices / 隐私说明 / 商标使用规范 / 仓库脱敏）** | **done（2026-07-04）**：LICENSE 双许可 ✅ + Everything 条款核查 ✅（不构成再分发，[third-party-licenses.md](./docs/third-party-licenses.md)）+ PRIVACY.md ✅ + **仓库脱敏 ✅**（语料全合成核实 / 图片无 EXIF / 密钥工作区+924 commits 历史双零命中 / 个人用户名 148 处等长替换清零、受改 crate 测试全绿，报告见当时的脱敏核查记录）。**仓库已转公开（2026-07-04 同日，orphan 首发）**：原公开仓库自单 commit `bc47473` 起步、私有归档仓库冻结保全史（报告 §4 执行记录）——BETA-00 无开放项。**2026-07-24 起项目重构迁移至私有仓库 `huibinma/Scout`（Scout 品牌重命名 + 工程目录/文档精简），与原公开仓库各自独立演进** | docs/ | MVP-28 | 完成于 2026-07-04 |
+
+**BETA-00 验收**（2026-07-04 开源口径重写，原律师签字版 EULA / Privacy Policy 要求作废）：LICENSE-MIT + LICENSE-APACHE 入库 ✅；`docs/third-party-licenses.md` 与实际依赖差异为 0；**Everything 再分发条款核查 ✅**（2026-07-04：现状即「检测用户自装」——运行期 spawn `es.exe`、零 voidtools 二进制入库，不构成再分发；voidtools License 本身 MIT 风格宽松，核查记录见 [third-party-licenses.md](./docs/third-party-licenses.md)）；**隐私说明入库 ✅**（[PRIVACY.md](./PRIVACY.md)，2026-07-04：无遥测 / 唯一联网点 = 用户触发的模型下载 / 落盘清单 / 卸载清理路径 / daemon 形态数据边界）；Apple/Microsoft/voidtools 商标使用位置经审查（不暗示背书，[IP §7.3](./docs/Scout知识产权保护计划书.md) 该节仍有效）；**公开仓库前脱敏**——BETA-44 真实语料、个人路径、git 历史敏感信息核查。**此 task 是 BETA-10 / BETA-10A 分发的前置**。
+
+#### B1：本地索引
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| BETA-01 | 音乐 metadata 索引（artist/title/album/duration/format） | done（2026-06-02，详见归档） | packages/indexer | MVP-28 | 5d |
+| BETA-02 | Office/PDF 内容索引（FTS5） | done（2026-06-02，详见归档） | packages/indexer | MVP-28 | 7d |
+| **BETA-01A** | **全盘音频索引（发现层全盘枚举，超越固定 Music 目录）** | done（2026-06-02，详见归档） | packages/indexer + packages/search-backends/local-index | BETA-01, MVP-12 | 3-4d |
+| BETA-03 | OCR（macOS Vision / Windows.Media.Ocr / Tesseract 兜底） | done（2026-06-02，详见归档） | packages/indexer + packages/search-backends/local-index + apps/desktop | MVP-28 | 7d |
+| **BETA-28** | **索引预算与分层新鲜度（按目录热度分档：light metadata / FTS / embedding / OCR；避免对 cold long-tail 全量预处理）** | not_started（2026-06-25 登记，源于 Claude × Codex 联合规划，借鉴 [LLM Wiki 文章](https://axk51013.medium.com/rethinking-agent-harness-part4-llm-wiki-%E5%8F%96%E4%BB%A3-rag-041629319804) Data 维度反例：cold content 反伤）。**价值主张**：把"对所有文件做所有事"换成「按 root 热度分档做多深」——默认 light（仅 metadata + 文件名 FTS）、热区 full（embedding + OCR）、按需 promote；用户可见档位 + 系统自适应。**衔接**：BETA-07 后台索引调度（加 per-root budget 字段）、BETA-15B 语义索引（embedding 入 full 档）、BETA-03 OCR（OCR 入 full 档）、设置页索引目录（per-root 档位 UI）、BETA-27 索引目录配置（per-root 档位继承根设置）。**主要风险**：漏召回（用户搜了 light 档目录下的内容词）；缓解 = 失败时自动 promote 该 root 到 full 档 + 通知用户 + BETA-30 失败样本箱记录信号。 | packages/indexer + packages/search-backends/local-index + apps/desktop | BETA-07, BETA-15B-1, BETA-27 | 1-2 weeks |
+| **BETA-42** | **【bug】trigram FTS 2 字 CJK 关键词 AND 组合必然 0 命中（"判决 违约金"类查询误报「错误：未找到结果」）** | done（2026-07-03，详见归档） | packages/indexer + packages/intent-parser + packages/search-backends/local-index | — | 0.5d（含单测） |
+
+> **BETA-01A 背景**（spike `spike-disk-wide-audio` 2026-06-02 真机验证）：现状 `reindex` 仅扫固定 `dirs::audio_dir()`，用户音频散落 OneDrive/下载等处时扫到 0 条。方案 = **发现/提取/存储三层拆分**：发现用 Everything `es.exe ext:`（Win，307ms 枚举全盘 1249 文件）/ Spotlight `mdfind`（macOS），提取仍用 lofty，存储复用 `MusicIndex`（spike 已加 `index_paths(&[PathBuf])`）。**搜索跨目录命中已验证 ✅**。
+>
+> **BETA-01A 三处必做设计**（spike 实测暴露）：① **跳过"仅在线"占位符**（查 `FILE_ATTRIBUTE_OFFLINE`/`RECALL_ON_DATA_ACCESS`）——实测 302/1249=24% OneDrive 占位符 `os error 395` 读取被拒，且会触发水合下载；占位符只存文件名不读标签；② **并行提取**（rayon）——单线程实测 244ms/文件 × 上千 = 5 分钟；③ **file_name 进 FTS**——实测标签覆盖仅 ~21%（多为教学/音效 mp3），按文件名搜需命中本地索引。思路可推广至 BETA-02 文档全盘索引。
+>
+> **BETA-01A 验收**：reindex 覆盖全盘音频（非仅 Music 目录）；仅在线占位符跳过、不触发下载、计入 skipped 统计；跨目录 artist/文件名查询真机命中；并行提取 p50 较单线程显著下降；fmt/clippy/全 workspace test 零回归。
+
+#### B2：多源融合
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| BETA-04 | Result Normalizer（+ 可选"最近使用文件"快捷通道） | done（2026-06-02，详见归档） | packages/result-normalizer + packages/search-backends/local-index | BETA-01, BETA-02, MVP-10A | 3d |
+| BETA-05 | Ranker（多源合并、BM25 + 启发式） | done（2026-06-02，详见归档） | packages/ranker | BETA-04 | 5d |
+| BETA-06 | Audit Log | done（2026-06-02，详见归档） | packages/harness | MVP-10A | 2d |
+| BETA-07 | Index Scheduler（后台低优先级） | done（2026-06-02，详见归档） | packages/indexer + apps/desktop | BETA-01, BETA-02 | 3d |
+
+> **BETA-04 注**（Gemini 审阅 nice-to-have #4 落地）：如 Beta 进度领先，可在 Result Normalizer 中加入"最近使用文件"快捷通道（基于系统 Recent Items / Jump Lists），作为本地活动洞察（V10-02）的早期预览，**但不包含主题摘要等隐私敏感分析**。该预览功能默认关闭，需用户主动开启。
+
+#### B3：模型升级
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| BETA-08 | LoRA 数据集生成 + MLX 微调 | done（2026-05-28，详见归档） | training/ + packages/evals/src/bin/build_lora_dataset.rs | MVP-25 | 2 weeks |
+| BETA-09 | 模型量化与跨平台部署 | done（2026-06-01，详见归档） | training/ + packages/model-runtime + packages/evals | BETA-08 | 1 week |
+| **BETA-17** | **基座模型选型实验（bake-off：Qwen2.5-1.5B 基线 vs Qwen3-0.6B vs Qwen3-1.7B）** | done（2026-06-02，详见归档） | training/ + packages/model-runtime + packages/evals | BETA-08 | 3-5d |
+
+**BETA-17 验收**：
+- **候选**：Qwen2.5-1.5B（v1 基线）/ Qwen3-0.6B / Qwen3-1.7B，均 Apache 2.0，统一 Q4_K_M。
+- **同配方训练**：三者用相同 LoRA 配方（mask-prompt + nonempty oversample 8×，超参对齐 v1）在 v0.5-patch 数据集上各训一份 adapter，复用 `training/mlx-lora/scripts/` 管线。
+- **统一评测**：各跑 v0.5 evals `--with-fallback --hybrid` 全 500 case，对比 **pass / partial / fail / rescued_to_pass / regressed / 字段精确匹配 / p50·p95 fallback 延迟 / 常驻内存**。
+- **Qwen3 关键约束**：dual-mode 必须 **non-thinking 模式**（`enable_thinking=False`）——本任务要快速产结构化 JSON 补丁，thinking 会暴涨延迟、是负担。spec 期确认 llama.cpp（当前 llama-cpp-sys-4 0.3.0）+ mlx-lm（0.29.1）对 Qwen3 架构的支持（各跑一次最小推理验证）。
+- **判定**：若 Qwen3-0.6B 保住 v1 的 pass 数（净降 ≤2）→ 它是弱硬件场景更优解（更快更小），建议设为弱硬件默认；若 0.6B 掉质量 → Qwen3-1.7B 作"新一代质量更稳"升级。延迟需在目标弱硬件（如本次 Intel 核显笔记本，CPU 后端）实测对比。
+- **关联**：与 BETA-09「弱硬件上模型 fallback 可选/降级 + 能力感知路由」联动——bake-off 结论直接决定弱硬件默认是"小模型"还是"纯 parser"。
+- **2026-06-01 实测判定结果**：**分支①命中** —— Qwen3-0.6B 准确率逐项对等且更小更快，已推荐为弱硬件默认。**后续 backlog**：(a) **Windows 弱硬件延迟复核**——winner GGUF 传 Windows 走 BETA-09a Vulkan 流程实测 p50/p95，判定 3000ms 绝对达标；(b) **winner 接成默认推理基座 wiring**（改 `SCOUT_MODEL_PATH` 默认 / 能力感知选模型 + 过 evals 回归门）——本会话刻意不做（spec out of scope）；(c) **>1B 候选（Qwen3-1.7B / Qwen3.5-2B）按需补测**；(d) Qwen3.5 小尺寸为多模态 VLM，<1B 段未找到纯文本 Qwen3.5，如需新一代再追踪官方纯文本小 dense 发布。
+
+#### B3.5：搜索召回增强（同义词族）
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| **BETA-11** | **同义词关键词扩展（手维护 YAML 词典）** | **dropped（2026-07-04 盘点：与 BETA-15 重复登记，工作已在 BETA-15 done 2026-05-30 全部交付**——`SynonymExpander`/`YamlSynonymExpander`/词典/desktop 接线/Spotlight `search_expanded` 均在仓，本行验收即 BETA-15 验收） | packages/harness + resources/synonyms + packages/search-backends/spotlight + apps/desktop | MVP-28 | ~~2d~~ 0（重复卡） |
+| **BETA-11A** | **同义词召回评测集（独立 30~50 case fixture + query + 期望命中）** | **dropped（2026-07-04 盘点：= BETA-15A done 2026-05-30**；`fixtures/synonym-recall` 42 case + `synonym_recall` binary 在仓） | packages/evals | BETA-11 | ~~2d~~ 0（重复卡） |
+| **BETA-11B** | **同义词召回升级（embedding 索引 或 LoRA 在线扩词，二选一）** | **dropped（2026-07-04 盘点：= BETA-15B**——已升格为旗舰「本地语义召回层」，embedding 路径胜出并大部分交付，见 BETA-15B 行） | packages/harness + packages/model-runtime | BETA-11, BETA-11A, BETA-08 | 见 BETA-15B |
+| **BETA-11C** | **WindowsSearchBackend / EverythingBackend 覆盖 `search_expanded`** | **dropped（2026-07-04 盘点：= BETA-15C done 2026-05-31**；两后端 `search_expanded` OR 谓词翻译 + 单测在仓实测确认） | packages/search-backends/{windows-search,everything} | BETA-11, MVP-11, MVP-12 | ~~2d~~ 0（重复卡） |
+| **BETA-11D** | **用户级持久化同义词库 + 人审闸门（运行态 feedback 学习）** | done（2026-06-13，详见归档） | packages/harness + apps/desktop + `app_config_dir/user-synonyms.yaml` | BETA-11（共享 SynonymExpander trait，= BETA-15 已 done） | 完成于 2026-06-13 |
+| **BETA-18** | **parser 多类型查询支持（"pdf和doc" / "图片和视频" 不再丢类型）** | done（2026-06-02，详见归档） | packages/search-backends/common + packages/intent-parser + 3 backends | — | 1-2d |
+| **BETA-19** | **跨范畴多类型查询均衡展示（「图片和视频」少数派类型不再被碾压不可见）** | done（2026-06-03，详见归档） | packages/ranker + apps/desktop + packages/search-backends/common + packages/intent-parser | BETA-18 | 1d |
+
+> **注（2026-07-04）**：以下 BETA-11/11A/11B/11C 验收段保留作历史记录——四卡均为 BETA-15/15A/15B/15C 的重复登记（已 dropped，见上表），验收内容已由对应 BETA-15 族卡片交付。
+
+**BETA-11 验收**：spec §6 全部测试通过 + §7 全部 8 条手测 scenario 通过；`bash scripts/ci.sh` 全过；**v0.5 evals parser-only baseline byte-equal `pass 472 / partial 26 / fail 2`** + **hybrid `pass 480` 不掉**（关键不回归 guard，见 spec §6.2）；harness 新增 `SynonymExpander` trait + `YamlSynonymExpander` + `NoopExpander`；`SearchBackend` trait 加 `search_expanded` default method；SpotlightBackend 覆盖；初始词典 ~60 zh + ~40 en = ~100 组（spec §5）；混合字符 keyword（标识符如 `synthetic-place`）走 NoopExpand 不被误扩；trace `synonym_expand` event 落 JSONL。
+
+**BETA-11A 验收**：独立同义词召回评测集 ≥ 30 case（query → 期望命中合成 fixture）；report 包含召回率 / 假阳率分桶；BETA-11 当前手维护词典在此集召回 ≥ 70%、假阳 ≤ 5%；为 BETA-11B 升级提供定量 baseline。
+
+**BETA-11B 升级时点判定**（spec §10）：手维护词典 > 200 组、或出现可重复的"用户原 case 找不到"反馈、或 BETA-11A 召回率连续两次评测无法继续提升时进 BETA-11B。embedding 路径与 LoRA 在线扩词路径二选一在进入时再评估（要素：评测召回率提升幅度 / 推理延迟 p95 / 模型常驻额外内存 / 跨平台部署复杂度）。
+
+**BETA-11C 验收**：WindowsSearchBackend `search_expanded` 在 SystemIndex SQL 翻成等价 OR 谓词；EverythingBackend `search_expanded` 在 ES 查询语法翻成等价 OR；spec §7 8 条手测在 Windows 真机端到端通过；macOS / Windows 同 query 召回差异 < 5pp（与 §6.2 跨平台一致性 guard 对齐）。
+
+**BETA-11D 验收**：
+
+- **持久化**：用户词典本地落盘（SQLite 或 `~/.scout/user-synonyms.yaml`，二选一在 spec 期决定），重启 app 不丢；不上传不同步（守 PROJECT.md "本地优先" 原则）；支持导出 / 导入 yaml 半手动跨设备
+- **双层叠加**：SynonymExpander 优先查用户词典再查系统词典（BETA-11）；冲突时用户词典覆盖；trace `synonym_expand` event 新增 `source: "user" | "system"` 字段
+- **触发 UX**：query 命中数 ≤ 阈值（默认 0）时，UI 弹"扩展搜索?"对话框；候选词由 BETA-11B 在线生成（未做则候选空，用户手输）；用户勾选后立即重查并返回结果；勾选完成后 UI 问"是否记住此映射?"二次确认才沉淀
+- **撤销 / 编辑 / 查看**：设置页新增"我的同义词"页，支持查看全部用户词条、编辑 aliases、删除整组、批量导出 / 导入；删除即时生效（不需重启）
+- **卸载集成**：BETA-12 卸载流程需清掉用户词典文件（或对应 SQLite 表）
+- **隐私**：用户词典不进 trace（默认场景；`SCOUT_TRACE` 开启时可见，便于 dev 调试）；Privacy Policy 文案新增"用户同义词库" 一条；不混入任何 telemetry 上报路径
+- **反向污染防护**：单次新建词条 `aliases.len() ≤ 8`（与 BETA-11 系统词典 lint 一致）；不允许把 ASCII 标识符（`synthetic-place` 类）建为 head 或 alias（同 BETA-11 §4.2 NoopExpand 规则）；user 词典里同一 head 多次教学时合并 + 去重，不无限增长
+- **目标 case 覆盖**：spec §7 手测追加 BETA-11D 场景:用户搜"友商竞争分析"零命中 → 弹候选（LLM 生成或空）→ 用户勾选 `[AWS, Azure, 产品分析, 功能洞察]`+ 确认 → 命中合成 fixture `aws计算产品分析.md` + `Azure功能洞察.md`；重启 app 后再搜同 query → 零延迟直接命中（走 user 词典）
+
+**B3.5 并行约束**：BETA-11 完全独立于 B1 / B2（不依赖索引或多源融合，纯 query 时中间件）；BETA-11A 与 BETA-11 顺序串行（先有能力再衡量）；BETA-11B 强依赖 BETA-11A 有评测 baseline + BETA-08 LoRA 训练管线（若走 LoRA 在线扩词路径）；BETA-11C 与 BETA-11B 可并行（覆盖现有手维护词典的跨后端就够，不必等 embedding 升级）；**BETA-11D 强依赖 BETA-11（共享 trait），可选依赖 BETA-11B（候选生成质量直接影响 BETA-11D 的"教学成本"——LLM 候选好用户勾几下就行，LLM 没接用户得手输每个 alias）；BETA-11D 与 BETA-11C 无依赖可并行**。
+
+**BETA-18 背景与验收**：2026-06-01 BETA-09(a) 会话用户在 Windows 桌面 app 手测「找 pdf和doc文件」只返回 docx——根因 `packages/intent-parser/src/parsers/file_search.rs:89` `match_extensions` 用 `.find()` 只取**第一个**命中的扩展名别名，词典 `EXTENSION_ALIASES` 里 `doc` 排在 `pdf` 前 → pdf 被静默丢弃（`SearchIntent.extensions` 是 `Vec<String>` 本就支持多扩展名，缺口纯在抽取层）。**修复**：扩展名抽取累加所有命中别名 + 合并去重；多类型 file_type 不一致时取 None 只保留 extensions；关键词抽取同步排除所有命中扩展名词；确认后端翻译多扩展名为 OR 谓词。**验收**：v0.5 evals parser-only 不退化（pass≥472）；新增单测覆盖「pdf和doc」「图片和视频」「word 或 ppt」+ 单类型回归；走 spec/plan 流程。
+
+#### B4：分发
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| BETA-10 | macOS DMG 开源分发（原「签名 + 公证 + Stapler」，2026-07-04 开源免费拍板 re-scoped） | **in_progress（2026-07-04 文档层 done）**：Gatekeeper 放行文档（含 macOS 15 系统设置新路径 / 右键打开 / xattr）+ ad-hoc 签名说明入 [install.md](./docs/install.md)；Homebrew 评估 done（自建 tap 先行、官方 cask 待知名度，渠道评估）。**DMG 产物 CI done（2026-07-06）**：[.github/workflows/release-macos.yml](.github/workflows/release-macos.yml) 镜像 release-windows.yml（macos-14 Apple Silicon + aarch64-apple-darwin + 同款 --locked 守门 + model-fallback/semantic-recall features + Gatekeeper 放行 releaseBody），与 windows 并行同吃 v* tag 挂同一 Release；本机仅 YAML 校验，**下次 macOS 发版首验**（Metal 编译/DMG 打包/tauri-action）。**剩余**：真机放行验证（§6.3 指标，随 macOS 发版） | platform/macos + docs | BETA-00, MVP-28 | 剩 0.5d |
+| BETA-10A | Windows 安装包开源分发（原「MSIX 签名」，2026-07-04 开源免费拍板 re-scoped；原 BETA-11，2026-05-30 重编号） | **in_progress（2026-07-04 分发链路 done）**：SmartScreen 放行 + SHA256 校验 + 升级/卸载说明入 [install.md](./docs/install.md)、README 安装节、Release body 挂链；**v0.9.14 首个公开 Release 经 GitHub Releases 外发**（release-windows.yml 新仓库跑通、NSIS hook 首次真实构建通过）；**Scoop 渠道上线**（[scoop-scout](https://github.com/huibinma/scoop-scout) bucket）；winget 待 BETA-14 后稳定期（渠道评估）。**剩余**：真机「下载→放行→安装→可用」+ Scoop 装机路径验证（随下次上机 / cycle 9，§6.3 指标） | platform/windows + docs | BETA-00, MVP-28 | 剩 0.3d（真机） |
+| BETA-12 | 卸载流程（删索引 / 模型 / 日志 / 保留配置）。卸载需清 `app_config_dir/user-synonyms.yaml`（BETA-11D 用户同义词库）。 | **done（2026-07-04）**：双层清理同一份清单——① Windows NSIS 卸载 hook（`apps/desktop/src-tauri/nsis/uninstall-hooks.nsh`，`$UpdateMode` 守卫升级不清数据、settings.json 保留）；② 应用内 `uninstall_cleanup` 命令 + 隐私页「卸载清理」（覆盖 macOS 无卸载器 / 便携版；模型句柄 `unload()` 释放 GGUF 占用、索引/嵌入/下载并发守卫、逐项报告）。搜索历史随「日志」口径一并清（查询词属敏感数据）。闸门：uninstall 单测 ×5 + hook 在位/守卫在位校验；NSIS hook 首次真实构建随下次发版 CI，真机验证归 cycle 9（[manual-test-scenarios BETA-12 节](docs/manual-test-scenarios.md)，场景 5「升级零数据损失」为发版阻断）。**追加（用户反馈拍板，待真机验证）**：NSIS 路径把索引 index.db（+ -wal/-shm）纳入与模型同等的「默认保留」（同一 MessageBox 问一次、`/SD IDNO` 静默默认保留）——覆盖「先卸载旧版再装新版」这类手动两步操作，避免每次手动重装逼一次小时级全量重扫；应用内 `uninstall_cleanup` 路径不变（仍是「彻底清空我的数据」全删语义）。manual-test-scenarios 新增场景 4b/6。 | apps/desktop + platform/* | MVP-22, BETA-01-03 | ~~2d~~ 0.5d（AI 全程） |
+
+#### B5：Beta 出场
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| BETA-13 | evals 扩到 1000 条 | done（2026-06-03，详见归档） | packages/evals | BETA-04, BETA-05 | 完成于 2026-06-03 |
+| BETA-14 | Beta 出场评测 + 内测招募文档 | not_started（**§6「总体 evals」51.4%→…→88.1%（7-04 收束）→92.7%（7-04 三刀）→95.2%（7-04 IX 时间表达簇 + keywords 小刀：before/after 绝对日期 + 年月 + 英文月名 + 区间 + 这周/这个月/新增/做的/最近拍 + created→created_desc 翻转收窄〔仅相对时间+显式创建词，Before/After 保持 modified_desc〕、月份名/序数/数字词停用 + 报告 sole-keep + 又 分隔 + 预算表 compound + 比X还大 size + 图片内容子句整尾短语 + "the word" 框架名词消歧 + 标题词不作时间；标注离群对齐 3 条均 5:1 以上锚点）→**97.7%**（7-04 X 四项口径拍板落地：英文复数归一〔装配终点 + minutes/news/series 例外 + report sole-keep〕、language 降出严格匹配〔judge 跳过，分语言统计不变〕、clarify question 核实既定实现、ext-ft 标注对齐 6 条 + G15 谓词扩展〔in the <kw> / 句首 documents 里 / 位置义 pictures 抑制〕+ 几百KB→<1MB 启发）。**v0.9 = 977/23/0、v0.5 = 490/10/0**，四轮逐 case 全程零回归，parser 新测 ×15 + judge 测 ×1，详复盘 §3.5。BETA-13-G1~G16 + 7-04 全部拍板已落地。→**98.5%**（7-06 clarify options 方案 A：按 reason 挂标准 options〔Unknown 除外〕+ parser/标注双向对齐，8 条 clarify partial 全清、Clarify 桶 67/0/0，Class B 决策清零）→**99.4%**（7-06 同日老账收割 9 条：songs by 小写连字符 artist〔synthetic-artist ×4〕/ 碳中和 compound 占位符保全 / 裸 no+字面扩展名窄路径 / music 目录 mixed hint / 几个G 抽象 size→size_desc / d3 ft 标注对齐 ×2）。**v0.9 = 994/6/0、v0.5 = 495/5/0**，逐 case 零回归，parser 新测 +5+4。剩 6 partial 全为 v0.5 标注锁定项（markdown ft / 下载动词歧义 / 项目归档 location / downloads hint 双语 ×2）+ 备份文件两难，不阻塞出场线。**BETA-14 出场报告骨架已落**（parser-only 全填，真机格标 TODO）。出场判定余双平台基准画像真机复跑 + BETA-10/10A 分发前置** | — | BETA-10, BETA-10A, BETA-12, BETA-13 | 3d |
+| BETA-13-G1 | parser 自然语言关键词抽取（名词短语，如「工作汇报/年度预算/marketing plan」）| **done**（零依赖跨度剥离：中文剥信号词取 CJK 段 + 英文短语抽取 + mixed 合并；容器名词整段丢弃）| packages/intent-parser | BETA-13 | 1-2 week |
+| BETA-13-G2 | 音乐 metadata 措辞鲁棒性（artist/genre/album/title/duration 多样自然措辞，「周杰伦的歌/找邓紫棋的歌曲」抽不出 artist）| **done**（自由 CJK/EN artist + genre 新字段 + album/title 抽取 + quality high + 时长 less_than/中文数字 + 音频路由）| packages/intent-parser | BETA-13 | 3-5d |
+| BETA-13-G3 | 中文类型词→file_type（「表格/幻灯片/演示文稿」等非字面扩展名的类型词映射）| **done**（范畴词 alias 拆分=仅 file_type 不带扩展名；补表格/照片/音频/代码/可执行/slides；多 file_type 按 query 语序）| packages/intent-parser | BETA-13 | 2d |
+| BETA-13-G4 | refine 标记词覆盖扩展（「只要/换成/再加上/去掉/不限…了」等自然 refine 措辞，现仅认「只看/排除/清空」）| done（详见归档） | packages/intent-parser | BETA-13 | 2-3d |
+| BETA-13-G5 | file_action 自然识别（「打开第一个/删除这些」在无显式列表上下文时被误路由 file_search）| **done**（delete 动作 + 定位/显示措辞 + 路径目标 + 指示代词→首个 + 多序数 Indices + 全部；含 env path 的 dest 因机器相关不可参测）| packages/intent-parser | BETA-13 | 2-3d |
+| BETA-13-G6 | 显式排序词覆盖（「按名字排序」等被忽略退回默认）| **done**（按名字±倒序 NameAsc/NameDesc + 方向×维度 created/accessed/modified asc/desc）| packages/intent-parser | BETA-13 | 1d |
+| BETA-13-G7 | clarify 触发阈值（设计性）| **done**（用户决策：中度阈值 + 精确 5 类 reason；unsafe/action/location/time/type/unknown，有具体约束即不拦，「昨天的 pdf」仍走真搜索）| packages/intent-parser | BETA-13 | 需用户决策 |
+| BETA-13-G8 | parser 干净缺口第二轮（截图内容子句路由 + 中/英文类型名词→file_type + artist 自然措辞修缮）| done（2026-06-19，详见归档） | packages/intent-parser | BETA-13 | 完成于 2026-06-19 |
+| BETA-13-G9 | parser 近邻 follow-up（size 区间 + 内容截图多关键词）| done（2026-06-19，详见归档） | packages/intent-parser | BETA-13 | 完成于 2026-06-19 |
+| BETA-13-G10 | coverage 标注对齐 v0.5 契约 + screenshot parser 微修 | done（2026-06-19，详见归档） | packages/intent-parser, packages/evals | BETA-13 | 完成于 2026-06-19 |
+
+| BETA-13-G11 | 标注规范决策 A/B/C/D 落地（跨范畴多类型路由 + 多类型 ext 规则 + 排序边界 + 无上下文动作安全语义）| done（2026-06-19，详见归档） | packages/intent-parser, packages/evals | BETA-13 | 完成于 2026-06-19 |
+| BETA-13-G12 | parser 自然语言剩余缺口 backlog（A/B/C/D 落地暴露，纯 parser 可修、改 coverage 对齐会凑指标故未动）| **done（2026-07-04 收束**：末项 ④ documents/pictures 消歧已由 G15 交付；「剩 2 fail = §1.1 契约冲突」经用户拍板 re-baseline 消化——coverage 改标 MediaSearch（schema 本有 sort/size/location/created_time 可无损表达）+ 顺手修 2 个 media 路径缺口〔`sorted by X` 短语漏进 screenshot keywords → 整短语剥除；`bigger than` 不入 `parse_size` GT 正则〕各带回归单测、v0.5 零暴露。历史 cycle 记录如下）（2026-06-19，**已清干净低风险项 +10 pass**：① **英文复数类型词** `pdfs`/`archives` 入 lexicon（word_present 词边界使 `pdf` 不匹配 `pdfs`）；② **cross-category keyword 残留** `都要`/`我全都要`/`但是不要` 等入停用词；③ **否定/排除多类型** `negation_split` 边界（`images but not videos`/`要图片不要视频`/`…但是不要截图`→`exclude_file_type` + 正向 file_type 只取标记前段）+ 5 条 coverage 单元素数组→标量对齐。**v0.9 807→817 pass、fail 16→15、v0.5 byte-equal 零回归、workspace 775 passed**。**【2026-06-19 续，+5 pass】再清干净小项 4 个**：⑤ **`不含 mkv`→exclude_extensions**（否定段字面扩展名 token，新 helper `negated_literal_extensions`，与类型词→exclude_file_type 区分；**en `no mkv` 推后**——需裸 `no` 标记 byte-equal 风险 + ground-truth 自相矛盾〔en-020 有 audio 扩展名列表而 zh-020 无〕，属 coverage re-baseline）；⑥ `音乐和图片文件都列一下`→加 `都列` 框架词剥离（`文件都列` 残留消除）；⑦ `按 size`/`by size`（英文 size 词）→ file_search decide_sort + refine 双路径 size_desc + `size` 入 EN_STOPWORDS；⑧ **exclude+约束→file_search（决策 C 同构）**：`文档和图片，排除压缩包`→file_search 带 exclude_file_type（refine 加约束门 `is_fresh_positive_then_exclude`：前向 `排除TYPE` + 排除前有正向类型才转 file_search；裸 `排除视频`/尾置 `把 ppt 也排除掉` 仍 refine）+ negation_split 复用 `排除`/`exclude` 标记。**v0.9 817→822 pass、fail 15→14、§6 80.7%→82.2%；v0.5 byte-equal 零回归（500 case 0 diff）、workspace 779 passed、4 条新单测**。**【2026-06-19 续，+4 pass｜标注决策 E/F/G】**用户逐条拍板剩余三条产品语义并落地：**E**（§3.2，改 parser）`has_visual_media_with_abstract_modifier` 加 `has_quantity_degree_modifier`（数量/程度修饰 `几个/些/短/some/a few` + 视觉媒体→media_search）→ `找几个视频`/`短视频`/`some videos` 转 pass；**F**（§3.4，改 parser）`detect_vague_clarify` 加 `bare_relative_time_only`（剥前导动词+尾「的」后精确等于单时间词→clarify(ambiguous_type)）→ `昨天的` 转 pass，`昨天的 pdf`/`昨天的视频` 不误触发；**G**（en-020，改 coverage）删除 en-020 多余 audio 扩展名列表对齐规则 B + zh-020（裸 `no` 标记按决策推后、仍 partial）。**v0.9 822→826 pass、fail 14→10、§6 82.2%→82.6%；v0.5 byte-equal 零回归（500 case 0 diff）、workspace 780 passed、3 条新单测、clippy/fmt 净**。**【2026-06-20 续，+5 pass｜③′ file_action 误路由 done】**`移动到文档文件夹`/`重命名为 终稿`/`把第1、3、5个复制到U盘` 转 file_action（file_action.rs 3 处：① 抽到 destination/new_name 但无显式目标→默认 `last_results Index{1}`，门控避免裸动作词误判；② 多序数 `第1、3、5个`→Indices；③ U盘/优盘/usb→`/Volumes/USB`）+ coverage d6 三条 `Documents` destination `/Users/me/Documents`→`~/Documents` 对齐 v0.5 约定（顺带 zh-020/en-004 partial→pass）。**v0.9 826→831 pass、fail 10→7、partial 164→162、§6 82.6%→83.1%；v0.5 byte-equal 零回归（500 case 0 diff）、workspace 全绿、clippy/fmt 净、5 条新单测**。**【2026-06-20 续，+4 pass｜②′ image+约束 误路由 done】**`创建于上个月的图片`/`桌面上 smaller than 1MB 的图片`/`截图目录里的图片` 转 file_search：① media_search image-only 守护（视觉媒体仅 image 无 video→file，§1.1 决策 image 是 carve-out；coverage 0 条 image→media、v0.5 唯一 image 锚点即 file）；② `截图目录/文件夹/夹`=location（screenshot_dir_is_location 提至 common，media 路由 + file_search file_type 双抑制 Screenshot + 新 LocationAlias 截图目录→截图）；③ file_search 补缺口：`创建`→created_time、LT 前缀 size 正则（smaller/less than/小于/不到…，v0.5 零暴露）、`less_than`→size_asc sort；④ coverage 对齐：zh-015 sort modified_desc→created_desc（v0.5 22 条 created 锚点全 created_desc，离群标注对齐）+ 更新 BETA-19 单测（image→file）。**v0.9 831→835 pass、fail 7→4、partial 162→161、§6 83.1%→83.5%；v0.5 byte-equal 零回归（500 case 0 diff）、workspace 全绿、clippy/fmt 净**。**剩余项**：④ **`documents`/`pictures` 类型义 vs 位置义消歧**（v0.5 ~24 条 location 锚点，高风险，宜单独 task）。**注**：剩 2 fail = §1.1 `screenshots…sorted`/`videos…sorted by size` 契约冲突，需评测集 re-baseline 非纯 parser）| packages/intent-parser | BETA-13-G11 | 2-3d |
+| BETA-13-G13 | 过期 hybrid fallback 修复（首次跑 v0.9 hybrid 暴露模型反伤出厂质量）| done（2026-06-20，详见归档） | packages/intent-parser + apps/desktop + packages/evals | BETA-13-G12 | 完成于 2026-06-20 |
+| BETA-13-G14 | 评测集 re-baseline 走向 §6 90%（决策清单 + 分组执行）| **done（2026-07-04 收束**：剩余 4 fail 经用户三项拍板全部消化——① v05-39a-039「把这些 pdf 复制到桌面」Refine→FileAction（与逐字相同的 39b-040 及 G5 拍板对齐）；② v05-45b-047「排除压缩包合并后」合并终态→Refine（单轮无状态评测下结构性不可测，合并归 harness 层）；③ v09-d5-en-024/025 §1.1 冲突 → coverage 改标 MediaSearch。**v0.9 = 881/119/0（§6 87.7%→88.1%）、variant 100%；v0.5 = 475/25/0**，锁定基线累计改 2 条（§6.5 豁免 ≤25 上限内），收束记录见决策清单顶部。距 90% 剩 1.9pp 全在 partial，路径 = BETA-29 草稿 UI 或新一轮缺口盘点。历史 cycle 记录如下）（2026-06-20）：用 v0.5 500 锁定基线逐条证伪 ~71 争议 partial（file_type 32+location 20+sort 19），重分类 Group A（coverage 标错对齐 v0.5）/ B（parser 缺口）/ C（真产品决策），产出 决策清单。**Group A 第 1 刀 done（待提交）**：coverage shards 12 条逐字段从 v0.5 锚点推导（file_type 显式类型词→document ×7、sort created/accessed→时间维度 + ext ×5）→ assemble-coverage→generate-evals-v09。**v0.9 835→847（精确 12 partial→pass）、§6 83.5%→84.7%、v0.5 byte-equal 0 变化、0 回归、v09_integrity 通过**。剩余 Group A 耦合 parser bug 归 B；A3 触 v0.5 base 排除。**Group B 三刀 done（+12，各独立 commit + TDD + byte-equal 闸门）**：B1 content-clause 文档类型名词→document（中文复合「劳动合同/协议文件」+ 英文 contract/report/agreement/resume/study notes 内容子句门控，+7）；B3 size 单位扩展（个G/bare g/gigs，+3）；B2「X文件夹」作 location（图片/影片文件夹 mirror screenshot_dir + Image 抑制，+2）。**v0.9 835→859、§6 83.5%→85.9%、全程 v0.5 byte-equal 0、0 回归、192 lib tests**。**Group C 决策 done（除 C1，+5）**：调研反转——C2 多类型 parser 多已正确给数组、拖累项是 documents/pictures 当 location（=C1）；C3 screenshot+time 是 coverage 错标 v0.5（6 条 created_desc）。落地 C3 screenshot→created_desc 对齐（+2）+ 用户拍板 oldest=created_asc（SORT_ALIAS，v0.5 零锚点，+1）+ 都找=数组（coverage d2-zh-035 ft 数组 + ext 删〔G11 多类型→ext=None〕+ parser frame-word「三种都找」，+1）。**v0.9 835→863、§6 83.5%→86.3%、全程 v0.5 byte-equal 0、0 回归、193 lib tests**。**诚实边界**：决策清单的 A~26/B~18 是标注方向条数，实翻少（耦合多字段）。**纯 parser/coverage 近见顶 ~86%；跨 90% 唯一剩余路径 = C1/G15**| packages/evals + packages/intent-parser | BETA-13-G13 | 进行中 |
+| BETA-13-G15（C1）| `documents`/`pictures` 类型义 vs 位置义上下文消歧 | done（2026-06-20，详见归档） | packages/intent-parser | BETA-13-G14 | 完成于 2026-06-20 |
+| BETA-13-G16（C2+backlog）| 多类型 ext 约定（C2）+ 相邻字段 backlog（keyword 泄漏 + opened 时间维度）| done（2026-06-20，详见归档） | packages/intent-parser + packages/evals | BETA-13-G15 | 完成于 2026-06-20 |
+
+#### B6：产品体验增强（演示能力）
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| BETA-15 | 同义词关键词扩展（手维护 YAML 词典 + harness 中间件） | done（2026-05-30，详见归档） | packages/harness/src/synonym/ + apps/desktop + resources/synonyms/ | — | 完成于 2026-05-30 |
+| BETA-15A | 同义词召回定量评测集（30~50 case fixture + 期望命中） | done（2026-05-30，详见归档） | packages/evals | BETA-15 | 完成于 2026-05-30 |
+| BETA-15B | 词典升级为 embedding 索引 或 LoRA 在线扩词（二选一时评估） | not_started（父卡：2026-06-15 用户选「进取档」升格为旗舰「本地语义召回层」——按意思 / 跨语言模糊召回做差异化主打；拆 4 子项 BETA-15B-1..4）。**子周期全文详见归档**：BETA-15B-1 语义召回纵切 MVP（文档臂 embedding + BLOB 向量 + SemanticIndexBackend + 加权 RRF hybrid + macOS/Windows 真机验通）done；BETA-15B-2 向量索引后台预热 + 解耦调度 done；BETA-15B-3 融合调优（簇 A-1 相似度下限 / A-2 权重 w*=10 / A-3 FTS 置信度路由 / A-4 query 语种路由 / A-5 VEC top-1 cosine 阈值路由 ⭐ 首破 spec §5；簇 B 列迁移 + worker panic 兜底）done；BETA-15B-4 跨平台 + 拓宽 not_started；BETA-15B-5 / BETA-15B-6 见下独立行；BETA-15B-7 embedding 模型跨族探针（bge-m3 / qwen3-8b、暴露 pooling 硬编码 bug）done；BETA-15B-8 pooling type detection 修复 done；BETA-15B-9 llama-cpp-4 升级 + qwen3-8b 全零排查 done；BETA-15B-7-v2 bake bge-m3 生产 done；BETA-15B-10 bge-m3 baseline 重锚 + cosine sweep + 长文本扩量 done；BETA-15B-11 EmbeddingGemma-300M 跨厂探针 + prefix 对照（sweep best OVERALL 0.900 / crosslang 0.725 复活字面 spec 双过）done；BETA-15B-11-v2 bake embeddinggemma-300m 生产（313MB、无 trade-off 全面提升）done。**当前 follow-up 抓手**：① cosine_threshold 在 embeddinggemma 上 sweep & bake（best 0.882）② baseline.json 切 embeddinggemma ③ BETA-15B-11-v3 prefix API 接 model-runtime（+0.013~0.026）④ 模型分发 UX。 | packages/harness + packages/indexer + packages/search-backends/semantic-index + apps/desktop + training/ | BETA-15, BETA-15A, **BETA-26（done）** | 旗舰线（多 cycle，见状态） |
+| **BETA-15B-5** | **语义召回可信化（可解释 v1）：段落高亮 + 来源标注 + 置信档位** | done（2026-06-21，详见归档） | packages/search-backends/semantic-index（explain 纯模块）+ apps/desktop（命令 + 前端 UI） | BETA-15B-1, BETA-20（预览面板） | 完成于 2026-06-22 |
+| **BETA-15B-6** | **持久化语义召回质量评测集 + baseline（质量调优前置设施）+ v2 扩量 + v3 二次扩量** | done（2026-06-21，详见归档） | packages/evals（semantic_quality 模块 + binary + 测试 + fixtures）+ packages/spike-retrieval（转正） | BETA-26, BETA-15A, BETA-15B-1 | 完成于 2026-06-22 |
+| BETA-15C | WindowsSearchBackend / EverythingBackend 覆盖 `search_expanded` | done（2026-05-31，详见归档） | packages/search-backends/* + packages/harness + apps/desktop | BETA-15, MVP-26 | 完成于 2026-05-31 |
+| BETA-15E | 自然中文 query 产出名词短语 keyword（解锁同义词特性 + 让 BETA-15D 复合谓词修复在真机可被验证）。**done（2026-05-30）**：方案 B=harness 层词典 gazetteer——`SynonymExpander::expand` 加 `query` 参数，仅当 parser 无 keyword 时扫 query 对 zh+en 索引做子串匹配，用 `parse(候选)` 重解析守护跳过类型/媒体词，取最长（并列取首现）注入单个内容词 group。**不动 parser/spotlight → evals parser-only 472/26/2 byte-equal（实跑确认）**。inline 执行 3 task + 每 task fmt/clippy/test 门 + ci.sh 全过；harness 测试 +5。诊断 .../beta-15e-keyword-extraction-diagnosis.md、设计 .../beta-15e-gazetteer-design.md、计划 .../beta-15e-gazetteer.md | done（详见归档） | packages/harness/src/synonym + apps/desktop（不改 parser/spotlight） | BETA-15、BETA-15D（真机手测暴露） | 完成于 2026-05-30 |
+| BETA-15D | Spotlight backend 谓词形态适配 macOS 26+ NSPredicate parser 回归 | done（2026-05-30，详见归档） | packages/search-backends/spotlight + apps/scout-cli | BETA-15（真机验证暴露） | 完成于 2026-05-30 |
+| **BETA-20** | **结果预览面板（Quick Look：选中结果显示文本片段 / 图片缩略图 / PDF 首页 / 音频元数据+播放 / OCR 命中高亮）** | done（2026-06-03，详见归档） | apps/desktop（前端预览面板为主）+ packages/search-backends/local-index（预览数据源） | BETA-02, BETA-03, BETA-04 | 3-4d |
+| **BETA-21** | **隐私 / 索引数据可视化轻量版（"索引了什么 / 日志在哪 / 一键清除"信任面板，V10-03 隐私 UI 早期预览）** | done（2026-06-03，详见归档） | apps/desktop（privacy.rs + PrivacyPage）+ packages/indexer（clear_index）+ packages/search-backends/local-index（clear） | BETA-06, BETA-07 | 2-3d |
+| **BETA-22** | **搜索历史 + 保存的搜索 / 智能文件夹（本地持久化，可一键重跑）** | done（2026-06-03，详见归档） | apps/desktop（history.rs + SearchView + PrivacyPage）+ packages 无改动 | MVP-19 | 2-3d |
+| **BETA-23** | **模型 fallback 接入桌面搜索默认流程（触发器扩展 + hybrid 编排 + feature 隔离）** | done（2026-06-13，详见归档） | packages/intent-parser + packages/model-runtime + apps/desktop + CI（release-windows.yml） | MVP-17, BETA-17 | 完成于 2026-06-13 |
+| **BETA-24** | **LoRA 重训含 keywords 补全样本（问题 4 最后一公里）+ MediaSearch 内容词覆盖** | done（2026-06-13，详见归档） | training/mlx-lora + packages/evals + packages/intent-parser | BETA-23 | 完成于 2026-06-13 |
+| **BETA-27** | **可配置本地索引目录 + 排除规则（通配符，参考 Everything 目录定义）** | done（2026-06-18，详见归档） | apps/desktop + packages/indexer | BETA-07（reindex 调度）, BETA-21（隐私面板复用）, BETA-15B-2（后台调度承接大目录） | 重估中（中等，初估 ~2-3d） |
+| **BETA-26** | **本地语义检索质量探针（BETA-15B embedding 路径去风险，spike）** | done（2026-06-15，详见归档） | packages/spike-retrieval（throwaway）+ model-runtime embed() | BETA-02, BETA-03, BETA-15A | 完成于 2026-06-15 |
+| **BETA-25** | **model-fallback 构建的动态库打包（静态链接路线）** | done（2026-06-13，详见归档） | apps/desktop + packages/model-runtime + CI | BETA-23 | 完成于 2026-06-13 |
+| **BETA-29** | **查询意图可编辑草稿（搜索前/后展示 Search Intent 关键字段，用户一键修正类型 / 时间 / 排序后重跑）** | **in_progress（v1 done 2026-07-04、v2 done 2026-07-04 II）**：核心闭环已交付——`Started` 事件回带完整 intent JSON（三条执行路径统一）、新命令 `search_with_intent`（serde 强校验跳过 parser 直接执行、仅收 file_search/media_search、成功后照常 record 支撑后续 Refine）、意图条「调整 ▾」折叠面板（关键词/扩展名 chips 可增删 + 类型/时间/排序下拉 + 重跑、未编辑字段零丢失）；测试 ×5、手测清单入 [manual-test-scenarios BETA-29 节](docs/manual-test-scenarios.md)（随 cycle 9）。**v2 done（2026-07-04 II）**：① 草稿保存进 BETA-22 saved searches——`SavedSearch.intent: Option<Value>`（serde default 向后兼容旧文件）+ `save_search` 增 `intent` 可选参（保存时即走 `validate_draft_intent` 强校验闸门，与 search_with_intent 同口径）+ 草稿面板「保存草稿…」（与重跑共用 `buildDraft()` 保证所存即所跑）+ 带 ⚙ 角标 chip 重跑走 `search_with_intent`；③ 搜索前预览草稿——新命令 `preview_intent`（parser + Refine 合并、**不含模型 fallback**、只解析零 tool call）+ 搜索框 ⚙ / Shift+Enter 入口 + 预览意图条 + 复用草稿面板（「按此条件搜索」）、动作/澄清类提示后直接普通搜索；desktop 新测 ×3（history round-trip/闸门 + preview 零执行）、手测清单入 [manual-test-scenarios BETA-29 v2 节](docs/manual-test-scenarios.md)（随 cycle 9）。**剩余**：② 修正样本入 BETA-30 失败样本箱（依赖 BETA-30 开工，卡随 BETA-30）。（2026-06-25 登记，源于 Claude × Codex 联合规划，借鉴 [LLM Wiki 文章](https://axk51013.medium.com/rethinking-agent-harness-part4-llm-wiki-%E5%8F%96%E4%BB%A3-rag-041629319804) Harness + Task 维度）。**价值主张**：把 parser 长尾问题（BETA-13 §6=87.7% 距 90% 差 2.3pp、纯 parser 见底）从「再训练 / 再标注」转移到「让用户一键修正」的产品化解法；BETA-13 剩余的 §1.1 video / screenshot+sort 等契约冲突可走草稿 UI 而非 re-baseline 评测集。**衔接**：Agent Harness（暴露 Search Intent JSON 到前端）、Search Intent schema、Ranker、BETA-13 eval pipeline（草稿修正可入 BETA-30 失败样本箱）、BETA-22 saved searches（草稿可保存）。**主要风险**：UI 复杂打断搜索流；缓解 = 默认折叠「展开高级」+ 一键 chips 修正常见字段（类型 / 时间 / 排序）+ 不打开高级时不影响主流程。 | apps/desktop + packages/harness + packages/intent-parser | BETA-13, BETA-22 | 1-2 weeks |
+| **BETA-30** | **本地失败样本箱（低置信 / 零结果 / 用户快速改搜的 query 本地入箱，可标注转私有 eval / ranker 反馈）** | not_started（2026-06-25 登记，源于 Claude × Codex 联合规划，借鉴 [LLM Wiki 文章](https://axk51013.medium.com/rethinking-agent-harness-part4-llm-wiki-%E5%8F%96%E4%BB%A3-rag-041629319804) Task + Data 维度）。**价值主张**：Beta 之后真正稀缺的不是更多规则，是真实用户找不到什么。把 long-tail query 转成可观测可迭代的私有 eval、不需要云端 telemetry，符合本地优先原则。**衔接**：BETA-22 搜索历史、BETA-06 Audit、Ranker、BETA-13 eval pipeline（导出后入 private eval）、BETA-11C 用户同义词库（标注路径 → 同义词候选）、BETA-29 查询意图草稿（修正后行为入箱）。**主要风险**：隐私（日志含查询词和路径）、反馈偏置、日志膨胀；缓解 = 本地保存 + 用户可清空 + 显式导出后才与 evals pipeline 集成 + 只记录用户触达的 hot failures 不全量。 | apps/desktop + packages/evals + packages/ranker | BETA-22, BETA-06 | 1-2 weeks |
+| **BETA-31** | **Windows 模型分发 UX 增强（双平台 onboarding 扩 3-step + GUI 一键下载 + example queries 内嵌）** | done（2026-06-27，详见归档） | apps/desktop/src-tauri + apps/desktop/src | BETA-15B-11-v2 | 完成于 2026-06-27 |
+| **BETA-32** | **团队归档 MCP daemon（headless 服务，包装 hybrid 检索给 Claude Code / MCP 客户端用、单一固定集合、内网局域网部署、bearer auth）** | done（2026-06-29，详见归档） | packages/scout-server + apps/daemon + packages/indexer + packages/evals + .github/workflows | — | 完成于 2026-06-29 |
+| **BETA-33** | **桌面菜单栏重构 + 选项对话框（参考 Everything：7 个下拉菜单 + 模态「选项」窗）** | **in_progress（2026-07-03 Claude Code、cycle 1..7c + cycle 9 done；2026-07-24 cycle 10 done：菜单栏/模态选项整体退场，改侧栏导航 + 整页设置）⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐**。**cycle 10 done（2026-07-24、Codex 前端重构 + Claude Code review/修复，随 v0.9.36 双平台发布）**：Codex 摒弃 Everything 风格菜单栏 + 冗余禁用死菜单项——删 `MenuBar.tsx`（393 行），`App.tsx` 改固定侧栏（找文件 / 设置 + 快速入门 / 关于 / 本机服务状态），`PreferencesDialog` 从居中模态卡片升级为 `/settings` 整页路由（分类导航加 Phosphor 图标）；`SearchView` 首屏加空状态引导卡（3 条真实搜索示例）+ emoji 图标统一换 Phosphor。**Claude Code review 修复 3 个功能回归**（Codex 自测走的是浏览器截图 QA，未跑通交互路径）：① 全局快捷键搬迁漏了 `Ctrl+N`（新建搜索/重置查询），补回；② `Ctrl+;`/`Ctrl+,` 在引导流程（onboarding）期间仍会触发 `navigate("/settings")`，把用户踢出首次授权向导且无法自动弹回，改为 onboarding 路由下整组快捷键直接不挂载；③ 设置页原为模态叠加层、关闭必回到打开前的底层视图，改路由后 `onClose` 写死 `navigate("/")`——从「快速入门」第 N 步跳去设置再关闭会被打回搜索页且引导步数丢失（`OnboardingMac/Win` 的 `step` 是纯组件内 state，路由切换即卸载重置），修法：`App.tsx` 记录 `settingsReturnPath`（打开设置前的路径）关闭时原路返回 + onboarding 页 `step` 用 `sessionStorage` 持久化跨卸载存活；一并清了模态遗留的死 CSS（`.prefs-backdrop/.prefs-dialog/.prefs-header/.prefs-close-x/.app-main`）。三处均在浏览器 + 组件级人工交互复测确认修复。**遗留（不阻塞、低优先级）**：`menu-events.ts` 的 `open-selected`/`locate-selected`/`show-history`/`clear-history` 4 个 action 已无发射者（原唯一发射者 MenuBar 已删），但功能均有平行 UI 入口（右键菜单 / 独立按钮）覆盖，未清理纯是死分支。**旧「剩余 cycle 10+」清单中「子菜单 ▸ 展开」「macOS 原生菜单 BETA-34」因整个下拉菜单体系已移除而作废**，不再是待办。**cycle 9 done（2026-07-03、六刀全清，代码层完、真机验证随下次发版按 [manual-test-scenarios「BETA-33 cycle 9」节](docs/manual-test-scenarios.md)）**：① embed 失败 degrade 根修——`TextEmbedder::is_ready()` 默认探测方法 + `EmbeddingModelHandle` 状态机实现 + `SemanticIndexBackend::is_available()` live 探测，feature 关/模型缺失/加载失败时必败语义臂**路由期退出** fanout（旧 `is_available` 只查句柄存在是「dev 版恒报 embedding 模型不可用」真根因）+ fanout 零结果报错优先非语义臂错误；② 单实例锁（tauri-plugin-single-instance、注册在全插件之前、二开聚焦既有窗口；licenses 顺带补 BETA-27 漏登记的 dialog）；③ `check_windows_search_indexed` 真做（`sc query WSearch` STATE 数字码 locale 无关解析、zh-CN 真机实测 + onboarding 第 1 步状态条首个真实消费点）；④ StatusIndicator/EmbedStatus 文案重写（`lib/model-status.ts` 单一信源：EmbedStatus 类型 ×3 / embedStatusLine ×2 / 顶栏第三套文案收拢、tooltip 不拼 raw 路径/Rust 错误串）；⑤「本地索引」全库 vs 概貌口径统一（`IndexStatus.db_totals` 结构化 + 概貌卡差值显式提示、隐私面板全库语义不动）；⑥ useAppSettings hook 抽取 + 删 SettingsPage（-538 行）+ `/settings` 路由（cycle 3 起已无导航入口）。新增 11 单测、六 crate 全测零回归。**剩余**（子菜单展开 / macOS 原生菜单已随 cycle 10 作废，见上）：上下文 enable/disable（无选中项时灰、空 query 时灰，~0.5d）/ dev feature-full script（需装 cmake、~0.5d）。**此前**（2026-07-02、cycle 1+2+3+3v2+3v3+3v4+4+5+6v4+7a+7b+7c done、v0.9.4~v0.9.7 已发 + v0.9.7 真机验证 (a)-(j) 9 GO / 1 FAIL（(d) window.confirm、已随 7c 修）+ cycle 7c 合 bump v0.9.8 待 tag）：菜单栏骨架 + 关于对话框 + 事件总线 + 全局快捷键 + Alt 访问键已落地。**cycle 7-a done（v0.9.7、Codex APPROVED with suggestions ⭐⭐⭐）**：v0.9.6 首次真机验证锁定"C 主 + B 副 + 数据源不一致 + 进度可视化断层"（用户报"添加后不显示"= 覆盖语义系统默认三夹消失的心智冲突、非真 bug、代码工作正常）。索引 pane UX 打磨——(1) C 修法：加"覆盖语义系统默认已隐藏"大字醒目提示条 + checkbox 增强绿描边加粗 + 概貌"目录"改「生效目录」+ tooltip；(2) B 修法：picker 后新目录 flash 1.5s 高亮 + scrollIntoView（Codex SUGGEST 9） + `⏳ 待应用` 琥珀 chip + `hasUnsavedChanges` sticky 底部 warn 提示 + 关闭前 window.confirm 二次确认；(3) 数据源统一（Codex APPROVED 2 选 (a)）：概貌 latestTime 引用 indexOverview + `prevIndexing` useEffect 完成时强刷 IndexStatus；(4) 进度可视化（Codex OBJECT 3 · SUGGEST 4/5）：新 `IndexStatus.current_phase` + `IndexProgress::on_phase(phase)` trait method 默认 no-op + `StatusProgressBridge::on_phase` impl + local-index `reindex_with_progress_inner` 每 phase 前调（MusicDiscovery 时同步清 current_root）+ 前端 phase chip 拼进 `indexStatusLine`（🎵 扫描音乐（Everything 全盘发现，请稍候）/ 📄 扫描文档 / 🖼 扫描图片）+ indeterminate 动画进度条（不做百分比）。改动 7 文件。本机 cargo 全测过 indexer 121 / local-index 22 / desktop bin 140 / desktop::search::index_status 9（含新 `phase_bridge_*` 单测）/ clippy 干净 / fmt 干净 / tsc 干净。**cycle 7-b done（v0.9.7 同版）**：子路径排除（相对 root path glob）—— 新 `RootExclude { root, patterns }` struct + `AppSettings.root_excludes` + `normalize_root_key(path)` 跨平台归一 helper（Windows 反斜杠→\+小写、Unix 正斜杠+保留大小写、trim 尾部分隔符）+ indexer `ExcludeFilter` struct（basename 全局 + per_root 相对路径 GlobSet 双层）+ `from_basename_set(&GlobSet)` 兼容构造（**Codex OBJECT 2 保 BETA-27 basename-only byte-for-byte**）+ `build(exclude_globs, root_excludes, normalize)` 生产构造（Codex SUGGEST 3 边界：以 `/**` 结尾 pattern 自动补目录本身让 walkdir 剪枝生效）+ Windows 分隔符归一（rel `\` → `/` 再喂 globset）+ 3 个 `_with_filter_and_progress` 方法（Music/Doc/Image）+ local-index `reindex_scoped_with_filter_and_progress` + desktop `read_index_config_with_filter` + `perform_reindex` 走 filter 版本 + 前端 `RootRow` 加折叠区「子路径排除 ▸ (N)」+ hint 通配符（`**`/`*`/`?`）说明 + 移除 root 时同步删该 root 的 root_excludes 条目（无孤儿）。改动 8 文件。本机 cargo 全测过：indexer 127（+6 新 ExcludeFilter：dir_itself / windows_separator / empty_root_short_circuits / walkdir_per_root / per_root_no_leak / from_basename_set 等价）/ desktop::settings 17（+5 新：`root_excludes_default_is_empty` / `root_exclude_serde_round_trip` / `normalize_root_key_windows_equivalence` / `normalize_root_key_empty_returns_empty` / `old_settings_without_root_excludes_parses_ok`）/ desktop bin 145 / clippy 干净（顺手删旧 `is_excluded_dir` 无 caller fn + 修 `derivable_impls` + `redundant_closure`）/ fmt 干净 / tsc 干净。**cycle 7-c done（2026-07-02、bump v0.9.8 待 tag、Codex SUGGEST 6/7/8/10 全落地 + 真机验证发现的 (d) confirm 失效顺带修）**：① 单目录重扫——`perform_reindex` 抽 `perform_reindex_for_roots(status, db, settings_path, roots_override)`、override 只换扫描 roots、exclude_globs / root_excludes / OCR / progress bridge 仍从 settings live-read（不给绕过排除配置的旁路留口子）+ 新 tauri command `reindex_root`（校验目录存在 + spawn_blocking + 完成接语义 worker、与全量 reindex 同构）+ RootRow「重扫」按钮（`⏳ 待应用` pending root 不显示、索引中禁用）；② 打开目录——**复用既有 `open_path` 命令**（FileActionTool 策略 + audit 口径一致、Windows `cmd start` 对目录开 Explorer / macOS `open`；与 design doc 的 plugin-shell 方案偏差 = 零新依赖、目标一致）+ RootRow「打开」按钮；③ 移除目录二次确认——单选「仅从索引配置移除」（默认）vs「移除并清除索引记录」、文案明确**不删除磁盘上的任何原文件**、清除失败时不移除配置（避免"以为清了其实没清"）；`MusicIndex::purge_under_root` + `DocumentIndex::purge_under_root` SQL 落 indexer 存储层、与 `stats_under_root` 共用新抽 `root_glob_predicate` / `root_glob_params` 边界 helper（**统计口径 = 清除口径**）、FTS 同事务同步删、document_vectors 外键级联；新 tauri command `purge_root_from_db` 薄封装；④ **(d) window.confirm 失效修复**——v0.9.7 真机验证发现 wry/WebView2 生产装机版 `window.confirm` 不弹窗直接放行、cycle 7-a 关闭守卫静默丢改动（对照实验排除 hasUnsavedChanges 状态问题）；新通用 in-DOM `ConfirmModal` 组件替换、关闭守卫与移除确认共用、Esc 在弹窗打开时只关弹窗不穿透外层守卫（详记忆 tauri-webview2-window-confirm-noop）。改动 8 文件；本机全测过：indexer 130（+3 purge 单测含 Codex SUGGEST 10 外键级联）/ local-index 22 / desktop bin 145 / clippy `-D warnings` 干净 / fmt 干净 / tsc 干净。**cycle 8 done（2026-07-02 Claude Code Opus 4.7、待 bump v0.9.9 一起 tag）**：快速入门 6 步重构（Win 6 / Mac 5，兑现 BETA-31 cycle 2 UX 扩展 pending 的 Everything 引导 + 生成模型下载入口）—— 新 4 组件 `apps/desktop/src/components/onboarding/{OnboardingShell,EverythingCheckStep,IndexRootsStep,FirstIndexStep}.tsx` + 改 5 文件（OnboardingWin/Mac 页 + [menu-events.ts](apps/desktop/src/lib/menu-events.ts) 新 `open-prefs-indexing` action + App.tsx 传 initialCategory + [PreferencesDialog.tsx](apps/desktop/src/components/PreferencesDialog.tsx) 新 `initialCategory?: Category` prop）。步骤：① Windows 索引 / Mac FDA；② Everything CLI winget 命令（复制按钮 + voidtools fallback + `get_backend_status` 前端 filter `search.everything` + 3s 自动重检）；③ 嵌入模型（复用 ModelDownloadStep kind='embedding'）；④ 生成模型 Qwen3-0.6B（复用 ModelDownloadStep kind='generation'）；⑤ 索引目录（内嵌只读 `get_effective_index_roots` 列表 + 「打开索引选项…」触发 `open-prefs-indexing` → PreferencesDialog 直接停在「索引」分类）；⑥ 首次索引（reindex + 实时 fts/semantic 进度条 + 行内 2×2 示例卡 + **不阻塞「完成」按钮**）。**零后端命令新增**（复用 `get_backend_status` / `get_effective_index_roots` / `reindex` / `get_index_status` / `open_windows_indexing_options`）；useShouldShowOnboarding 判定不变（第 3 步完成时仍调 `complete_onboarding('model_download')`）。dev 真机验证反馈两轮微调：① UX 紧凑化（shell padding 36/40/48→18/36/20、stepperDot 22→20、title fontSize 24→20、subtitle 13→12.5、children marginBottom 28→16、button padding 12/28→9/22、各步骤内部 padding/lineHeight 全线收一档）；② shell 加 `skipAction` 槽（primary 左侧 ghost）+ 每步都填「跳过此步」+ Step 3/4 隐藏 ModelDownloadStep 内嵌 skip 避免双重按钮；③ 顺带清 PreferencesDialog 索引概貌顶部 3 emoji（📄🖼🎵）+ RootRow 分类计数改中文（"文档 N · 图片 N · 音乐 N"）。tsc + vite build 双绿；BETA-31 cycle 2 UX pending 至此关闭；`check_windows_search_indexed` 仍是 stub 留 cycle 9。**cycle 1+2 改动概览（3 新文件 + 6 改、单次 commit）**：① 新 [MenuBar.tsx](apps/desktop/src/components/MenuBar.tsx) ~325 行（7 个下拉 + 28 菜单项含分隔线 + 全局快捷键 Ctrl+N/F/P/D/Shift+C/, + Alt+F/E/V/S/B/T/H 访问键 + hover 切换 + 点空白/Esc 关闭 + aria）；② 新 [AboutDialog.tsx](apps/desktop/src/components/AboutDialog.tsx) ~75 行（模态弹窗 + getVersion + GitHub 链接）；③ 新 [lib/menu-events.ts](apps/desktop/src/lib/menu-events.ts) ~45 行（MenuAction 10 种 + emit/listen helpers + CustomEvent `scout:menu`）；④ [App.tsx](apps/desktop/src/App.tsx) +3/-12 删 NavLink 换 MenuBar；⑤ [styles.css](apps/desktop/src/styles.css) +179/-24 菜单栏 + 关于对话框样式；⑥ [SearchView.tsx](apps/desktop/src/SearchView.tsx) +60 inputRef + menu listener bridge 9 actions；⑦ tauri.conf.json + Cargo.toml + Cargo.lock 三处 0.8.9 → 0.9.0。**接通状态**：✅ 14 menu item + 6 快捷键 + 7 Alt 访问键 + 选项对话框；🚧 cycle 4+ 待：导出/列控制/排序/范围/跨语言/高级语法/管理保存/重建索引/索引状态/模型 ▸/后端 ▸/打开日志数据目录/键盘快捷键/用户手册/反馈/context-aware enable。**cycle 3 改动概览（v0.9.1、1 新文件 + 5 改、单次 commit）**：① 菜单栏紧凑化（[styles.css](apps/desktop/src/styles.css) `.app-header` min-height 28→22px / `.menu-bar-title` font-size 0.82→0.78rem + padding 0.2 0.55→0.08 0.32rem + 去 margin / `.menu-access-key` font-size 0.75→0.72rem + opacity 0.6→0.55，视觉密度对齐 Everything）；② 新 [PreferencesDialog.tsx](apps/desktop/src/components/PreferencesDialog.tsx) ~540 行：模态卡片 760×560 + 标题栏 + 左侧 4 分类树（常规 / 语义召回 / 索引 / 隐私与记录）+ 右侧分类对应 Pane（GeneralPane / SemanticPane / IndexingPane / PrivacyPane）+ 底部 取消/应用/确定；复用全部 SettingsPage 后端 tauri command（`get_settings` / `update_settings` / `get_audit_log` / `get_index_status` / `get_model_status` / `embedding_model_status` / `get_effective_index_roots` / `reindex` / `clear_audit_log`，**zero backend change**）；③ [lib/menu-events.ts](apps/desktop/src/lib/menu-events.ts) 加 `open-prefs` MenuAction；④ [MenuBar.tsx](apps/desktop/src/components/MenuBar.tsx)「工具→选项」与 Ctrl+, 改 emit("open-prefs") 不 navigate("/settings")；⑤ [App.tsx](apps/desktop/src/App.tsx) 加 showPrefs state + onMenuAction listener + `<PreferencesDialog />` 条件渲染；⑥ styles.css 新增 `.prefs-*` 系列 ~250 行（backdrop / 760×560 dialog / 160px 左栏分类树 / 右栏 scroll pane / 表单 form 控件 / footer 按钮 / audit table）；⑦ 旧 `/settings` 路由 + SettingsPage 保留作 fallback（**零回归保底**，cycle 4 才考虑删）；⑧ bump tauri.conf.json + Cargo.toml + Cargo.lock 三处 0.9.0 → 0.9.1。**cycle 3 v2 hotfix（v0.9.2、commit `318fdd3`、7 文件 +98/-14）**：本地首次 `npm run tauri dev` 真机验证 v0.9.1 发现 3 处交互 bug、当场修 2 个。① **Esc 键关闭修复** = 4 版试错定位（v1 `document.addEventListener` ❌ / v1.1 `window+capture+useRef` ❌ / v1.2 React onKeyDown+dialog root autoFocus ❌ / **v2 GO** = React `onKeyDownCapture` 挂 backdrop 元素 + `dialogRef.current?.focus()` 挂载自动获焦，React 合成事件层不受 Windows Sogou IME 拦截）；② **点遮罩关闭修复** = dialog 从 760×560 缩到 `min(720px, calc(100vw-80px)) × min(520px, calc(100vh-100px))` + 加 `outline: none`，默认 800×600 窗口下遮罩 ≥40px 可点；③ **Ctrl+, 打不开对话框** = Sogou IME 拦 `,` 键、无代码 fix、登记 cycle 4 follow-up 换绑 Ctrl+; 或 Ctrl+Shift+,；顺带 4 项 follow-up 登记（dev 版 `cargo run --no-default-features` 关掉 semantic-recall+model-fallback feature → 搜索恒报「embedding 模型不可用」；embed 报错整个搜索不 degrade；顶栏灯只判 feature+文件不判 load；npm 11 approve-scripts esbuild 加 `allowScripts` 到 package.json）；顺带 tauri-build 重生 `windows-schema.json` 一并入 commit。**cycle 3 v2 真机验证 GO 项（computer-use 驱动 GUI 截图 + zoom 双源）**：菜单栏紧凑度对齐 Everything / 工具→选项 弹模态 / 4 分类切换 / 索引 pane 显示真数据（3 系统默认路径 + 「上次索引 音乐 34185 / 文档 187 / 图片 4687」） / 隐私 pane 8 条 audit 真记录 / 取消 / × / **Esc** / **点遮罩** 全过。**cycle 3 v3（v0.9.3）**：暴露语义原始 cosine + 前端「相似度」列 + 按相似度排序（走 MergedResult.semantic_cosine 传给 SearchResultJson、避开 42 个 SearchResult 构造点、只动 3 个 MergedResult 构造点、真机 GO）。**cycle 3 v4（v0.9.4）**：Qwen3-0.6B 一键下载（model_download.rs 重构 ModelKind 枚举 + 独立命名空间事件 + useModelDownload/ModelDownloadStep 参数化 kind + PreferencesDialog 常规 pane 嵌入 not_found 下载按钮、~400 MB 从 unsloth/Qwen3-0.6B-GGUF 拉、Embedding 兼容 emit 老无 ns 事件不破 v0.9.3 前端） + 段落 vs 文档 cosine label 明示。**收工前追加（待 v0.9.5 出货）**：① Ctrl+, → Ctrl+; 换绑绕 Sogou IME（`,` 老键 fallback、双键 both emit `open-prefs`、真机秒验）；② StatusIndicator 顶栏灯口径修正（额外查 `embedding_model_status`、语义灯 ready 绿 / loading 蓝 / not_found 琥珀 / failed 红 / unavailable 灰、轮询 30s → 10s、与选项对话框「语义召回」pane 状态源统一）。**cycle 4 done（v0.9.5 待收工提交）**：OCR 乱码 + 图片语义污染防治双层门槛——A 层 `is_embed_worthy` v2（`MEANINGFUL_CHAR_RATIO_FLOOR=0.6` CJK+拉丁占非空白 ≥60% 才嵌）+ B 层 `embed_pending` / `explain_semantic_hit_impl` / `purge_short_body_vectors` 三处「图片 doc_type 一律跳过语义索引」+ 段落级 `EXPLAIN_MIN_SCORE 0.30→0.45` + `passage_worth_embedding` 段级门槛（字数 ≥8 + meaningful ratio ≥60%）。修复 v0.9.4 用户搜「作文」踩到 QQ 表情包 `face-3-efdc54.png` OCR 乱码段落级虚高 0.62 bug。改动 5 文件、本机 cargo 全测过（indexer 115/115、semantic-index 16/16、clippy `-D warnings` 干净、桌面 crate check 干净）；顺手修 Rust 1.96 新 lint `map_unwrap_or` 2 处（非本 cycle 引入）；已 commit `6e6d008` 未 tag。**cycle 5 done（v0.9.5 同版、一起 tag 待收工提交）**：索引目录概貌 + 分类统计 UI——后端新 tauri command `get_index_overview` + `DocumentIndex::stats_under_root` + `MusicIndex::stats_under_root`（SQL GLOB 3-OR 前缀边界跨 Windows / Unix 分隔符、图片按 `doc_type IN IMAGE_EXTS` 拆分）；前端 IndexingPane 顶部加 `.prefs-overview-card`（6 单元格）+ 新 `RootRow` 组件让每目录行展示 `📄 X · 🖼 Y · 🎵 Z` + 人性化时间；useEffect 跟 `settings.index_roots` fetch + 监听 `indexStatus.indexing` 从 true 转 false 时自动刷新。改动 7 文件；indexer 119/119、clippy `-D warnings` 全 workspace 干净、tsc 干净、fmt 干净。**未做 follow-up**：① size 字段（需 schema migration + upsert 补 size + 走 std::fs::metadata、~2h）；② 单目录重扫 `reindex_root(path)` command（~2h）；③ 打开目录 plugin-shell 按钮（~30 分钟）；④ 移除目录时同步 purge 该 root 下 DB 条目（~1h）。**cycle 6 v4 done（bump v0.9.6、待 tag ⭐⭐⭐）**：追加系统默认目录 checkbox + FTS 索引进度可视化——① **AppSettings 加 `include_system_defaults: bool`**（默 false 保旧覆盖语义、零回归）+ 新 `resolve_index_roots_tagged(raw, include_defaults) -> Vec<(PathBuf, bool)>` 主 API + 3 分支覆盖（空 raw / 覆盖 / 追加去重）+ `get_effective_index_roots` / `get_index_overview` 都加 `include_system_defaults: Option<bool>` 参数 + 抽 `read_effective_inputs` helper；② **IndexStatus 加 `current_root: Option<String>` + `fts_progress: Option<(u64, u64)>`** 字段 + `fts_begin` / `fts_finish` 生命周期 fn + `StatusProgressBridge` impl `scout_indexer::IndexProgress` trait（on_file 累加 scanned/indexed + 父目录更新 current_root）；③ **local-index 新 `reindex_scoped_with_progress` API**（音乐 Everything 发现分支保 `index_paths` 无进度、fallback + 文档 + 图片全走 `_with_progress` 变体、`perform_reindex` 走它 + fts_begin/finish 包夹）；④ **前端 PreferencesDialog IndexingPane 统一按 effectiveRoots 渲染**（自定义项显示「移除」、系统默认项显示「系统默认」tag）+ `index_roots.length > 0` 时暴露 checkbox「☐ 同时索引系统默认目录」 + `indexStatusLine` 索引中显示「⏳ 正在索引：📁 current_root　已扫描 N · 已入库 M」+ SettingsPage fallback 页 interface 也加字段防 spread 丢字段；⑤ 顺手删旧 `resolve_index_roots(raw)` wrapper + `fts_set_current_root` 占位 fn（都无 caller、YAGNI）。改动 6 文件 +250/-70。**本机全测过**：indexer 119 / local-index 22 / desktop bin 141（3 ignored Windows 真机 e2e）/ desktop::settings 12（含新 3：tagged 3 branches + dedup + default）/ desktop::search::index_status 8（含新 1：桥闭环）/ clippy `-D warnings` 干净 / fmt 干净 / tsc 干净。**修复的 UX gap**：加自定义目录后系统默认 3 目录消失（override 语义 UX 坑、方案 B checkbox opt-in 追加）+ 索引进度只有静态"正在后台索引…"、看不到当前目录 + 数字。**cycle 7-N 路线**：cycle 7 embed 报错 degrade 到其他 3 后端（~30 分钟）+ dev feature-full script（~0.5d、需装 cmake）→ cycle 8 抽 `useAppSettings()` hook + 删 SettingsPage 旧路由（~1d）→ cycle 9 PrivacyPage 迁「隐私」分类（~1d）→ cycle 10 上下文 enable/disable（无选中项时灰、空 query 时灰，~0.5d）→ cycle 11 子菜单 ▸ 展开（视图→列/排序、工具→模型/后端，~1d）+ 后端接通（重建索引 + 打开日志/数据目录 + 用户手册/反馈 URL，需 plugin-shell + 3 tauri command，~1d） + StatusIndicator/EmbedStatus 文案 UX 整体重写（backend detail 字符串前端拼句、~0.5d）→ cycle 12 macOS 原生菜单（用 Tauri tauri::menu::Menu API，~3-5d、可独立 BETA-34）。**cycle 3 接受标准**：本机 cargo + node 均不可用（[[ci-ubuntu-first-run-lint-gaps]]）、CI ci.yml 兜底；真机正确性留 v0.9.1 release 装机后用户验证：(a) 菜单栏视觉密度对齐 Everything 截图；(b) 点「工具→选项」或 Ctrl+, 弹模态对话框、不再跳 `/settings` 长页；(c) 左侧 4 分类切换右侧表单内容；(d) 改字段点「应用」绿字「设置已保存」；点「确定」保存并关；(e) Esc / 点遮罩 / 右上 × 都能关闭；(f) 现有所有搜索 / 索引 / 预览 / 历史 / 保存的搜索 / 旧 `/settings` 路由 零回归。**cycle 1+2 接受标准**：本机 cargo + node 均不可用（[[ci-ubuntu-first-run-lint-gaps]]）、CI 兜底；真机正确性留 v0.9.0 release 装机后用户验证 (a) 顶部菜单栏 7 个下拉可点击展开 + hover 切换；(b) Alt+F 等访问键展开对应下拉；(c) Ctrl+N 清搜索框 + Ctrl+F 聚焦 + Ctrl+P 切预览面板；(d) 选中结果后 Ctrl+Shift+C 复制路径 + 状态栏「已复制路径：xxx」；(e) 工具→选项 跳现 `/settings` 长页面；(f) 帮助→关于 弹版本 v0.9.0；(g) 现有所有搜索/索引/预览/历史/保存的搜索 零回归。**承接（原 not_started 卡片描述）**：源于用户「请参考 Everything 菜单栏重新规划」需求，**范围 = 路径 C**：先纯前端 React `<MenuBar>` 组件 + `<PreferencesDialog>` modal、Windows 优先；macOS 用 Tauri `tauri::menu::Menu` 原生顶栏留 BETA-34（后续）。**菜单清单（7 个下拉）**：① 文件(新建搜索 Ctrl+N / 打开 Enter / 在资源管理器中显示 Ctrl+Enter / 复制路径 Ctrl+Shift+C / 导出结果 CSV/JSON / 退出) ② 编辑(撤销/重做/剪切/复制/粘贴/全选 + 查找 Ctrl+F) ③ 视图(列 ▸ / 排序 ▸ / 预览面板 Ctrl+P / 状态指示 / 快捷键横条显隐) ④ 搜索(重置 Esc / 搜索范围 ▸ / 跨语言匹配 / 搜索历史 / 清空历史 / 高级语法帮助) ⑤ 书签(保存当前 Ctrl+D / 管理 + 动态列出 saved_searches 前 N 条直接点击运行) ⑥ 工具(重建索引 / 索引状态 / 我的同义词 / 隐私与数据 / 模型 ▸ / 搜索后端 ▸ / 打开日志目录 / 打开数据目录 / **选项 Ctrl+,**) ⑦ 帮助(快速入门 = Onboarding / 键盘快捷键 / 用户手册 = docs / 反馈与报告 bug = GitHub Issues / 关于 Scout)。**「选项」对话框结构**（参考 Everything）：左侧分类树 + 右侧表单 + 底部确定/取消/应用；分类 = 常规(界面/首页/搜索/结果/视图/上下文菜单/字体颜色/快捷键含 global_shortcut) / 历史 / 索引(目录 = index_roots / 排除规则 = exclude_globs / 调度) / **模型与召回**(Scout 特有：model_path / similarity_floor / semantic_weight / enable_model_fallback) / **后端**(Scout 特有：Spotlight/WindowsSearch/Everything/Semantic 启停) / 隐私(tracing 开关 / 数据根 / 清空各类) / 高级(env 开关含 SCOUT_ENABLE_EMBED)。**承接关系**：吃掉现有 `/settings`、`/privacy`、`/synonyms` 三个独立路由的内容到「工具」菜单 + 选项对话框；保留 `/` 搜索主路由 + 兼容现有 NavLink（or 完全替代）。**估时**：~1-2w（前端骨架 + 路由收编 + 选项对话框分类树 + 14 个分类的表单迁移 + 真机手测）。**验收**：(a) 顶部菜单栏 7 个下拉可展开 + 键盘 alt+首字母唤出；(b) Ctrl+, 打开选项对话框；(c) 现有所有 settings 字段迁入选项对话框对应分类、保存重启持久化；(d) Windows v0.9.0 真机验证菜单点击 / 键盘导航 / 选项保存 / 现有功能（搜索 / 索引 / 预览 / 历史 / 保存的搜索）零回归；(e) macOS 原生菜单留 BETA-34。**风险**：① CSS 模拟菜单与 webview 默认右键 / Tauri context menu 冲突需排查；② alt+首字母在 webview 里不一定被 Tauri 截获、需测试；③ 选项对话框 14 个分类一次性出工作量大、可拆 v1（核心 8 分类）+ v2（其余 6 分类）。**对应 spec / plan**：本次会话已对齐方案、下次会话开 cycle 时补充设计 spec。 | apps/desktop/src + apps/desktop/src-tauri | BETA-31-v3 收尾 | 1-2 weeks |
+
+**BETA-15D 验收**：
+- 复合 keyword + extension 谓词在 macOS 26+ 真机 mdfind 上接受不 reject
+- BETA-15 spec §7 scenario 1（`找一份工作汇报相关的ppt → 述职.ppt`）在真机端到端命中
+- 既有 evals v0.5 parser-only / hybrid 不回归（472/26/2 + 480 维持）
+
+**B6 升级判定**：手维护词典 > 200 组、或出现可重复的"用户原 case 找不到"反馈时启动 BETA-15B。
+
+#### B7：企业冷归档检索底座（三场景，并行衍生子线）
+
+> 2026-07-02 定位收敛后登记（方案与 Codex 评审：Codex 结论 APPROVE with required adjustments、修正意见已全部合入本小节）。
+> 目标场景：① 律所案件卷宗检索；② 企业内部审计取证检索；③ 离职员工材料归档检索。共同画像 = 敏感数据不出门 + 冷归档 + 检索者不熟悉语料组织方式 + 需留痕。
+> **红线：本小节不修改 §6.3；BETA-14 / §6.3 仍是 Beta 出场依据。B7 与 BETA-32 同属并行衍生子线，不进 Beta 出场硬指标、不阻塞 B→V 切换。**
+> 分析层（内容关联分析 / 摘要 / 比对 / 起草）**不自建**——经 BETA-32 daemon + 外部 LLM（MCP 工作流）组合实现；V10-13/15/16 已相应重定性（见 §3.4）。
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| **BETA-35** | **扫描版 PDF OCR 管线（PDF 页渲染成图 → 复用 OcrEngine 层；三场景共同第一缺口）** | done（2026-07-02，详见归档） | packages/indexer + packages/search-backends/local-index + apps/desktop | BETA-02, BETA-03 | ~~1-2w~~ → 1 天（AI 全程） |
+| **BETA-36** | **daemon 检索权限模型 + 归档集合（collection）模型** | done（2026-07-03，详见归档） | packages/scout-server + apps/daemon | BETA-32 | ~~1.5-2.5w~~ → 1 天（AI 全程） |
+| **BETA-37** | **邮件格式提取（eml 正文 + 附件 + headers 基础字段；msg 拆 BETA-37b 后置）** | done（2026-07-02，详见归档） | packages/indexer | BETA-02 | ~~1-1.5w~~ → 1 天（AI 全程） |
+| **BETA-37b** | **msg（Outlook OLE/CFB）提取——BETA-37 拆出后置：无 fixture 验收靶、Rust crate 生态弱（msg_parser 久未更新），等真实样本/需求再评估 crate 或 shell-out 方案** | not_started | packages/indexer | BETA-37 | 2-4d |
+| **BETA-38** | **向量检索规模化 + 文档身份/去重策略（内存缓存优化暴力 + 文件身份 hash 去重，十万级水位）** | done（2026-07-03，详见归档） | packages/indexer + packages/search-backends/semantic-index + packages/evals | BETA-15B | 1-2w |
+| **BETA-39** | **图片语义索引 opt-in + 质量门槛（解除 BETA-33 cycle 4 一刀切）** | done（2026-07-03，详见归档）。**2026-07-04 III 追加：daemon 默认开**（用户拍板）——`ServerConfig.embed_images` daemon 默认 true / 桌面 opt-in 不变、`--disable-image-semantics` 逃生舱、启动期 purge 镜像桌面语义；顺带修语义臂空洞（`SemanticIndexBackend` 扩展接受图片类 MediaSearch + `IMAGE_EXTS` 过滤——`截图/照片` 问法此前语义臂直接跳过）；enterprise eval O-09 顶位命中实证 2 字 CJK 词图片内容可达：beta-40-enterprise-eval-2026-07-04.md §7 | packages/indexer + apps/desktop + packages/scout-server + apps/daemon + packages/search-backends/semantic-index | BETA-33 | ~~2-3d~~ → 1 天（AI 全程）；daemon 默认开追加 0.5 天 |
+| **BETA-40** | **MCP 场景 playbook（三场景各一篇：部署 + 权限配置 + 示例 query + LLM 工作流；吸收原 V10-13）** | **in_progress**（2026-07-03 文档面 done：[docs/playbooks/](./docs/playbooks/README.md)；2026-07-03 Codex 补三场景本机 smoke 证据：enterprise-semantic-daemon-test-report-2026-07-03.md，真实模型加载 + daemon-mode smoke 3/3 + scoutd e2e 9/9 + 三场景 MCP 查询命中。**2026-07-04 Claude Code 口径修正 + 底座补齐**：7-03 的"semantic 命中"实为 FTS 字面命中——当时 daemon `document_vectors` 恒空、候选链无语义后端；本轮修 4 根因（中文 CMap PDF panic 降级 OCR / daemon 图片轮 / daemon embed pass+语义臂+RRF 融合 / WinRT 正斜杠路径），补 `index_failures` 失败留痕，真实模型端到端复验语义召回真实生效：beta-40-ingest-semantic-gap-fix-2026-07-04.md。**2026-07-04 II Claude Code：enterprise eval 自动化 done**——`packages/evals` enterprise 模块 + `enterprise_scenarios` binary（queries.tsv 21 case → 真 scoutd collection 模式 → 逐 subject token 信息墙双断言 + top-K 命中）+ `enterprise_scenarios_gate` 回归门（fixture 完整性常跑 CI + env 门控端到端 `--require-all`）；真实模型 baseline 全过（同日 III 扩至 **22/22**，含图片语义 case O-09）、首轮暴露并修复 csv/tsv 不在 `DOC_EXTS` 的覆盖缺口；daemon 加 `--semantic-weight` 旋钮、权重 10 vs 3 排名逐 case 一致 → 融合权重问题结案维持默认：beta-40-enterprise-eval-2026-07-04.md。**同日 IV：桌面 UI 消费 `extraction_failures()` done**（「选项 → 索引」新「未能索引的文件」区块，7-04 修复报告遗留项全部消化）。**剩验收第二条严格口径**：至少一场景在用户真实内网/归档目录走通并回填验收证据（记入本 task 卡）；本机合成材料证据不替代真实内网证据） | apps/daemon + docs/ | BETA-32, BETA-36, BETA-41 | ~~3-5d~~ 文档面 0.5 天；本机 smoke + 语义底座 + eval 自动化 done；真实内网证据待用户 |
+| **BETA-41** | **企业场景评测语料 fixture（三场景合成语料 + 检索 query 子集，BETA-35/37/38 共同验收基线）** | done（2026-07-02，详见归档）。2026-07-03 Codex 另补独立原始材料包 [test-materials/enterprise-scenarios-raw](test-materials/enterprise-scenarios-raw/) 与真实格式生成脚本 [generate_enterprise_real_format_materials.py](scripts/generate_enterprise_real_format_materials.py)，覆盖 DOCX/PPTX/XLSX/PDF/JPG/PNG/扫描 PDF/EML/MD/TXT；本轮报告指出 PDF/JPG/PNG/OCR 落库仍需专项。 | packages/evals + test-materials/ | BETA-13 | ~~1w~~ → 1 天（AI 全程）；扩展材料 0.5 天 |
+| **BETA-43** | **MCP 出处/权限闸门先导（V10-16 先导提前：结果强制带出处 / 禁全文读取时片段级返回 / 审计导出合规报告）** | **done（2026-07-04）**：四条验收全达——① `search` 命中新增 `snippet`（关键词上下文窗口，字符级匹配避开 trigram 2 字 CJK 盲区）+ `pages`（复用 BETA-35 `document_passages` 命中回页）；② 新 MCP tool `read_document` + `CollectionConfig.allow_full_read`（TOML 缺省 false 禁全文 / legacy 合成 true）——禁全文时 `full=true` → Denied + audit denied 留痕、片段模式仅返回命中窗口 + 页级摘录、内容全取索引 db 不触磁盘原文件；③ `GET /admin/audit/report?format=md\|csv&subject=&collection=&from=&to=`（audit.jsonl → 人读合规报告，不要求客户 parse jsonl）+ audit 扩 `read` 动作 / `path` / `read_mode` 字段；④ e2e ×3 覆盖出处字段完整性 / 片段模式不吐全文 + read 留痕 / 禁全文拒绝 + denied 留痕 + 报告导出（非 admin 403 / 坏 format 400）。途中修复 search 结果 `\\?\` 规范化路径查库落空（镜像 desktop `lookup_candidates`）。server 88 / daemon 8+e2e 13 全绿；扫描件页级定位真机验证归入 BETA-33 cycle 9 清单（playbook 验证清单第 8/9 条）。V10-16 主卡保留隐私 UI 集成与全量策略收口。 | packages/scout-server + apps/daemon | BETA-36, BETA-40 | ~~3-5d~~ → 1 天（AI 全程） |
+| **BETA-44** | **enterprise eval 扩容 22 → 50 case（越权负样本 / 跨语言别名 / 近重复干扰 / 低清复扫件优先；不为凑数加新格式）** | **done（2026-07-04）**：queries.tsv 扩至 **53 case**、真实模型（embeddinggemma-300m + 当日 BETA-43 代码 scoutd）首跑 **53/53 全过 `--require-all`**——正样本绝大多数 top-1、最深第 3 位；11 条越权负样本缺省检索零跨集合泄漏 + 显式越权全拒；既有 22 case 排名与 baseline 一致零回归。新增 31 case：越权负样本 +8（法务/审计/HR/技术继任跨 subject 矩阵 + 同场景利益冲突墙）/ 跨语言别名 +4（Northridge/Northfield/Morningstar/Project Orion）/ 近重复干扰 +4（草稿 vs 签署版按措辞取对版本 + 版本对全召回）/ 低清复扫 +3 / 零覆盖材料消化 12（li.si 首获正样本）；新增合成材料 4 份（签署版和解协议 / 北原尽调清单 / 银行回单与 NDA 低清复扫）。`.msg` 仍挂 BETA-37b、PST 不做（验收 ③）；`enterprise_scenarios_gate` fixture 完整性测试零改动对 53 case 全过——闸门随 TSV 自然生长（验收 ④）。报告：beta-44-enterprise-eval-expansion-2026-07-04.md。真实语料 case 随设计伙伴落地滚动补充。**2026-07-07 II 追加：离线闸门加固**——`Expectation::AccessDenied` 携机读墙目标（queries.tsv 11 条越权改 `ACCESS_DENIED:<相对路径>`）+ `enterprise_scenarios_gate` 两条常跑断言（每声明 collection 有 ≥1 case 演练〔无死 collection〕+ 每条越权墙目标非空洞〔真实存在且落未授权 collection〕）；运行期不消费墙目标、真机 `--require-all` 零回归；lib 67 / gate 6 全绿。把「信息墙有没有真被测到」从人工审阅转为常跑 CI 机器可查。 | packages/evals + test-materials/ | BETA-41 | ~~2-4d~~ → 0.5 天（AI 全程） |
+| **BETA-53** | **桌面「本机 MCP 服务」开关（BETA-32 个人变体：本机索引经 MCP 暴露给本机 LLM 客户端）** | **done（2026-07-07 V；真机验证达成）**：用户诉求「让 Claude Code 经 MCP 检索本机文件」→ 澄清为 BETA-32 headless 检索的**个人单机变体**（非 BETA-43 企业信息墙——单库无 collection/token）。设计 desktop-local-mcp-service-design.md：**内嵌**（非起子进程）`packages/scout-server` 复用桌面已加载检索栈、**只读挂载**桌面 index.db（零重索引、语义白送）、工具菜单开关 + `127.0.0.1:8766` + 随机 token；安全红线只绑 127.0.0.1 + token 必填 + 暴露面知情。**S1-S3 code-done（2026-07-07 V）**。**S1**：`ServerCtx::attach_readonly(config, embedder)`（开现有 db 不跑首索引、按 embedder 探针挂语义臂、读现有 doc_count）+ 单测。**S2**：server 加 `DaemonConfigFile::personal_local(roots, token)`（多 root 桌面变体、全权 admin、allow_full_read）+ `app::serve_bound(listener, ctx, shutdown)`（axum 封装在 server 内、真 socket 起停集成测试）；桌面 `mcp_service.rs`——`McpServiceState` + `start/stop_mcp_service`/`mcp_service_status`/`reset_mcp_token` 四命令，复用桌面 embedder + 只读挂载 index.db、bind `127.0.0.1:8766`（同步拿端口占用错误）、随机 64-hex token、oneshot 优雅关停、开关态+token 持久化 settings.json、enabled 时自启。**S3**：`preferences/McpPane.tsx`（开关 / 运行状态〔地址·挂载条数·语义臂〕/ token 复制 / Claude Code 配置片段复制 / 重置令牌 / 安全提示）+ 工具菜单入口〔`open-prefs-mcp`〕+ 选项页第八 tab。安全红线：只绑 127.0.0.1 + token 必填随机 + 暴露面 UI 明示 + 重置即踢连接。验证：server lib 93 pass（+2：personal_local / serve_bound 端到端）/ desktop 174 pass（+3：token·roots·status）/ clippy `-D warnings`〔server·desktop·daemon〕/ fmt / tsc+vite 全绿。**功能级 + 真机 GUI 全流程已验**（2026-07-07，报告）：① 自动化 harness 对真实 index.db（86 文档）拷贝跑通 §2/§3/§4；② **computer-use 驱动 dev app 真机 GUI**——工具菜单入口 + tab 路由、开关联动后端起停（OFF→8766 停+持久化 / ON→重新监听）、token·配置片段复制（剪贴板实读校验）、启动自启、旧设置迁移，并对实跑 app curl round-trip（/health 200·无 token 401·tools/list 三工具·真实 search 命中·read_document 片段）全通过。③ **语义路径 B 已验**（`semantic-recall` feature 构建 headless harness：`start()` 返 `semantic=Some(true)` 语义臂激活 + 中文 query「财务预算规划」经 MCP 命中英文财务文档、纯跨语言语义召回）。**功能/GUI/语义三维真机均通过**，仅余可选「真 Claude Code 进程实连」（协议已 curl 验过、锦上添花）。途中修 daemon 正斜杠 root → `read_document` round-trip bug（root 入口 `normalize_root` 归一原生分隔符 + 单测，commit 9b55a1c）。**2026-07-08 发版后小修**：`reset_token` 由「停服务 + 需手动重新启用」改为**运行中则换 token 后自动重启**（旧 token 立即 401、新 token 立即 200，免手动重开）；McpPane 重置提示同步 + 停止态轮换单测（`cargo test mcp_service` 4 绿）。注：面板「token 常驻显示 + 重置按钮」经查早在 e1f3048 已具备（任务据以为缺的旧印象来自旧装机版）。**2026-07-08 follow-up：修 token 持久化分叉**（同日并行会话，本次一并并入 main）——Codex 接 MCP 排查暴露「服务在跑并持 token、磁盘 settings.json 却 token=null/enabled=false」矛盾态。根因**非双数据目录**（`mcp_service.rs` 与 UI 同写 `app_config_dir/settings.json`），实为**双写者覆盖**：MCP token/enabled 由后端带外写盘，偏好表单 `update_settings` 全量覆写用弹窗挂载期旧快照把其冲成 null，运行中 axum server 仍持内存旧 token → 401 静默失效、agent 无感退回 grep。修：`update_settings` 写盘前读磁盘现值、合并回 `mcp_service_enabled`/`mcp_service_token`（磁盘成唯一信源、表单永不动这两字段，`merge_backend_managed_mcp_fields` + 可测 `update_settings_at` 内核）；+3 测试（clobber 回归 / 首存无文件 / status↔磁盘 token 一致守卫）；本机无 MSVC 部分靠 CI。**2026-07-09 热修：内嵌 MCP 端口竞态（v0.9.30）**——app 重启时 8766 的 OS socket 未落停（`tauri_plugin_single_instance` 进程锁**先于** socket 释放的竞态），`mcp_service.rs` 自动启动首 `TcpListener::bind` 撞 `AddrInUse`（os 10048），旧逻辑一次失败即 `warn!` 放弃 → MCP 服务重启后**静默死掉**（`/health` 000、`netstat` 无 8766）直到用户手动开关或再重启。本机复盘用户带 Codex「查体检报告 0 命中」：诊断链 audit.jsonl（3 条 `action:"search"` 证 Codex 确连上过）→ netstat/health（服务已死）→ log（10048）→ 直查 index.db（161 docs、`体检报告1.pdf` id=23 在库、`MATCH '体检报告'`→2 命中）；**真因两层且都非检索 bug**：Codex 查询早于后台索引建完（16:19 查、库建到 16:56）+ 上述端口竞态。修：`mcp_service.rs` 加 `bind_with_retry`（`AddrInUse` 有界重试 6×500ms≈3s 等旧 listener 收尾自愈；其余错误立即上抛）+ 自愈守卫单测；`cargo test -p scout-desktop mcp_service` 6 绿 + clippy `-D warnings` 净。**改动仅进程内 MCP、不需重建索引**；立即缓解 = 关→开「本机 MCP 服务」或重启 app。 | packages/scout-server + apps/desktop | BETA-32, BETA-36 | S1-S3 done；剩真机验证 |
+
+**BETA-35 验收**：① 图片型 PDF 页渲染 → OCR → 可检索；② 页码/来源映射保留（命中能回到具体页，取证可用）；③ 失败页记录不静默丢；④ 命中预览可展示 OCR 段落。BETA-41 扫描 PDF 子集命中率进 evals report；文本层 PDF 路径 byte-equal 不回归。
+
+**BETA-36 验收**：① bearer token 升级为 per-collection / per-root 权限模型（常数时间比较沿用）；② collection 概念落地：root 分组、归档主体（案件/员工/审计项目）边界、显示名、只读态、审计标签——否则 ACL 只能按路径打补丁；③ audit 留痕含 subject（谁查了什么）；④ 越权访问返 403 + audit 记录，e2e 覆盖。**→ 2026-07-03 落地**：四条全达——① 多 token 逐条 `subtle::ct_eq` + `CollectionGrant`（`"*"`/列表）；② `CollectionConfig`（id/display_name/subject_kind/roots 多根/read_only/audit_tags）+ per-collection 独立 index.db 物理信息墙；③ `audit.jsonl` 每条含 subject（token→subject 映射），query 明文默认开、`[audit] log_query=false` 降级；④ REST 非 admin 403 + MCP 越权 tool error（未知/未授权同文案防探测）都留 denied 记录，e2e `e2e_infowall_search_scoped_and_denied` / `e2e_admin_403_and_audit_trail` / `e2e_read_only_collection_reindex_409` 覆盖。
+
+**BETA-37 验收**：eml/msg 进 DOC_EXTS + 提取器（正文 + from/to/date/subject headers 基础字段 + 附件递交现有提取管线）；**pst 明确不在本卡范围**（后置，防审计取证场景误期望）；BETA-41 邮件子集命中率进 evals。**→ 2026-07-02 落地**：eml 全链路 done（headers 零 schema 变更映射 + 头块进 body；附件深度 1 并入 body）；msg 拆 BETA-37b 后置（spec §7 Q2 用户拍板）；email/attachment 桶命中率待 enterprise 向量 bootstrap（Mac）后由 `semantic_quality --fixture-set enterprise` 出报告。
+
+**BETA-38 验收**：① 十万级文档向量检索水位基准（p95 延迟 + 内存）对比现暴力扫描（**cycle 4 达成**——实测 10万×1024：暴力全量重载 p95 ~900ms vs 进程级缓存 ~174ms、5×+，常驻向量 ~390MB；缓存后转 cosine 计算受限、sub-second 交互可用，未触及 ANN 门槛；报告）；② doc identity 策略定义并落库（**cycle 1-3 达成**——文件原始字节 FNV-1a hash 落 `documents.content_hash`，副本关系 SQL 可还原 `SELECT path FROM documents WHERE content_hash=?` 供审计取证，索引期同身份只嵌一次不丢任何 path、结果期合并不被副本刷屏）；③ 现有语义召回质量 evals 不回归（缓存/去重不改 cosine 语义，仅合并真副本；indexer/semantic-index/desktop/server 全测零回归）。
+
+**BETA-39 验收**：设置项 opt-in（默认关）；开启后图片走双层质量门槛（沿用 A 层 meaningful_ratio + 段级门槛）入语义索引；关闭时行为与 BETA-33 cycle 4 现状 byte-equal；已知污染 case（QQ 表情包乱码 OCR）仍被挡。**→ 2026-07-03 落地**：四条全达——① `AppSettings.enable_image_semantics` 默认 false + 「选项→索引」pane checkbox；② 文档级门槛 = 字数 20 + 图片专属 ratio 0.75（`is_image_embed_worthy`），段级门槛 = `explain_passages_with_ratio(0.75)`（双层）；③ 三处调用点（`embed_pending` / `purge_short_body_vectors` / `explain_semantic_hit_impl`）默认参数路径零改动 + `embed_pending_embed_images_branches` / `purge_keep_worthy_images_branches` 断言关闭态 byte-equal；④ 单测 `is_image_embed_worthy_blocks_cjk_heavy_noise` + `explain_with_image_ratio_blocks_cjk_heavy_noise_segment` 覆盖 QQ 表情包 case（ratio≈0.63/0.65/0.67）仍被挡。实现修订：purge 的 `keep_worthy_images` 启动期由设置动态判（关→清全部图片向量恢复一刀切态、开→仅清不过 0.75 门槛的），非「关闭后保留已嵌」（守 byte-equal 验收）。
+
+**BETA-40 验收**：三场景 playbook 各一篇（部署拓扑 + 权限配置 + 10 条示例 query + Claude/MCP 客户端工作流示例）；至少一个场景在真机/内网环境走通并留证据。
+
+**BETA-41 验收**：三场景合成语料（扫描 PDF / 邮件 / 附件 / 跨语言别名 / 近重复材料）+ 相关性标注 + query 子集；隐私红线沿用「合成集入仓做 CI 门控」方案（BETA-15B-6 同款）。**→ 2026-07-02 落地**：四条全达——① scenario 三值齐（lawfirm 34 / audit 35 / offboarding 35）；② 五桶各 10 case + 文件层实体文件（9 扫描 PDF 其中判决书 ×3 为文件级近重复、6 eml 其中 2 封带 base64 附件 part、4 近重复 md/txt、1 文本层 PDF 对照守 BETA-27）；③ graded 1-3 标注 + 10 个 dup_group（BETA-38 doc identity 靶）；④ 隐私红线机器可查（`enterprise_recall_fixtures_integrity` 常跑：非 example.com/org 邮箱域名直接 fail）。**命中率报告**待向量 bootstrap（Mac）后由 `semantic_quality --fixture-set enterprise` 出、`enterprise_recall_gate` 同步转真跑；BETA-35 扫描 PDF OCR 端到端 = `real_pdf.rs` `--ignored` 三层测试（常跑二分守卫已本机验证：9 份全进扫描分支、文本层走原路径）。
+
+**BETA-43 验收**：① MCP search 结果强制含出处（collection + path + 页码/段落定位，扫描件能回到页——复用 BETA-35 来源映射）；② collection 级 `allow_full_read` 策略——禁全文时读取类工具仅返回命中片段 + 有限上下文窗口，不吐全文；③ 审计导出：`audit.jsonl` → 人读合规报告（按 subject / collection / 时间范围过滤，md 或 csv），不要求客户自行 parse jsonl；④ e2e 覆盖禁全文越界拒绝与出处字段完整性。
+
+**BETA-44 验收**：① `queries.tsv` 扩至 ≥50 case、`enterprise_scenarios --require-all` 全过；② 新增 case 优先覆盖：越权负样本（HR/法务/审计不同 subject）、跨语言/别名召回、近重复干扰下排名稳定、低清复扫件 OCR；③ `.msg` 相关 case 仍挂 BETA-37b（等真实样本），PST 不做；④ 报告沉淀到本 task 卡，`--require-all` 闸门随 TSV 自然生长。
+
+**B 阶段预期总工期**：8-12 周（B6 / B7 不上关键路径）。
+
+#### B8：cycle 9 真机反馈（2026-07-06 v0.9.15 首测三条，用户拍板逐条登记）
+
+> 来源：用户 v0.9.15 Windows 装机真机测试首批反馈。三项拍板（2026-07-06）：卸载默认保模型可勾选删 / 本地发现后**复制**进默认目录 / ①②当场做、③下会话。不进 §6.3 出场指标。
+
+| ID | 标题 | 状态 | 模块 | 依赖 | 估时 |
+|---|---|---|---|---|---|
+| **BETA-45** | **模型本地发现 + 卸载默认保留模型**（真机反馈①：重装后被迫重下 ~700MB） | **done（2026-07-06 代码层）**：(a) NSIS 卸载 hook 改「模型默认保留」——MessageBox 询问删否（默认/静默 `/SD IDNO` = 保留）、保留经 models 同卷 Rename 暂存→整删→移回（敏感派生数据零遗漏）、$UpdateMode 守卫不变、闸门测试加 Rename models + `/SD IDNO` 断言；应用内「卸载清理」仍全删含模型（§6.3 指标不受影响）。(b) 下载 UI 前两级本地发现——默认路径已有完整文件（≥100MB）→ 直接就绪跳过下载；否则 everything crate 新公开 `find_files_named`/`es_cli_available`（复用 es.exe 两段式定位 + UTF-8 导出解码）按**精确文件名**全盘发现候选（绝不 `*.gguf` 泛搜、防错模型 ucrtbase abort），「使用此文件」经 `import_local_model` 复制进默认目录（校验文件名白名单 + ≥100MB + `.partial`→rename 原子落盘 + 与下载共用 in-flight 守卫与 done event，前端状态机零改动）。**v0.9.16 真机首验（同日）**：发现 UI 工作（Everything 命中 artifacts/ 下模型）；但暴露**下载卡死链**——HF 连接阶段长挂占满守卫 300s、取消无效（cancel 只在 chunk loop 检查）、前端切步重挂回 idle 与后端守卫脱节（无取消入口）、取消被误报「下载失败」。**修复四刀（v0.9.17 随包）**：tokio::select 取消竞速（连接阶段也即刻生效）+ connect_timeout 15s + **hf-mirror.com 镜像兜底**（PRIVACY 同步）+ 新命令 model_download_in_flight（前端 mount 恢复下载中态）+ invoke 拒绝路径过滤取消 reason；测试 +2。另：everything crate 引用忘加平台 gate 致 v0.9.16 macOS CI E0433、已加 shim（cfg windows 对 + 非 Windows 恒降级）。**卸载保模型弹窗待真机验证** | apps/desktop + packages/search-backends/everything | — | 0.5d |
+| **BETA-46** | **默认零索引 + 目录列表 UX**（真机反馈②：未经同意不应索引系统目录；路径截断看不全） | **done（2026-07-06 代码层）**：`resolve_index_roots_tagged` 新语义——系统三夹**仅当 `include_system_defaults=true`** 时纳入、与 `index_roots` 空否解耦（空+false = **零索引**）；checkbox 常显（覆盖语义 banner 退役）；onboarding Step 5 / 设置页空态文案改「默认不索引、请添加」；目录路径退役 ellipsis 截断改完整显示（自然换行 + title hover）。settings 测试改四分支 + desktop 168 全过。**行为变化注意**：旧装机若 index_roots 为空，升级后停止索引系统三夹（需重新勾选或添加目录）——beta 阶段接受、随 cycle 9 复测确认。**v0.9.16 真机首验（同日）**：零索引/checkbox 常显生效；但路径换行修法在单行 flex 下被统计列+按钮挤成逐字断行——**二轮改三行卡片式**（行1 完整路径+标签 / 行2 统计+上次索引 / 行3 操作按钮，卡片下边框分隔，v0.9.17 随包）。**空态提示与升级行为待复测** | apps/desktop | — | 0.5d |
+| **BETA-47** | **选项页重构**（真机反馈③：拆 tab = 常规 / 索引（本地索引配置）/ Everything（检测+开关）/ 语义召回（含模型下载与管理）/ Windows（系统集成）/ 隐私与记录 / 杂项；PreferencesDialog.tsx 1579 行拆文件） | **done（2026-07-06 代码层）**：(a) `enable_everything` 设置（默认开、旧配置 serde default 零回归）+ **三处 es.exe 调用点全门控**——搜索后端条件注册（关闭需重启，与 model_path 口径一致）、索引期音乐全盘发现（live-read；local-index 新 `reindex_scoped_with_filter_progress_and_discovery` 变体、`false` 时跳过发现器直走 MusicScan + phase 级回归测试；macOS Spotlight 发现不受控）、BETA-45 模型本地发现（live-read、关闭时 `everything_available=false` 零候选）；新命令 `check_everything_available`（检测与开关独立、非 Windows cfg shim 恒 false〔v0.9.16 E0433 口径〕）。(b) 七 tab 落地，Everything（检测 3s 轮询 + 开关 + winget/官网安装引导）与 Windows（WSearch 检测 + 打开系统索引选项）两 tab 仅 Windows 显示（`navigator.platform`）；**模型管理归位**：生成模型 fallback/状态/下载/路径覆盖从「常规」迁入「语义召回」；杂项收同义词入口、隐私与记录补完整隐私面板入口（跳转走未保存守卫）。(c) PreferencesDialog.tsx **1579→513 行**，面板拆 `components/preferences/` 九文件（shared/ConfirmModal/General/Indexing/Everything/Semantic/Windows/Privacy/Misc）。desktop 171 / local-index 24 全过 + tsc/vite/clippy/fmt 净。**真机待验**：Everything tab 两态 + 开关关闭后行为（随下次发版） | apps/desktop + packages/search-backends/local-index | BETA-45, BETA-46 | 1-2d |
+| **BETA-48** | **前端 AppSettings 缺 `embedding_model_path` 字段**（BETA-47 会话顺带发现：Rust `AppSettings` 有该字段而前端 interface 没有，`update_settings` 全量覆写时 serde default 会把用户手工写进 settings.json 的该值静默冲掉） | **done（2026-07-06）**：前端 interface 补字段透传 + 「语义召回」tab 一并暴露「语义模型路径覆盖」输入框（与生成模型路径覆盖对称、placeholder 标默认 `embeddinggemma-300m-q8_0.gguf` 路径）。tsc/vite 过 | apps/desktop | — | 0.5d |
+| **BETA-50** | **OCR 数字校正变体**（2026-07-06 真机踩坑：用户搜 `150138` 找不到准考证 PNG——诊断实锤 Windows OCR 把 `15013866763` 识成 `1 S013866763`〔5→S + 空格拆组〕，图已入库、trigram 正常、正确号码在索引里不存在） | **done（2026-07-06 同轮沉淀）**：indexer `digit_correction_variants`（易错字母经典五对 S→5/O→0/I·l→1/B→8/Z→2 + 跨单空格分组合并如 `789 803 810`→`789803810`；保守规则宁漏勿误——真数字 ≥4 且易错 ≤2、纯数字须分组 ≥2 且 ≥6 位、链 ≤64 字符、变体 ≤16 条去重）+ `finalize_ocr_text` 统一收口（normalize 后**原文保留**、变体以〔OCR数字校正〕行追加正文尾——预览可见即解释"为什么命中"、trigram 子串两态可搜）；WinRT/Tesseract 两引擎与扫描 PDF 逐页管线（`recognize` choke point）自动共享。测试：真机 case 四连（手机号拆组/`1234S6`/会议号合并/身份证紧邻链）+ 保守反例五连 + 去重上限 + doc_db FTS e2e（`150138`/`15013866763`/`S013866763` 均命中）。indexer 182 全过、local-index/desktop/server 零回归。**生效条件**：存量图片 mtime skip、需清空索引重建；scoutd 下次构建重编 | packages/indexer | — | 0.5d |
+| **BETA-49** | **音乐发现按 roots 过滤**（BETA-47 会话顺带发现 + 2026-07-06 用户拍板**方案 A**：Everything/Spotlight 全盘发现与 BETA-46「默认零索引、未经同意不索引」语义冲突——发现结果越界入库、空 music_roots 也 spawn es.exe 全盘枚举） | **done（2026-07-06）**：local-index 三处发现分支统一——① 发现结果经 `filter_discovered_to_roots` 按生效音乐 roots 过滤后才 `index_paths`（Windows 大小写/分隔符归一、root+分隔符判界防 `D:\Music2` 误挂 `D:\Music`；发现器纯做加速，收录盘外音乐 = 把该目录加进索引目录）；② **roots 为空直接跳过发现器**（零索引不 spawn es.exe，顺带消除单测/「文档-only 重建」路径的全盘枚举）。旧库越界记录不主动清（沿用「生效目录之外 N 条」UI 提示 + 移除目录 purge 口径）。行为变更测试面：改写 `reindex_uses_discovery_paths_filtered_to_roots` + 计数 mock（空 roots 零调用）+ 纯函数边界测试；UI 文案「全盘发现」→「快速发现（仅限所选目录）」。local-index 26 全过 + desktop 全量 exit 0 + clippy/fmt 净。**遗留（低优）**：发现路径不经 exclude_globs/per-root 排除（root 内 `node_modules` 下音频经发现器仍入库、目录扫描则剪枝——罕见场景、暂不修） | packages/search-backends/local-index + apps/desktop | BETA-46 | 0.5d |
+
+| **BETA-51** | **设置统一入口**（v0.9.18 后真机反馈：「我的同义词」设置整页进入后无关闭/返回入口、回不到搜索主界面；同类独立设置页应统一收进选项对话框） | **done（2026-07-07，随 v0.9.19）**：「我的同义词」`/synonyms` + 「隐私与数据」`/privacy` 两独立整页整体收编进选项对话框 tab——新增 `SynonymsPane`（内联「杂项」tab、增删改+导入/导出）+ `PrivacyPane` 折叠完整隐私内容（索引概览/数据位置/一键清除/卸载清理，与操作记录同 tab）；删两路由与两页文件（App.tsx）、`handleNavigate`/`useNavigate` 退役；工具菜单「我的同义词/隐私与数据」改 `open-prefs-misc`/`open-prefs-privacy` 事件打开对应 tab。tsc/vite 净、desktop 171 测试零回归。**真机待验**：菜单/设置进出可正常返回 | apps/desktop | — | 0.5d |
+| **BETA-52** | **语义召回模型管理增强**（v0.9.18 后真机反馈：语义召回只显示"已就绪"、看不到实际用哪个模型；需可指定+检测可用性+自动发现，为切换更强本地/局域网可信模型铺路） | **done（2026-07-07，随 v0.9.19）**：① `EmbedStatus::Ready` 携 `active_path`（状态行显示「已就绪（当前模型：xxx.gguf）」；生成模型 detail 本就含路径）；② 新命令 `probe_model_file`（纯文件校验：存在/gguf 后缀/体积下限，不加载）+ 语义/生成两路径覆盖框「检测」按钮；③ 新命令 `discover_gguf_models`（everything crate 新 `find_files_by_extension`、`ext:gguf` 全盘发现 + 8MB 下限 + 体积降序 + 上限 60）+「扫描本机 gguf 模型」列表每项「设为语义/设为生成」回填路径覆盖并自动检测——**只回填不复制不加载**（错架构误载可能 crash、交用户判断+检测+重启验真）；非 Windows/Everything 关时提示手动填写。clippy `-D warnings`（修 `unnecessary_sort_by`）/tsc/vite/171 测试 全绿。**真机待验**：当前模型显示 / 检测 / 自动发现列表 | apps/desktop + packages/search-backends/everything | — | 1d |
+| **BETA-54** | **数字/编号检索 gap 修复**（2026-07-08 排查 Codex 接本机 MCP 服务时真机复现：`search 150138`/`440307`/`15013866763` 一律 0 命中，但 `准考证` 能命中同一文档、桌面 index.db 直接 `LIKE` 也能查到——BETA-50 让正确号码进了索引，检索层却搜不出来。律所/审计场景第一类需求就是按号码检索） | **done（2026-07-08 代码层）**：根因 = `packages/intent-parser/src/parsers/file_search.rs` `extract_en_residual_keywords` 把 `tok.chars().all(is_ascii_digit)` 的 token 一律当 signal 噪声剥（本意剥年份/尺寸/日号，副作用把电话/案号/身份证号也剥了）→ `keywords=None` → daemon `expand_intent_for_daemon` 无 group → FTS 臂无检索词 → 0 命中（底层 `documents_fts` 是 trigram、数字串本可子串命中）。修法：新增 `is_incidental_number`（纯数字**且 < `IDENTIFIER_DIGIT_MIN=6` 位**才算噪声剥；≥6 位视为标识符保留为字面 keyword），替换 `is_signal` 判据中的无条件剥数字。desktop 搜索 UI 与 MCP daemon 共用 `intent_parser::parse`，**一改两受益**。测试：intent-parser 242 全绿（新增 4：阈值判定 / 长号码保留 / 短数字仍剥〔年份 2024 守 date-size 零回归〕/ parse 端到端）。**真机 MCP 验证达成**：重编 `scoutd`〔build-scoutd-llama.bat〕挂含号码语料到 `:8788`，经 HTTP MCP 实搜 `150138`/`440307`/`15013866763`/`440307201312314812` 从 0→命中、`2024` 仍 0（阈值有效）、`仙本那` 对照仍命中。**→ v0.9.23 双平台已发布**（2026-07-08，三分支收敛后 tag）：装机版真机经 MCP 实搜 `15013866`/`150138`/`440307` 从 0→命中 ✓。附带发现两个 MCP token bug 已派后台会话 `task_7260d343`·`task_06f499be`（后者 401 分叉已并 main） | packages/intent-parser | BETA-50, BETA-53 | 0.5d |
+| **BETA-55** | **索引 Office 最后保存者（cp:lastModifiedBy）**（2026-07-08 Codex 接 MCP 提问暴露：查「最后一次保存者为 X 的文档」经 MCP 0 命中——`read_core_props` 只抽 `dc:creator`、`cp:lastModifiedBy` 完全没入索引。"谁最后改的这份文件"是审计取证 / 离职归档核心诉求） | **done（2026-07-08 代码层，release/v0.9.22）**：`packages/indexer/src/doc_extract.rs` `read_core_props` 加抽 `cp:lastModifiedBy`，经新 `combine_authors`（去重、按序空格连接）与 `dc:creator` 合并进 `author` 字段——两者皆入 `documents_fts` 的 `author` 列、trigram 子串可检索（零 schema 变更）；xlsx 走 calamine 原本不读 core props，新 `read_ooxml_core_props_from_path` 另开 zip 补齐（.xls BIFF/.ods 无 docProps/core.xml 降级 None）。docx/pptx/xlsx 三格式一处覆盖。测试：indexer doc_extract 25 pass（新增 `combine_authors_dedups_and_joins` + `extract_docx_author_includes_last_modified_by` + 扩 `first_element_text_reads_core_props`；creator-only 回归零变）。**生效条件**：存量文件 mtime skip、需清空索引重建。**→ v0.9.23 双平台已发布**（2026-07-08）：清库重建后真机验证 author 已带最后保存者（`饶燎原` 命中；2 字「燎原」0 命中是 trigram 下限、非 bug → 短 CJK 兜底另立 BETA-56）。 | packages/indexer | BETA-53 | 0.5d |
+| **BETA-56** | **短 CJK 查询（≤2 字）检索兜底**（2026-07-08 真机：BETA-55 已把最后保存者写进 `author`，但搜 2 字人名「燎原」0 命中——`documents_fts`/`music_fts` 用 trigram tokenizer、<3 字符生不成 3-gram 必 0 命中〔db.rs 注释已明载〕；2 字人名 / 常用词〔合同/发票/预算〕/短编号同受限。语义臂对内容词有兜底、对人名/编号类无能为力） | **done（2026-07-08，并入 main 待发版）**：`DocumentIndex::query`/`MusicIndex::query` 加**短查询 metadata LIKE 兜底**——无 `fts_match` 且 query 经 whitespace 切分后**全部**词 <3 字符且纯 alnum/CJK 时，改走 `LIKE '%词%'` 子串匹配 metadata 列（documents: title/author/file_name；music: artist/title/album/file_name；**不扫 body**——正文全表 LIKE 慢且噪声高、内容词由语义臂兜底），长短混合查询保持 FTS。共享判据 `db::short_metadata_like_terms`（`char::is_alphanumeric` 对 CJK 表意字亦 true；含符号病态输入如 `a" OR b` 不触发、保 `fts_sanitize` 零回归）。desktop 搜索 + daemon MCP 共用 `LocalIndexBackend`——纯短查询在 `fts_match_from_groups` 被剥空 → fts=None → 回退 base keyword → `query` 兜底，一处修两路径皆受益。测试：indexer +4 / local-index +1 端到端全绿（本机 fmt/clippy `-D warnings`/test 全套跑过）。**真机 MCP 验证达成**：新建 daemon FTS-only 挂含 `dc:creator=燎原 饶`（正文/文件名均不含该串）语料，HTTP MCP 搜「燎原」0→命中 `案卷2024.docx`、「违约金」正文 FTS 仍命中、「张三」0 | packages/indexer + packages/search-backends/local-index | BETA-55 | 0.5d |
+| **BETA-57** | **多词查询组间 AND 过严导致 0 召回**（2026-07-09 用户经 MCP 真机复现：`体检 体检报告 健康检查 健康体检` 泛查 0 命中，但单词 `体检报告`/`健康体检` 均命中同一文档——parser 把多词拆成多个词组、`fts_match_from_groups` 组间 AND 要求全部命中，正文缺任一词〔如「健康检查」〕即整条结构性归零，与用户「多给近义词求召回」的心智相反。自然语言/多关键词泛查是律所/审计/健康材料检索高频入口） | **done（2026-07-09，并入 main 待发版）**：`LocalIndexBackend::search_results_expanded`（生产 fan-out 收敛点，desktop 搜索 + daemon MCP 共用）加 **AND 优先 + 0 命中 OR 兜底**——组间 AND 查完若返回空且存在 ≥2 有效词组，用新 `fts_or_relax_from_groups`（把所有词组词项摊平进单个 OR 子句、沿用 `sanitized_group_terms` 同口径剔 <3 字 CJK/转义）放宽成组间 OR 重试一次；**零精确性回归**（仅 AND 空时触发、已命中查询行为完全不变，FTS bm25 天然让命中更多词项者排前）；单组时 AND≡OR 返 None 不做无谓重复查询。抽 `sanitized_group_terms` helper 消 AND/OR 两路重复。测试：local-index +2（`fts_or_relax_flattens_all_terms_across_groups` 单元 + `search_expanded_and_zero_falls_back_to_or` 端到端复现体检报告场景 + AND 本可命中查询不受兜底影响的对照），29 全绿、clippy `-D warnings`/fmt 净。**查询侧改动、不需重建索引**；scoutd/desktop 下次构建重编后真机生效。**→ v0.9.25 已 bump**（2026-07-09，本机已重编 `scoutd`〔release+llama-cpp〕+ desktop NSIS 安装包、均 exit 0）。**真机 MCP 验证达成**（2026-07-09）：起 FTS-only stub daemon〔dummy.gguf、`:8799`〕挂含「健康体检报告 饶燎原」语料（正文无「健康检查」），经 HTTP MCP `search`——`健康检查` 单搜 0（词确缺席）、`体检报告` 单搜 1、多词 `体检 体检报告 健康检查 健康体检`〔含缺席词，旧 AND 必 0〕经 OR 兜底 → 命中，audit.jsonl 三条 `results` 铁证。待推 `v0.9.25` tag 触发 CI 双平台发布 | packages/search-backends/local-index | BETA-56 | 0.5d |
+| **BETA-58** | **本机 MCP 客户端接入体验**（2026-07-09 用户带 Codex 查身份证文件全程截图复盘：Codex 全程手搓 HTTP 逆向端口/token/协议 3m52s，根因 = 桌面 McpPane「接入配置」只生成 Claude 风格 `mcpServers` JSON，而 Codex 只认 `codex mcp add` 命令、根本挂不上；连带踩 token 藏 AppData 被沙箱挡、rmcp Accept 双声明报错、PowerShell curl=Invoke-WebRequest 空引用） | **done（2026-07-09，并入 main 待发版）**：`apps/desktop/src/components/preferences/McpPane.tsx` 接入区块加**客户端切换 tab**（Claude Code / Codex / 通用 curl）——Claude 栏保留原 JSON；**Codex 栏**给两条可复制命令（`setx SCOUT_MCP_TOKEN` + `codex mcp add scout-local --url <url> --bearer-token-env-var SCOUT_MCP_TOKEN`，token 走环境变量不明文落配置）+ 醒目 **MSIX 注销重登警告**（setx 后须注销重登 Windows 才生效、否则连上但 401，重启 app/explorer 不够）；**curl 栏**给带全三头（Authorization / Content-Type / **Accept: application/json, text/event-stream**）的 `tools/list` 探活示例 + PowerShell 提示（Windows 走 Git Bash/真 curl.exe，PS 的 curl 是 Invoke-WebRequest 别名不认多行续行、对本响应体抛空引用）。抽复用 `CopyBlock` 组件、`copied` state 放宽多块区分。同步 `apps/daemon/README.md §4` 补 Codex/curl 配法。tsc `--noEmit` exit 0、未引入 any。分派本地 Claude 子代理实现、Claude Code 复核。 | apps/desktop | BETA-53 | 0.5d |
+| **BETA-59** | **PII 类型概念检索**（2026-07-09 同一 Codex 复盘暴露：「查找包含身份证信息的文件」直接搜「身份证/证件号」概念词 0 命中，只有猜到 18 位号码数字片段才命中 OCR 出的准考证 PNG——正文有号码但无「身份证」字面标签、且无实体类型标签让概念词映射过去。按 PII 类型找档是律所/审计/离职归档核心诉求） | **done（2026-07-09，并入 main 待发版）**：新增 `packages/indexer/src/pii.rs` 轻量结构化 PII 识别——身份证走 **GB 11643 校验位**（18 位、权重+校验码校验、带 alnum 前后边界防 20 位串误判 18 位子串）、手机号 `1[3-9]\d{9}`（非 alnum 切分、精确 11 位）；`detect_pii_types` 命中后往 `documents_fts` 注入**类型关键词**（`身份证 身份证号 证件号 identity_card` / `手机号 电话 联系方式 phone`）——**隐私红线：只注入类型词、绝不复制号码明文**（单测锁）。「身份证」3 字 trigram 可命中。`doc_db.rs` 单一 FTS 写入路径注入（`upsert_document` 经 `upsert_document_with_pages` 汇流覆盖）。`search.rs`/`mcp.rs` 描述同步点明 OCR/跨语言/PII 概念检索。**生效需重建索引**（同 BETA-55）。**追加重构 done（2026-07-09，独立 `entity` 列）**：`documents_fts` 加末列 `entity`（列序 title=0/author=1/body=2/entity=3 固定不变），PII 类型概念词改写 `entity` 而非并入 body——`query` 用裸 `MATCH` 自动跨列、「身份证」照样命中 entity；`snippet()` 固定打 body 列（index 2）**永不回显** entity 关键词，彻底消除"仅命中注入词时出处片段回显关键词尾巴"的观感缺陷；`preview` 正文也回归纯净。迁移不 bump schema 版本：`migrate_documents_fts_entity` 在 `from_conn` 里就地把旧 3 列表**拷 body 进新 4 列表再 drop+rename**（body 是正文唯一存处、不能像 `migrate_music_fts` 从主表重建，故拷贝保 body、entity 灌空待增量重抽回填），升级用户无运行时崩（4 列 INSERT 只在迁移后跑）、老正文照常可搜——与 `migrate_documents_content_hash`/`migrate_music_fts` 同属"透明加列"。`pii.rs` `append_pii_keywords_for_fts`→`pii_entity_keywords`（只返类型词）。测试 indexer 195 + server 93 全绿、clippy `-D warnings`/fmt 净（含合成校验位身份证识别+坏校验位拒识+手机号+entity 列命中+snippet 不回显+3 列老库迁移保 body）。只做身份证+手机号（银行卡/案号留后续），不处理被空格打散的 OCR 号码。分派 Codex CLI 实现、Claude Code 复核 diff + 独立 entity 列重构。 | packages/indexer + packages/scout-server | BETA-53 | 1d |
+| **BETA-60** | **检索 + 索引性能优化**（2026-07-09 用户真机反馈：搜「身份证」耗时 1965ms〔fan-out 走 local+semantic+windows+everything 四臂〕体验差；桌面索引偏慢。诊断：①搜索 fan-out 名义并行实为串行——`fanout_merge.rs` `for tool in backends { .await }` 各后端耗时**相加**，Windows Search 每次 spawn powershell+ADODB 冷启动 ~0.5-0.8s 是最大单头；②索引 walk 单线程串行 + 每文件一次事务 + **未开 WAL**〔默认 synchronous=FULL = 每文件一次 fsync〕+ 文档提取/OCR 无并发） | **done（2026-07-09，并入 main 待发版）**：**Track A 搜索并发化**（本地 Claude 子代理，`packages/harness`+`apps/desktop`）——harness 抽纯 fuse 函数 `fuse_fanout_merge`/`fuse_fanout_rrf`（融合/RRF 路由语义与串行版逐字节等价、daemon/MCP 串行路径改为调它们、单测全保留），desktop `fanout.rs` 新增 `concurrent_collect`：每后端 `tauri spawn_blocking`+`futures_executor::block_on` 驱动其 stream、按原序回收，总耗时≈最慢后端而非求和；兜底/取消/sources/errors/verdict 全对齐。**Track B 索引提速**（Codex CLI，`packages/indexer`）——①`doc_db.rs`/`db.rs` 文件型库开 `journal_mode=WAL`+`synchronous=NORMAL`（内存库兜底不碰 WAL），消掉每文件 fsync；②`scan.rs` 通用增量扫描改「串行预检候选 → 128 一块 rayon 并行提取 → 块内串行 upsert/进度/stats」，仿音乐 `index_paths` 三段式，分块限内存尖峰+保实时进度，DB 写入不并行、embedding 未动。测试：harness 191 + indexer 194 全绿、`cargo check -p scout-desktop`〔含 server/backends 调用方〕通过、clippy `-D warnings`/fmt 净。**搜索改动不需重建索引；WAL/并行提取下次构建重编生效**。**未尽（后续轮）**：Windows Search/Everything 常驻宿主免冷启动、embedding batch/context 复用（涉 RAM/共享 runtime、风险高本轮不做）、fan-out 软超时。分派本地 Claude（Track A）+ Codex CLI（Track B）双赛道并行、Claude Code 复核双 diff + 集成校验。**v0.9.28 热修两处**：①`on_file` 放并行块尾串行段→进度冻结、误判「卡死」（真机取证：WAL 崩溃恢复完好、documents 无损、索引实际在跑）→ 下沉并行段逐文件上报（`IndexProgress` 本 Send+Sync）、`EXTRACT_CHUNK` 128→64；②提取按核数无限并行→多份扫描 PDF 各 spawn `pdftoppm`+逐页 OCR 子进程风暴（真机首索引卡「0/50」、17 pdftoppm 并发）→ `EXTRACT_PARALLELISM=4` 受限 rayon 线程池压并发。**v0.9.29 热修栈溢出崩溃**：某台真机装机后偶发崩、异常码 `0xC00000FD`（`STATUS_STACK_OVERFLOW`）、故障模块 `scout-desktop.exe` 自身、偏移固定。根因＝BETA-60 新建的受限提取 rayon 线程池未设栈大小、worker 拿 std 默认 ≈2 MiB，`pdf-extract 0.10`/`lopdf`（静态链进 exe）解析深层嵌套/畸形 PDF 递归过深撑爆栈；栈溢出是 SEH 异常非 panic，`catch_extract` 的 `catch_unwind` 与 release `panic="unwind"` 都兜不住直接 abort 整个 app（完美吻合偶发/单机/模块为 exe/偏移固定）→ `extract_pool` 加 `stack_size=64 MiB`（新常量 `EXTRACT_STACK_SIZE`；并发已被 `EXTRACT_PARALLELISM=4` 限死、栈按需提交开销可忽略）。改共享 `scout-indexer` crate → desktop+`scoutd` 同受益。indexer scan 44/44 + clippy 净。纯运行期修复、不需重建索引。**后续若同机仍复现（真·成环递归）→ 上 PDF 提取子进程隔离**。 | packages/harness + apps/desktop + packages/indexer | BETA-57 | 1d |
+| **BETA-61** | **运行期自动增量索引（定时重扫）**（2026-07-10 用户提出：新增/变动文件自动入索引、未变不重索引。摸底：`run_incremental_index` 增量骨架〔mtime skip + 删除回收〕健全，缺口＝触发时机仅「启动后台 reindex + 手动」，运行期新文件要等重启） | **done（2026-07-10，随 v0.9.31 双平台发布）**：main.rs 新增 `run_auto_index_loop`——settings.json 新字段 `auto_index_interval_minutes`（默认 30、0=关闭；**live-read**：每轮 tick 前重读 + 等待期间关闭则本轮不执行）；首轮等完整间隔（启动已有后台 reindex、不重复）；tick 经 `spawn_blocking` 调 `perform_reindex`（复用并发守卫：已在索引中**静默跳过**）、成功后接 `spawn_semantic_index` 与启动/手动同口径；纯决策函数 `auto_index_tick_decision` 抽出可测。设置页索引区加下拉（关闭/15/30/60 分钟），文案明示「未变化的文件不会重新索引」。**明确不做 notify watcher**（Windows 丢事件 / 占位符水合 / 目录风暴；后续若引入仅作"提前重扫"信号、增量扫描仍兜底最终一致性）。desktop 181 测试 + clippy `-D warnings`/fmt/tsc 全绿。**真机端到端验证达成**（dev app、1 分钟间隔）：tick 准点；启动索引期间守卫全程让路；新文件下一 tick `doc_added=1` 其余全 0（未变文件全 skip）；FTS 标记词直查 index.db 命中；删除文件下一 tick 回收归零。附带发现：扫描版 PDF 重 roots 首次建库的启动 reindex 可达小时级（整本 200DPI OCR 一次性成本、单文件进度持久化中断不重来），期间 tick 正确让路。分派 Codex CLI 实现、Claude Code 复核 + 真机验证 | apps/desktop | BETA-60 | 0.5d |
+| **BETA-62** | **MCP search 索引进行中提示（不再静默 0 命中）**（v0.9.30 复盘未尽事项：Codex 查询早于索引建完 → `results:[]` 无任何提示 → 外部 LLM 误判「检索坏了」退回手搓 grep） | **done（2026-07-10，随 v0.9.31 双平台发布）**：`scout-server` `ServerCtx` 加 `IndexingProbe`（`Arc<dyn Fn()->bool + Send + Sync>`，默认恒 false＝未注入行为逐字节不变）；`search` 工具索引进行中时响应附 `"indexing_in_progress": true` + note（「本地索引正在构建中，结果可能不完整，建议稍后重试。」），intent 短路路径同覆盖；audit.jsonl search 记录仅 true 时带该标志（读侧 `read_tail` 走 `serde_json::Value`、旧记录无兼容风险）。desktop `mcp_service` 桥接 `IndexStatus.indexing`（只看 FTS 守卫、不看 `semantic_indexing`——语义臂构建中 FTS 仍可完整命中，本事故主因是目标文件未入 FTS）；daemon 桥接各 collection `reindex_in_flight`（首次索引在 bind 前完成、运行期 admin reindex 会提示）。单测锁**旧 JSON 字节形状**（空闲 / degraded 响应逐字节不变）+ 进行中含提示字段。server 95 + scoutd 8 单测/13 e2e + desktop 全套全绿、clippy `-D warnings` 净。分派 Codex CLI（独立 git worktree 并行、避开 tauri dev 热重载）实现、Claude Code 复核 + 手动合回主树 | packages/scout-server + apps/desktop + apps/daemon | BETA-60 | 0.5d |
+| **BETA-63** | **多复合条件检索全局匹配模式（AND 全命中 / OR 任一命中，用户可选）**（2026-07-20 用户反馈：多条件检索返回大量不符合要求的结果。复盘发现根因＝ BETA-57 遗留的「组间 AND 0 命中静默放宽为 OR」自动兜底——用户无感知地被扩大召回，只命中部分条件的结果混入，看起来像"不精确"） | **done（2026-07-20，并入 main 待发版）**：新增全局 `MatchMode`（`All`=全部复合条件命中/默认，`Any`=任一条件命中）枚举，挂 `ExpandedSearchIntent.match_mode` 单一信源（`packages/search-backends/common`）；**移除 BETA-57 自动 OR 兜底**——`All` 模式下严格返回 0、不再静默放宽（用户 2026-07-20 三点拍板：① 0 命中即 0 ② 默认 All ③ 四后端统一生效）。四个检索后端（local-index FTS5 / windows-search SQL / everything es.exe / spotlight NSPredicate）各自的组间连接逻辑均按 `match_mode` 切 AND/OR，结构性约束（扩展名/时间/大小/路径）不受影响、恒 AND。桌面端 `AppSettings.search_match_all_conditions`（默认 true）+「常规」设置页下拉框 + live-read provider（同 `semantic_weight` 模式）；daemon 无 settings.json、新增 CLI `--match-any-condition` 启动期一次性注入；桌面内嵌 MCP 服务读同一份桌面设置，行为与桌面内搜索一致。测试：local-index/windows-search/everything/spotlight 各补 All/Any 对照单测 + local-index 端到端复现 BETA-57 原始体检报告场景（All 严格 0、Any 命中）；desktop settings 加 round-trip 测试。全 workspace `cargo test`/`clippy -D warnings`/`fmt` 净（daemon e2e 3 个失败经 `git stash` 对照确认改动前基线同样失败，系本机沙盒 macOS `/var` vs `/private/var` 临时目录路径问题，与本次改动无关）。**v0.9.32 已发布 ✅**。**同日续（v0.9.32 真机复盘发现第二根因）**：用户实测「2025年 开发部 述职报告」——「全部命中」仍只按「述职报告」过滤。排查确认 FTS/SQL 层 AND 无误（`cargo run -p scout-cli --intent-only` 验证「报告」类通用容器名词被 parser 按既有设计丢弃、2 字 CJK 受 trigram 限制，均为既有已知限制非本次引入）；用户给出精确复现词组后定位**真根因**：`SemanticIndexBackend::search_expanded` 完全不消费 `keyword_groups`/`match_mode`，整句关键词拼接成一个向量做相似度召回，RRF 融合把只贴合一个条件的文档也带入结果，绕开 FTS 臂的严格 AND。**方案**（用户主导权衡「砍语义臂」vs「按条件过滤」，选后者）：语义臂改为逐词组分别 embed 算相似度（组内同义词仍 OR-取最大值），按 `match_mode` 汇总（All 取最小值一票否决、Any 取最大值）——≥2 有效词组才触发新逻辑，单/零词组零变化仍走整句 embed。`packages/search-backends/semantic-index` 新增 `search_results_expanded` + 2 测试（All 一票否决 / 单词组回归），25 测试全绿，harness/server/desktop 无回归、clippy/fmt 净。待随下一版本发布验证。 | packages/search-backends/common + packages/search-backends/{local-index,windows-search,everything,spotlight,semantic-index} + apps/desktop + apps/daemon + packages/scout-server | BETA-57 | 1d |
+| **BETA-64** | **索引构建性能优化二期**（2026-07-24 用户反馈：首次全量索引约 1 万文件耗时 1 小时以上；延续 BETA-60"未尽（后续轮）"清单——Windows Search/Everything 常驻宿主免冷启动、embedding batch/context 复用本轮评估——外加新排查出的四阶段串行 / 提取并发硬顶 / 单 PDF 页内 OCR 串行等问题） | **done（P0+P1 T5/T6，2026-07-25）**：完成索引构建架构走读 + Windows Search/Spotlight/Everything **索引构建期**复用可行性评估，产出 [docs/index-performance-design.md](../docs/index-performance-design.md)（B1-B8 瓶颈清单 + P0/P1/P2 任务规划）。**核心结论**：①四阶段（音乐/文档/图片OCR/embedding）严格串行不重叠，任一阶段耗时全部累加到总耗时；②`EXTRACT_PARALLELISM=4`（BETA-60 v0.9.27 热修产物）对轻量内存提取（音乐标签/docx/txt）与重量子进程提取（OCR/pdftoppm）一视同仁，高核数机器上轻量提取被无谓摁低；③单份 PDF 内多页 OCR 是纯串行 `.iter().map()`；④`embed_pending` 逐篇串行、每次新建 llama.cpp context，batch=1；⑤DB 写入按文件逐条事务提交（非按 chunk 批量）；⑥无阶段级耗时埋点、无运行时可调并发参数。**OS 索引复用结论**：Windows Search/Spotlight/Everything 可复用于「发现层」（比照 BETA-01A 音乐全盘发现层 `discovery.rs` 扩展到文档/图片，实测 307ms 全盘枚举 1249 文件量级）与「增量变更检测」（用 mtime 查询替代全量 WalkDir+逐文件 stat 比对）；**不能**复用其已提取的正文来跳过 Scout 自己的文本提取/OCR——`mdfind`/`Search.CollatorDSO`/`es.exe` 均只返回匹配路径、不提供取回已索引全文内容的接口。**P0（本轮执行）**：①阶段级 wall-time 埋点（scan.rs 增量骨架 + embed_pending + daemon 汇总日志）；②DB 写入按 `EXTRACT_CHUNK`（64）批量事务提交，替代逐文件 commit；③提取并发分级——音乐轮（lofty 纯内存解析、无子进程）按核数放开，文档/图片轮（可能触发 OCR/pdftoppm 子进程）保持保守上限、`SCOUT_EXTRACT_PARALLELISM_LIGHT`/`_HEAVY` env 可覆盖；④单 PDF 内多页 OCR 改为独立小容量子进程池内并行，而非解除到无限并发（防重现 v0.9.27 子进程风暴）。**P1 完成 T5+T6（本轮同日续）**：**T5**（发现层泛化）——`discovery.rs` 新增 `PathDiscovery` trait + `default_document_discovery`/`default_image_discovery`（Windows `EverythingExtDiscovery` 泛化 `ext:` 查询、macOS `SpotlightExtDiscovery` 扩展名 OR 谓词 / 图片走 `public.image` UTI，比照 BETA-01A `AudioDiscovery`）；`DocumentIndex` 新增 `index_paths`/`index_image_paths`（三段式，比照 `MusicIndex::index_paths`）+ `prune_deleted`；`packages/search-backends/local-index` 三条生产 reindex 入口（`reindex_with`/`reindex_with_progress_inner`/`reindex_with_filter_and_progress_inner`）均接入文档/图片发现，失败或不可用逐级回退 `WalkDir`；BETA-47 `use_audio_discovery` 开关改名 `use_platform_discovery`、统一控制三路发现（用户心智是"关 Everything 集成"这一件事，不只是音乐）。**T6**（embedding 解耦）——`apps/daemon/src/main.rs` 的 `embed_pending`/`purge_short_body_vectors` 从 `run_initial_collection_index` 同步链路摘出，改 `spawn_background_embedding`：FTS 三轮（音乐/文档/图片OCR）完成即可搜索对外服务，语义向量后台 `tokio::spawn` 任务补齐，不阻塞启动、不阻塞后续 collection。**T7（增量 reindex 用 OS mtime 查询）与 P2 本轮未做**——评估后判断收益/工作量比低于 T5/T6，留后续轮，详见设计文档 §3.2/§3.3。**验证**：本地 macOS 沙盒 `cargo test`/`clippy -D warnings`/`fmt --check` 全绿（CI 覆盖的 7 个 crate + `scout-local-index-backend`/`scoutd`）；`scoutd` e2e 3 个失败经 `git stash` 对照确认改动前基线同样失败（同 BETA-63 记录的本机沙盒 `/var` vs `/private/var` 临时目录问题，与本次改动无关）。**`v0.9.37` 已发布 ✅**（2026-07-25）：CI 全绿，Release Windows（29m28s）/ Release macOS（7m43s）均构建成功，`#[cfg(windows)]` 代码路径（`EverythingExtDiscovery` 等）编译验证通过，changelog 已补全。**仍待真机功能验证**：发现层实际枚举正确性、后台 embedding 与并发 search 交互、首次索引真实耗时改善程度，留待下一轮真机测试。**已知限制（非本轮引入）**：文档/图片发现沿用音乐发现同款边界——`discover()` 成功但返回空结果时不回退 `WalkDir`（只有工具不可用才回退），真实系统索引对刚创建文件有异步延迟，可能暂时搜不到、等系统索引追上或下次增量扫描恢复。 | packages/indexer + apps/daemon + apps/desktop + packages/search-backends/local-index | BETA-60 | P0 1-2d / P1 1-2w（T5+T6 已完成） / P2 视效果 |
+| **BETA-65** | **多条件检索过滤修复 + cosine 阈值/model_id 架构统一**（2026-07-28 用户反馈 BETA-63 的「多条件检索匹配方式」设置看起来不生效，举例文件名命中但文件类型不符仍返回；排查后延伸出两项架构讨论） | **done（2026-07-28）**：**根因与修复**——与 `MatchMode` 逻辑本身无关，单后端 `run_fallback_chain`（fan-out 候选 <2 个时的唯一路径）此前未走 fan-out 路径才有的 `filter_results_for_intent` 结构化约束过滤（文件类型/扩展名/路径/时间/大小），内容型后端只消费关键词、不校验这些字段，导致结果透传；`packages/harness/src/fallback_chain.rs` 补上同款过滤（复用 `fanout_merge::result_matches_intent`，改 `pub(crate)`），新增回归测试。**cosine 阈值架构改造**（用户拍板中期方案）：分析 FTS vs 向量检索差异后定位 `DEFAULT_COSINE_ROUTING_THRESHOLD`（0.70）是给已退役的 `bge-m3` 调的，生产模型早切到 `embeddinggemma-300m` 但阈值从未跟着重新 sweep（BETA-15B 父卡 follow-up ① 长期未清）；`packages/result-normalizer` 新增 `CALIBRATED_COSINE_THRESHOLDS`（model_id → 阈值表）+ `cosine_threshold_for_model`，阈值从孤立全局常量改成随模型显式绑定，未收录模型回落默认值 + `tracing::warn!`；`embeddinggemma-300m` 故意不收录（已知 sweep-best T\*=0.60 标注"未走完评审"，不拿它顶替正式校准值，留给团队按 bge-m3 同款流程补）。**model_id 统一**：桌面端此前硬编码常量、daemon 端裸 `file_stem()`（带量化后缀），同一模型两种 id；`packages/model-runtime` 新增共享 `canonical_model_id`（剥 GGUF 量化后缀），desktop/daemon 均改调，desktop 顺带修掉 `embedding_model_path` 覆盖时 `model_id()` 不感知的真实 bug；daemon 端现有部署会有一次性后台重新 embed（用户确认 Scout 尚未部署，代价可接受）。**测试回归**：过滤生效后暴露 `scout-desktop` 12 个既有测试失败（fake 后端假路径无扩展名，被新过滤器正确拒绝），修复三个 fake 后端合成路径（`FakeCapturingBackend` 按 intent 动态派生扩展名，处理多轮 refine 场景）。**验证**：6 个受影响 crate（`scout-model-runtime`/`scout-result-normalizer`/`scout-harness`/`scout-server`/`scoutd`/`scout-desktop` 含 `semantic-recall` feature）全部编译通过、clippy `-D warnings` 净、fmt 过；`scout-desktop` 183 测试全绿；daemon e2e 3 个失败与 `model_download` 并行测试偶发均排查确认与本次改动无关（既有沙盒/测试隔离问题）。**未尽事宜**：embeddinggemma-300m 的 cosine_threshold 正式评审值待补；本轮未做真机回归。 | packages/harness + packages/result-normalizer + packages/model-runtime + apps/desktop + apps/daemon + packages/scout-server | BETA-63 | 0.5d |
+| **BETA-66** | **索引优先级改文档优先 + 音频改名 + 索引进度真百分比/ETA**（2026-07-28 用户对 BETA-64 设计文档提反馈：①面向工作场景，索引执行顺序应「文档 → 图片 → 音频」而非「音乐 → 文档 → 图片」；②"音乐"改称"音频"更准确；③按设计文档 §8 P-UX 轨道启动新一轮，要求展示真百分比/ETA/用时明细） | **done（2026-07-28）**：**执行顺序**——`apps/daemon/src/main.rs`（`run_initial_collection_index`）、`packages/scout-server/src/reindex.rs`（`run_collection_reindex`）、`packages/search-backends/local-index/src/lib.rs` 三条生产 reindex 入口，均从"音乐→文档→图片"改为"文档→图片→音频"顺序执行 + `on_phase` 通知顺序，返回元组形状不变（仍是 music/doc/image 三个位置，只改计算顺序，不牵动下游解构调用点）。**改名**——"音乐"→"音频"仅改用户可见文案（桌面前端展示文案、后端产出的摘要/错误文本、对应测试断言），不动 Rust 内部类型名/数据库表名/字段名/`IndexPhase::Music*` 枚举变体（改这些涉及 DB schema 迁移，用户确认现阶段不需要）；"媒体"分组不采用，视频索引维持不支持现状、如实记录为独立功能缺口。**真百分比/ETA/用时明细**（按 [docs/index-performance-design.md](../docs/index-performance-design.md) §8 P-UX 轨道 U1 + U3 核心部分）：`IndexProgress` trait 新增 `on_scope_known`/`on_stage_timings` 两个默认 no-op 回调；`packages/indexer/src/scan.rs` 三处接入——`WalkDir` 骨架、`index_discovered_paths`（Everything/Spotlight 发现层成功路径，此前**完全不报逐文件进度**，本轮意外发现并修复的更基础缺口）、`MusicIndex::index_paths`（此前连耗时埋点都没有）；`IndexStatus` 新增 `phase_total`/`phase_scanned`/`phase_rate_per_min`/`last_run_stage_ms` 四个字段（`phase_scanned` 是 phase 内计数，与跨全轮累计的既有 `fts_progress.0` 是两个不同计数器，不能混用）；前端 `IndexingPane.tsx` 真百分比条 + 速率/ETA 文案 + 可展开的"本次索引用时明细"表格，`FirstIndexStep.tsx` 复用同一套字段并顺带修正一处既有语义错误的百分比计算（此前拿"新增/变更占比"当"整体进度"）。**未做（留后续）**：U2（Tauri event 推送替代轮询）、U4（取消索引）、U5（系统通知/托盘完成态）、P3 全部（跨阶段并行等，仍卡在"先测量"前提，本轮新增的 `last_run_stage_ms` 埋点正是为了在真机使用中把这份数据攒出来）。**验证**：`cargo check`/`clippy -D warnings`/`fmt --check` 在 5 个改动 crate（`scout-indexer`/`scout-local-index-backend`/`scoutd`/`scout-server`/`scout-desktop`）全绿；`cargo test` 对应 crate 全部通过（含本轮新增 8 个测试，专门锁定发现层进度这个回归点）；`tsc --noEmit`/`vite build` 通过；`scoutd` e2e 3 个失败是既有的本机 macOS 沙盒 `/var` vs `/private/var` 路径问题（同 BETA-63/65 记录的根因），与本次改动无关。前端因无 Tauri 运行环境，起了一次纯浏览器预览确认没有引入新的运行时报错，但未能实际看到新 UI 数据驱动的真实渲染效果，留待下次真机验证一并覆盖。 | packages/indexer + apps/daemon + apps/desktop + packages/scout-server + packages/search-backends/local-index | BETA-64 | 1d |
+| **BETA-67** | **真机复盘：14570 文档索引 25 小时（约 10 个/分钟），比原始投诉基线还慢 15-17 倍**（2026-07-29 用户真机测试 v0.9.43 反馈；排查发现两条关键线索：`SCOUT_ENABLE_EMBED` 默认禁用导致语义嵌入全程未执行、删除应用数据目录重装后吞吐从 10/分钟提升到 80/分钟） | **done（诊断 + 预防性修复，2026-07-29）**：**排除的可能性**——`spawn_semantic_index` 自 v0.8.5（BETA-31-v3 cycle 4）起默认禁用（env `SCOUT_ENABLE_EMBED=1` 才跑，因早期真机 llama-cpp native crash），v0.9.43 仍未移除，本次 25 小时测的其实只有关键词索引，语义嵌入全程未执行——不是本轮排查的慢因，但揭示了"语义索引在生产默认配置下完全不工作"这个更大的、留待用户决定是否处理的产品缺口。**定位到的机制**：① `paths_under_impl`/`modified_times_under_impl`/`failure_paths_under_impl`（`packages/indexer/src/doc_db.rs`）批量预取查询是无 `WHERE` 的全表扫描，代价随**全库历史累积量**增长、不随本轮实际处理量增长（T7a 刻意取舍，一次性开销，非主因）；② **更可能的主因**——`VACUUM`/FTS5 `optimize` 全仓库只在"一键清空索引"（`clear_index`，`packages/indexer/src/db.rs`）一条路径出现过，日常索引/reindex 生命周期从未整理过 `documents_fts`/`music_fts`（trigram 分词器），长期反复增删（真机测试机跑过 v0.9.27→v0.9.43 几十个版本）会累积 FTS5 内部 segment 碎片、直接拖慢每次写入，与"全新库 8 倍提速"现象吻合度最高。**修复**：`MusicIndex::optimize_fts`/`DocumentIndex::optimize_fts`（FTS5 官方支持的轻量整理命令，非 `VACUUM`、不需要独占锁）+ `packages/search-backends/local-index/src/lib.rs` 的 `optimize_fts_if_changed`——三条生产 reindex 入口收尾时、仅本轮确有变更才调用，防止长期使用的库重新累积同样的碎片化（预防性修复，不针对本次这一个具体案例——旧库已被用户删除，无法事后补救）；`apps/desktop/src-tauri/src/search/index_status.rs` 新增 `log_db_size_diagnostics`——每轮索引开始前记录 `index.db` 文件体量 + 关键表行数到日志，下次再变慢有数据可查，不用再靠"删了重装、对比前后速度"这种会丢证据的办法诊断。**验证**：`packages/indexer` 新增 4 个单测（`optimize_fts` 空库/有数据库均安全）、`scout-desktop` 新增 1 个单测（`log_db_size_diagnostics` 库不存在/真实库均不 panic）；5 个改动 crate `cargo check`/`clippy -D warnings`/`fmt --check` 全绿；`scoutd` e2e 3 个失败仍是既有本机沙盒问题。**未验证**：`optimize_fts` 对已严重碎片化的真实大库能带来多少实际提速——本地无可复现的碎片化大库，需真机场景再次出现"变慢"时用新加的诊断日志确认修复是否生效。**留待用户决定**：`SCOUT_ENABLE_EMBED` 默认禁用是否重新评估——有真实历史崩溃风险，不应顺手改默认值，需专门验证。 | packages/indexer + apps/desktop/src-tauri + packages/search-backends/local-index | BETA-66 | 0.5d |
+| **BETA-68** | **README/文案与产品定位对齐 + slogan 改名 + 设置页五 tab 重组 + 数据存储目录统一 + 仓库中文文件名英文化**（2026-07-29 用户附早期 Agefs〔Scout 项目最初技术构想〕PPTX，指出 scout-desktop UI 文案与 README/docs 表述的产品定位对不上，要求系统性梳理；过程中衍生出四项子任务） | **done（2026-07-29）**：**①定位对齐**——核对 PROJECT.md/产品定位文档确立的"本地优先个人搜索 Agent + 团队冷归档 MCP daemon"定位，修正 README 首行标语（原 "Local search for Agents & Huamns" 拼写错误且偏离定位）、桌面端侧栏 tagline（原英文 "Deep Document Search" 与全中文 UI 不协调）、主导航"找文档"→"找文件"（范围收窄）等处；`docs/install.md` "私有仓库"表述核实后确认仍准确、未改（GitHub 仓库当前确实 private，与"开源免费"许可证条款是两件事，供用户后续裁定）。**②slogan 改名**：用户认为 "Local search for humans" 未体现检索深度与服务 Agent 的双受众，拍板改为 **Deep Local Search**，回填 PROJECT.md/README/产品定位文档/使用手册/scoop bucket README/桌面端侧栏共 7 处引用（单一信源在 PROJECT.md）。**③设置页重组**：8 tab（含仅 Windows 显示的 Everything/Windows 两个空 tab 让 Mac 用户看到空白）精简为 5 个——Everything/Windows 收进「常规」子分区（`GeneralPane.tsx` 内新增 `.prefs-section-title` 分隔线，仅 `IS_WINDOWS` 显示）；「隐私与记录」并入「索引」，裁剪重复内容（"索引了什么"与索引概貌卡片同一份数据的重复展示，删除）、数据存储位置由 5 行路径表格简化为一行"目录+总大小"（建立在④之上——统一目录后逐行罗列相同路径前缀是纯噪音）；"杂项"更名"术语与同义词"（内容本就是 `SynonymsPane`，零风险）；`PrivacyPane.tsx` 整体删除，`docs/manual-test-scenarios.md` 对应场景改写。**④数据存储目录统一（真实 bug 修复）**：排查确认 `settings.json`/`search_history.json`/`user-synonyms.yaml`/`onboarding.json` 长期误走 Tauri 默认 `app.path().app_config_dir()`（基于 bundle id `ai.scout.desktop`），与 `index.db`/`audit.jsonl`/`models/` 走的 `scout_data_dir()`（"Scout" 目录，BETA-31 已有教训注释）不一致——两个目录并存，隐私面板"数据存在哪"展示自相矛盾，正是用户观察到的现象；`settings.rs`/`history.rs`/`user_synonyms.rs`/`permissions.rs` 四处路径解析统一改走 `scout_data_dir()`；新增 `migrate_legacy_config_dir`（`main.rs`，`.setup()` 最早期调用）一次性迁移老用户散落在旧目录的文件（仅新目录无同名文件时才搬，不覆盖，3 个单测覆盖搬迁/不覆盖/无老目录三种情形）；同步修复 Windows NSIS 卸载器（`uninstall-hooks.nsh`）——`settings.json` 现与 `index.db`/`models` 同目录、会被 `RMDir /r` 连带清空，补上与模型/索引同款的 Rename 暂存/恢复（两条分支：保留模型索引 / 彻底删除，均需保留 settings.json），`nsis_uninstall_hook_is_wired_and_guarded` 测试同步更新断言。**⑤仓库中文文件名英文化**：全仓库扫描出 4 个中文文件名（`apps/desktop/使用手册.md` 打包进 Tauri bundle resources；`docs/` 下 3 个纯内部规划文档），用户确认全部改英文；`git mv` 保留 history，21 处交叉引用（README/PROJECT.md/CLAUDE.md 等入口文件、6 个 package README、3 处 Rust 源码注释、`tauri.conf.json` bundle resources）同步更新；过程中 `perl -CSD` 的 `-C` 编码标志在 `C` locale 下导致 UTF-8 字面量匹配静默失败，改用不带 `-C` 的纯字节匹配修复。**验证**：`cargo fmt --check`/`clippy -D warnings`/`cargo test --workspace`/`cargo check --workspace` 全绿（含新增 3 个迁移测试 + 2 个 NSIS 守卫断言更新）；`npm run build`（tsc + vite）全绿；浏览器预览确认导航结构、静态文案渲染正确（需要 Tauri 后端的部分——Windows 专属子分区实际内容、隐私数据合并块的真实数据渲染、迁移函数实际生效——受限于浏览器预览无 Tauri Commands，留待真机验证）。 | apps/desktop（前端全量 + src-tauri 多文件）+ 根/docs 多份文档 | BETA-67 | 1d |
+| **BETA-69** | **桌面端 UI 深度设计优化 + 品牌图标重绘 + 许可证改为纯 MIT**（2026-07-29/30 用户参照 microsoft/Ontology-Playground 的明亮愉快风格要求对 scout-desktop 做视觉优化，随后追加字号协调性检查、图标清晰度优化、许可证由双许可改单许可三项延伸任务） | **done（2026-07-30，随 v0.9.46 发布）**：**①设计 token 化**：`styles.css` 新增 `--radius-sm/md/lg/xl/pill`、`--text-2xs/xs/sm/base/md/lg/xl/2xl`、`--transition-fast/normal`、`--accent-teal`/`--accent-violet` 点缀色，替换约 50 处此前散落的圆角/字号硬编码值；`.nav-item`/`.saved-chip`/`.search-examples button` 等卡片补齐 hover 位移+阴影+描边变色（此前仅个别按钮有反馈）。**②字号协调性**：用户指出"找文件"等大标题（原 `clamp(1.55rem,2.4vw,2.1rem)`，最大 33.6px）与正文说明文字（0.74-0.85rem）反差过大；新增 `--text-2xs`/`--text-2xl` 补齐阶梯，大标题收窄到 `clamp(1.3rem,1.8vw,1.6rem)`，页面副标题/空状态说明/文件预览正文等"正文类"文字统一提到 `--text-md`（0.95rem），原 22 档零散字号收拢为 8 档语义化 token。**③品牌图标重绘**：环境内确认无独立 image-gen 工具，改用 `codex exec -m gpt-5.5` 调用其原生 `image_gen` 工具（`imagegen` skill 明确建议"不要用生成式图片替换已有 SVG 图标系统"，故功能性 UI 图标〔phosphor-icons〕不动，仅重绘品牌 logo）；生成 3D 光泽丝带版与扁平几何版两个候选，用户选定后者（小尺寸更清晰）；本地 flood-fill 抠出透明角（AI 原始输出无 alpha 通道），替换 `src-tauri/icons/generated/scout-icon.png`（画布基准图）后跑 `npx tauri icon` 重新生成全套派生资源（`icon.png/.icns/.ico`/`32x32`/`64x64`/`128x128`/`128x128@2x`），删除工具附带生成但未被 `tauri.conf.json` 引用的 iOS/Android/Windows Store 图标（避免仓库混入未使用资产）；同步替换 `public/scout-icon.png`（前端 `<img>` 引用）。**④许可证改为纯 MIT**：用户明确要求删除一切 Apache-2.0 相关内容；删除 `LICENSE-APACHE`，`Cargo.toml`（workspace 单点，全部 `license.workspace=true` 子 crate 联动生效）/`apps/desktop/package.json`/`scripts/packaging/scoop/scout.json` 的 `license` 字段改 `"MIT"`，README/CONTRIBUTING.md/PR 模板/STATUS.md/PRIVACY.md/PROJECT.md/scoop bucket README 的双许可表述与"贡献视为 Apache-2.0 定义"条款一并改写；**明确不动**第三方依赖自身的 Apache-2.0 许可事实（`docs/third-party-licenses.md`、Qwen 系列模型许可备注等，与 Scout 自身许可选择无关，MIT 在这些依赖的可选许可证里始终存在，不构成冲突）；ROADMAP 历史决策日志（本卡片之外）按时间戳保留不改写。**验证**：`bash scripts/ci.sh`（fmt/clippy/build/test/synonym-recall）——fmt/clippy/build 全绿，workspace 内除 `scoutd` e2e 3 个用例外全部测试通过；该 3 个失败复现 BETA-63/65/66 已记录的同一本机沙盒临时目录问题（单线程重跑仍失败，非本轮改动引入，GitHub Actions 真实 CI 不受影响）；`npm run build`（tsc+vite）全绿；浏览器预览确认新 token/图标/字号渲染正确。**v0.9.46 已发布 ✅**：bump + push + tag，CI（1m37s）/ Release macOS（9m43s）/ Release Windows（30m5s）均成功，`gh release edit` 已补真实 changelog。 | apps/desktop（styles.css + App.tsx + IndexingPane.tsx + 全套 icons）+ 根/scripts 多份许可证文档 | BETA-68 | 0.5d |
+| **BETA-70** | **删除 LoRA 微调 / training 全部资产（项目聚焦，用户要求收窄范围）** | **done（2026-07-30）**：确认 `training/`（BETA-08/17/24 的 MLX LoRA 数据集生成 + 微调 + GGUF 融合管线）已是死代码——生产桌面端一键下载（`model_download.rs`）实际拉取的是 HuggingFace `unsloth/Qwen3-0.6B-GGUF` 原版模型，从未接入 BETA-08/24 训练产出的 LoRA-fused GGUF（该产物本就 `.gitignore`、从未进仓库/分发链路）；BETA-11B/15B 也已明确选 embedding 路径而非 LoRA 在线扩词，无未来工作依赖此目录。**删除**：`training/`（21 个文件，含 datasets/evals/generators/mlx-lora 子目录）；`packages/evals/src/bin/build_lora_dataset.rs`（BETA-08 数据集生成 bin，含 Cargo.toml `[[bin]]` 注册）；`packages/evals/src/bin/fixtures.rs` 的 `GenerateLoraAugKeywords` 子命令 + `AugSeed`/`aug_case_from_seed`/`template_seeds`/`split_train_heldout`/`check_unique_ids`/`generate_lora_aug_keywords` 一整块 + `lora_aug_tests` 测试模块（连带清理 2 个变为未用的 import）；`packages/evals/fixtures/lora-aug-keywords/`（仅被上述已删代码引用的 fixture 数据）；`docs/mac-session-todo.md`（内容已核销、且逐字保留部分整篇围绕跑 `training/mlx-lora/*.gguf`，无保留价值）。**修复**：`.gitignore` 移除 `training/` 专属条目（保留通用 `*.gguf`/`*.safetensors`，仍用于运行期模型下载）；`README.md`/`scripts/README.md` 仓库结构图与计划清单移除 `training/` 提及；`docs/windows-setup.md` §5 本地模型获取指南改写为指向生产实际使用的 `unsloth/Qwen3-0.6B-GGUF` HF 直链（原文档描述的"从 Mac 训练机拷贝 + 校验 sha256"流程本就是过时/未落地的假设）；`packages/intent-parser/src/parsers/media_search.rs` 两处"留给 LoRA 阶段处理"注释改为"已知遗留，不再规划专门修复"（该阶段不会再发生）。**不动**：ROADMAP 本身历史决策记录（BETA-08/17/24/11B/15B 等已完成条目按时间戳保留，不重写历史）；`docs/local-personal-search-agent-project-plan.md`/`docs/product-positioning-and-competitors.md`/`docs/manual-test-scenarios.md`/`packages/search-backends/common/src/lib.rs` 中的历史叙事性 LoRA 提及（非可执行资产，不删改）。**验证**：`cargo check/clippy -D warnings/fmt --check/test` 对 `scout-evals`/`scout-intent-parser`/`scout-search-backend` 及 `cargo check --workspace` 全绿。 | training/ 全目录 + packages/evals + packages/intent-parser + docs | — | 0.5d |
+| **BETA-71** | **v0.9.46 Windows 真机回归四项：图标回退 + Button 配色统一 + Everything/Windows 检测口径对齐 + 快速入门第 3/4 步误跳过修复** | **done（2026-07-30）**：用户 v0.9.46 装机后连续四轮真机反馈，逐项修复。**①图标回退**：新版扁平几何图标真机观感不佳，`src-tauri/icons` 全套派生资源 + `public/scout-icon.png` 回退到 v0.9.45 tag 版本（`git checkout v0.9.45 --`，9 个文件逐字节核对一致），`styles.css`/许可证等其余 v0.9.46 改动保留。**②Button 配色统一**：用户观察到按钮同时用了黑/橙实心/浅绿高亮/橙高亮四种风格、与图标黑底橙渐变的品牌调性不一致；统一实心主按钮为黑（`#1c1917`，`.prefs-btn.primary`/`.confirm-yes`/`.saved-save`/`.synonym-search-btn`/`.synonym-remember-btn`/`.intent-draft-rerun`/`.intent-draft-save` 及 Onboarding 全部内联样式按钮，含 `OnboardingShell.tsx` 共享 `buttonStyle()`），高亮态统一浅橙（`.preview-toggle.active` 改用 `--accent-soft`/`--accent-strong`，`.prefs-checkbox-strong` 强调描边由绿改浅橙），明确保留 `--status-ok*`/`.local-only-chip`/复制成功反馈等真正表达状态的绿色不变。**③Everything/Windows 检测口径对齐**：用户建议 Everything 面板去掉多余的"重新检测"按钮、向 Windows Search 面板的纯自动轮询口径看齐；核查 Rust 侧确认两个探测命令的注释明确写着与实际搜索可用性判断无关（`SearchBackend::is_available()` 在查询时独立现查，不读这份轮询缓存），故轮询间隔从 3s 拉长到 15s 不影响搜索质量；`EverythingPane.tsx` 删除手动按钮与 `checking` 状态，两个面板文案同步改"每 15 秒自动检测一次"。**④快速入门第 3/4 步误跳过**：定位到 `ModelDownloadStep.tsx` 是 onboarding 六步里唯一无需用户操作就静默推进的环节——mount 时若检测到模型文件已在默认路径（很可能是本轮真机反复测试时已下载完成）会 500ms 后自动调用 `onComplete()`，与其余步骤"即便后台检测就绪也停在原地等用户点按钮"的口径不一致；移除该静默推进 effect（保留"用户点下载、下载真正跑完"那条，供 Onboarding 承接与 `SemanticPane.tsx` 设置页状态刷新复用），并给 embedding 模型步骤（此前唯一没有 `primaryAction` 的一步）补上显式「下一步」按钮，两平台对齐。**顺带修复**：走读时发现 `download_model_impl` 的幂等短路只判断目标文件`metadata` 存在与否、未做体积校验，与 `discover_local_model`/`MIN_MODEL_BYTES` 口径不一致，残留 0 字节/截断文件会被误判"已完整"；补上 `>= MIN_MODEL_BYTES` 校验。**衍生清理**：应用户要求删除快速入门第 6 步的"试试这些搜索"示例板块——核实其 `onPickExample` 导航到的 `/?q=` 从未被 `SearchView.tsx` 消费，功能本就不生效；一并删除全仓库无引用的孤立组件 `ExampleQueries.tsx`。**其他**：应用户要求更新"关于 Scout"弹窗一句话定位文案。**验证**：`cargo check/clippy -D warnings/fmt --check`、`cargo test -p scout-desktop model_download` 全绿；`tsc`/`vite build` 全绿；浏览器预览逐项截图确认按钮配色、Everything 面板文案、Onboarding 按钮与示例区块改动。**未尽事宜**：全部改动均未做 Windows 真机验证（尤其图标真机显示、按钮配色真机观感、Onboarding 按钮流程），需下一轮真机走查确认。 | apps/desktop（icons + styles.css + 多个组件 + src-tauri/model_download.rs） | BETA-69 | 0.5d |
+| **BETA-72** | **易用性四项：全局快捷键改 Ctrl+Alt+S + 模型下载支持手动选本地文件 + 路径覆盖"检测"给具体信息 + 自动发现 gguf 扩展到 Windows 搜索/Spotlight** | **done（2026-08-08）**：用户提四项易用性问题，逐项落地；另核实"Everything 未装时给 winget 安装提示"这条已在 BETA-71 前的既有实现里完整覆盖（`EverythingCheckStep.tsx`/`EverythingPane.tsx` 均已有复制按钮 + winget 命令），本轮未改动。**①全局快捷键**：`Ctrl+Space` 与主流软件冲突概率高，Windows/Linux 默认改 `Ctrl+Alt+S`（`settings.rs`/`shortcut.rs` 两处硬编码同步，macOS `Option+Space` 不变）；`shortcut.rs` 新增单测直接 parse 两平台默认值，防手滑打错格式运行时才炸。**②快速入门模型下载支持手动选本地文件**：`ModelDownloadStep.tsx`（Onboarding 第 3/4 步与 `SemanticPane.tsx` 内嵌 compact 模式共用）新增"选择本地已下载的文件…"按钮，走 `@tauri-apps/plugin-dialog` 原生文件选择器，复用既有 `import_local_model` 命令（此前只有 Everything 自动发现候选能触发，手动路径此前完全没有入口，macOS 上 Everything 恒不可用、等于完全没有本地导入手段）；后端对导入文件名有精确白名单校验（防误选其它模型触发 abort，历史真机 crash 教训），新增提示告知期望文件名，避免用户选错先跑一次空导入。**同轮文案统一**："下载语义模型" → "下载嵌入模型"，与 Onboarding 步骤标题、设置页措辞对齐（此前两处不一致系此前会话遗留）。**③路径覆盖"检测"给具体信息**：`search.rs::probe_model_file` 新增 `kind` 参数，路径留空时不再回复静态的"未指定路径，将使用默认模型位置"，而是真的探测默认槽位文件（复用 `model_download::resolve_target_paths`，与实际加载路径同一信源）、报告"已使用默认模型 · 文件名 · 体积"或"默认模型尚未下载"；`SemanticPane.tsx` 语义/生成两个路径覆盖字段同步加"浏览…"按钮直接选文件。**④自动发现 gguf 扩展三后端**：`discover_gguf_models` 此前仅 Everything（Windows 专属、需额外装软件），macOS 与未装 Everything 的 Windows 用户完全没有自动发现能力；新增 `windows-search`/`spotlight` 两个 crate 的 `find_files_by_extension`（分别用 `System.FileExtension` SystemIndex 查询与 `kMDItemFSName` mdfind 谓词，镜像 everything crate 既有同名函数写法），`discover_gguf_models` 按 Everything（全盘，需装）→ Windows 搜索（Windows 自带，仅覆盖系统索引范围）→ Spotlight（macOS 自带，默认全盘）优先级三选一，新增 `ScanBackend` 枚举回传实际用的后端，前端据此展示对应文案（含 Windows 搜索覆盖范围有限的告知）。**验证**：`bash scripts/ci.sh` 全套（fmt/clippy/build/test/synonym-recall）——fmt 有 2 处格式问题已 `cargo fmt` 修正，clippy/build 全绿；`cargo test --workspace --all-targets` 除 `scoutd` e2e 3 个用例外全部通过，该 3 个失败复现 BETA-63 起已反复记录的同一本机沙盒临时目录问题（本轮改动未触及 `apps/daemon`/`packages/scout-server`，非本轮引入）；synonym-recall 门槛通过（100% recall，0% fp，1 条已知容差内 FAIL）；额外对 `packages/search-backends/{windows-search,everything}` 与 `scout-desktop` 用 `--target x86_64-pc-windows-gnu` 交叉编译验证 Windows 专属分支（本机常规 clippy/check 只覆盖 macOS 分支，历史上这条分支的真实语法错误要等 CI 才发现）；`tsc --noEmit`/`vite build` 全绿；浏览器预览确认无新增控制台错误（该应用强依赖 Tauri IPC，纯浏览器环境下 `invoke()` 必然报错，与本轮改动无关，属已知限制）。**未尽事宜**：全部改动均未做真机验证（尤其 Windows 上 Windows 搜索扫描实际覆盖范围、Spotlight 扫描耗时、新快捷键实际按键冲突情况），需下一轮真机走查确认。 | apps/desktop（`shortcut.rs`/`settings.rs`/`search.rs`/`model_download.rs`/`ModelDownloadStep.tsx`/`SemanticPane.tsx`）+ `packages/search-backends/{windows-search,spotlight}` | BETA-71 | 0.5d |
+
+> **BETA-64 收口更新（2026-07-25，v0.9.38）**：上表“`T7 与 P2 本轮未做`”已由本轮后续实现取代。T7 已覆盖发现层主路径的批量 mtime 预取；T8 已落地 Windows WinRT OCR 常驻 worker（超时/重启/一次性回退）；T9a 已落地 llama embedding context 复用、KV cache 清理与 worker 安全 join，并用真实 Metal 模型验证结果一致；T9b 受当前 wrapper API 边界限制判定不可行，T10 与既有 T2/T6 重叠、净收益不足，不投入。daemon 管理端 reindex 的 embedding 同步阶段亦已后台化。另针对 Windows 再次出现的 `APPCRASH 0xc00000fd`（`STATUS_STACK_OVERFLOW`），按 BETA-60 既定升级路径将 PDF native 解析隔离到隐藏 helper 子进程：60 秒超时、异常 NTSTATUS 可观测、失败转 OCR fallback，单个畸形 PDF 不再终止桌面或 daemon 主进程。Windows 分支已通过 `x86_64-pc-windows-gnu` 的 check/clippy，真机行为由 v0.9.38 Release 回归。
+
+> **BETA-64 索引与检索 P0 Review 收口（2026-07-25，v0.9.39）**：在 v0.9.38/P2 评审基础上继续完成索引架构、索引数据结构与检索链路全量 Review，并修复 6 类 P0：① `clear_index` 完整删除向量、OCR 段落与失败留痕；② Everything/Spotlight 发现结果统一执行排除规则，成功空结果回退 WalkDir；③ RRF 保留每个后端独立 rank，Hybrid Ranker 不再覆盖融合分；④ Local/Semantic 候选在融合前统一执行扩展名、类型、目录、时间、大小与时长约束，桌面多源合并后执行全局 limit；⑤语义缓存按向量代次、模型、维度与对应行数失效，覆盖 WAL 和等行数原地更新；⑥ daemon 多 collection reindex 在执行前一次性建立可回滚 guard，失败/冲突不遗留永久 InFlight。受影响 7 个 crate 共 595 个库测试通过，desktop/相关 crate check、全目标 clippy `-D warnings`、fmt 与 diff check 全绿；发布后仍需双平台真机验证。
+
+#### 代码整洁 / 技术债 backlog（非关键路径，随手可做）
+
+> 2026-06-03 "消冗余 + 上下文优化"梳理产生的可选后续项（均不阻塞功能）。已完成部分见 STATUS 同日会话日志。
+
+| ID | 内容 | 风险 | 状态 |
+|---|---|---|---|
+| CLEAN-1 | search.rs 代码层进一步拆子模块（`file_actions` / `index_status` / `fanout` 等；当前已拆出 `search/tests.rs`，主文件 1558 行） | 低-中（纯重构、需调可见性 + 补 import，churn 大） | **done（2026-06-03）**：search.rs **1558 → 637 行**，按签名/区块整体迁出三子模块——`fanout.rs`(341，BETA-04/18/19 多源+均衡)、`file_actions.rs`(495，open/locate/confirm/cancel + record_audit)、`index_status.rs`(130，BETA-07 reindex/状态)。`#[tauri::command]` 包装 + main.rs 所引类型（SearchDeps/ReindexStats/IndexStatus/perform_reindex）留 search.rs，避免 tauri 命令宏跨模块失效；迁出项提 `pub(crate)` + parent `pub(crate) use ::*` 重导出，使 `super::*`(tests) 与 `search::X`(main) 均解析；中置 `use TargetRefError/FileActionError` 随用迁入。逻辑零改动（仅移动 + 可见性/导入调整）。desktop 72 单测全过、全 workspace clippy(`-D warnings`)+test 零回归（platform-macos 2 预存除外）。 |
+| CLEAN-2 | 翻译层重复收拢到 common：`relative_time_bounds`（spotlight + windows-search）、`media_derived_file_types` + `media_common_constraints`（everything + windows-search） | 中（需三后端翻译单测护航，注意各后端时间/单位语法差异） | **done（2026-06-03）**：三函数 + 顺带发现的 `CommonConstraints` 结构体（三后端各一份完全相同）收拢到 common 单一信源，后端 `use` 引入；语法相关的 `add_*_constraints`（CommandBuilder/SqlBuilder/QueryBuilder）留原处不可合并。清理孤儿 import（`Location`/`RelativeTime`）。全 workspace clippy(`-D warnings`)+test 零回归（platform-macos 2 预存除外），后端 fixture 翻译单测全过。 |
+| CLEAN-3 | model-runtime 纳入 workspace lints（补 `[lints] workspace = true`，修可能浮现的 warning） | 低 | **done（2026-06-03）**：加 `[lints] workspace = true`，修浮现的 16 类 warning（`missing_debug_implementations` 手写/derive、`needless_pass_by_value` → `ModelLoadParams` 加 `Copy`、`uninlined_format_args`、`must_use`、`doc_markdown`、`float_cmp`/`#[ignore]` reason/测试模块 allow）。clippy(`-D warnings`) 0。 |
+| CLEAN-4 | 后端测试里重复的 `noop_waker + block_on` 抽公共 test helper（或改用 `futures_executor::block_on`） | 低 | **done（2026-06-03）**：7 处逐字节相同的手写 `block_on`（三后端各 1 + harness 4）全删，改用 `futures-executor::block_on`（dev-dependency，同 futures-rs 上游、零新传递依赖）。licenses 文档已登记。 |
+| CLEAN-5 | 抑制被 `catch_unwind` 兜底的提取器 panic 的 stderr 刷屏（BETA-07 启动自动索引时 pdf-extract 0.10 对畸形 PDF panic 约 10 条/轮，污染 dev 日志；panic 已计 failed 不崩，仅打印噪声） | 低（线程局部标志 + 一次性 panic hook，零新依赖、不动 unsafe 约束） | **done（2026-06-03）**：scan.rs `catch_extract` 内置位线程局部 `IN_CATCH_EXTRACT`，`install_quiet_extract_panic_hook`（`Once` 进程级一次安装）的 hook 仅在该标志置位时跳过默认 hook 打印、其余 panic 照常打印。顺序路径 + rayon 并行路径均成立（panic 与置位同线程）。新增标志复位单测；indexer 76 单测全过、全 workspace clippy(`-D warnings`)+test 零回归（platform-macos 2 预存除外）。**后续选项（②，未做）**：换更鲁棒的 PDF 文本提取以**降低 panic 率本身**——候选 `lopdf` 直读（纯 Rust、轻、可控但需自写文本流解析）/ `pdfium-render`（覆盖最广但引入 pdfium 原生大依赖，与"无新重依赖优先"冲突）/ 跟进 `pdf-extract` 上游修复版本。评估门槛：畸形 PDF panic 率、二进制体积、是否破 `unsafe_code=forbid`。当前噪声已消、坏 PDF 仍计 failed 不进 index.db，故 ② 仅"提升覆盖率"边际收益，非紧急。 |
+| CLEAN-6 | **ROADMAP 已完成 task 卡片压缩归档**（2026-07-02 登记：本文件已膨胀至 ~222KB、pre-commit hook 230KB 预警线就位。修法 = P/M 阶段与 B 阶段已 done 的巨型卡片压缩为"一行摘要 + 归档链接"，全文逐字移入归档文件；验收 = 压缩后 ROADMAP < 120KB、所有 task ID 仍可检索、归档只移动不删除） | 低（纯文档移动，需保 task ID 可检索） | **done（2026-07-03 Claude Code）**：62 张 done 巨型卡片行压缩为「ID + 标题 + done 摘要 + 归档链接」一行（模块/依赖/估时列保留）+ BETA-15B 父卡（not_started）内嵌的 15B-1..11-v2 全 done 子周期日志压为逐 ID 一行摘要 + 21 处 done 任务历史 background 注记搬迁至归档文件。**ROADMAP 242041 → 117234 字节（-51.6%，< 120KB 验收达成）**；160 个 task ID 全部前后可 grep（in_progress BETA-33/13-G12/13-G14/40 与 not_started 卡未动；BETA-16/16A、BETA-31-v2/-v4、15B-Y 等 done 卡内嵌引用随母卡进归档仍可 grep）。归档只移动不删除、历史一字不丢。 |
+
+> 已完成（2026-06-03）：跨后端重复小函数（`validate_search_path`/`is_excluded`/`result_id`）+ 图片扩展名白名单（indexer/local-index/desktop 三副本）收拢到单一信源；删未用依赖（tokio/tracing/anyhow）+ 死代码 echo；STATUS 369KB→14KB + ROADMAP 定向读取。**注**：indexer 索引侧扩展名白名单与 common 搜索侧 `extensions_for_file_type` **语义不同、不可合并**（经 Codex 交叉验证确认）。
+
+### 3.4 V 阶段：1.0
+
+目标：**正式发布所需的最后一公里**。
+
+| ID | 标题 | 状态 | 模块 | 估时 |
+|---|---|---|---|---|
+| V10-01 | 插件系统（Plugin SDK） | not_started | packages/harness + docs | 3 weeks |
+| V10-02 | 本地活动洞察模块（**工作时间分布 + 工作主题摘要**；最近打开如已在 BETA-04 下沉则此处不再实现） | not_started | packages/indexer + apps/desktop | 3 weeks |
+| V10-03 | 隐私 / 权限管理 UI | not_started | apps/desktop | 2 weeks |
+| V10-04 | 自动更新机制（Sparkle / Squirrel） | not_started | platform/* | 2 weeks |
+| V10-05 | 崩溃恢复 | not_started | apps/desktop | 1 week |
+| V10-06 | 多语言扩展（界面 i18n） | not_started | apps/desktop | 1 week |
+| V10-07 | 企业管理策略（如需要） | not_started | apps/desktop + docs | 2 weeks |
+| V10-08 | 开源法务文档完整化（LICENSE 双许可 / Third-party Notices / 隐私说明；原律师版 Privacy / Terms / EULA 已随 2026-07-04 开源免费拍板取消） | in_progress（LICENSE 已入库 2026-07-04） | docs | 数天（大幅缩量） |
+| V10-09 | ~~商标注册完成（中美）~~ | **dropped**（2026-07-04 开源免费拍板：不注册商标，撞名风险接受、全程用完整品牌名） | — | — |
+| V10-10 | 官网与用户文档 | not_started | （仓库外） | 持续 |
+| V10-11 | 1.0 发布 evals + 性能基准 | not_started | packages/evals | 2 weeks |
+| V10-12 | 1.0 正式发布 | not_started | — | — |
+| V10-13 | **MCP 文件问答工作流（re-scoped：不自建 RAG UI / 本地模型作答；检索+问答经 BETA-32 daemon + 外部 LLM 客户端组合实现，本卡并入 BETA-40 playbook）** | **re-scoped → 并入 BETA-40**（2026-07-02 定位收敛「不做分析层」，详 doc-realign 方案；原 2026-06-03"RAG over local results 本地作答"方案作废） | docs + apps/daemon | 并入 BETA-40 |
+| V10-14 | **通用自定义规则过滤（power-user：正则 + 熵 + 路径 + 扩展名，自助式内容/文件名模式匹配）** | not_started（2026-06-15 登记，源于"能否找 AWS 凭证"讨论；**不现在动手、不挤占进取档 BETA-15B**）。**定位=通用过滤器,非 secret scanner**：让 power-user 自定义规则指向自己关心的模式;**不对外宣称"找密码/凭证"**——那是另一个 job(模式审计 vs 按意思找文件)、差异化弱且规则维护重,该用 `gitleaks`/`trufflehog`/`detect-secrets` 专业工具补位。**隐私硬约束(必守)**：① 命中敏感路径(dotfile/`.env`/源码/`.pem`)需**显式 opt-in + 二次确认**(当前 indexer 特意跳过这些);② 命中**只存位置+规则名,绝不存明文密钥/密码**(避免 index.db 变成第二份泄漏面);③ 该类规则索引可独立清除;④ 守 local-first 不外发。**边界**：本质是 secret-scanning 的近邻,扩张前须过 PROJECT.md「防范围蔓延」判定。 | apps/desktop + packages/indexer + packages/intent-parser | BETA-22(保存搜索同源) | 重估中（非关键路径） |
+| V10-15 | **Frozen Index Pack（re-scoped：冻结检索包，无内置 LLM 合成——显式 pin 资料夹的冻结快照 + 原文索引 + 来源映射 + 文件/段落 ID + mtime/hash 失效检测 + 可导出给 MCP daemon 的检索上下文）** | **re-scoped**（2026-07-02 定位收敛「不做分析层」：原 Frozen Research Pack 的 LLM 合成部分——摘要 / 术语表 / 阅读地图——**外置**给外部 LLM 经 MCP 工作流生成，不内置；「冷归档可复现、可留痕、可交接」价值保留。原 2026-06-25 登记背景与 LLM Wiki 借鉴见 doc-realign 方案 §6 Q2） | apps/desktop + packages/search-backends/semantic-index + packages/harness | V10-16, BETA-36 | 2-3 weeks（合成外置后缩量） |
+| V10-16 | **MCP/LLM 读取权限与出处闸门（所有经 daemon/MCP 暴露给外部 LLM 的读取必过策略：哪些 collection/目录可读 / 是否允许全文 / 答案必须带出处引用）** | not_started（2026-06-25 登记；**2026-07-02 重定性**：从"本地 LLM 功能护栏"改为"**MCP 路径横切护栏**"、价值上升——律所信息墙 / 审计留痕 / 离职归档 HR 敏感的企业准入门槛。**衔接**：BETA-06 Audit、BETA-36 collection ACL、BETA-40 playbook、V10-03 隐私 UI。**缓解**：per-root/per-collection 策略（敏感目录默认禁）+ 答案强制出处引用。**2026-07-04 护城河规划**：先导部分（出处强制 / 片段级返回 / 审计导出）提前拆 **BETA-43** 进 B7，本卡保留隐私 UI 集成（V10-03）与全量策略收口，详 moat-plan-2026-07-04.md） | packages/scout-server + apps/daemon + packages/harness | BETA-36, BETA-40, V10-03 | 2 weeks（BETA-43 先导拆出后缩量） |
+
+**V 阶段预期总工期**：4-6 个月。
+
+## 4. 里程碑
+
+| 里程碑 | 触发条件 | 价值 |
+|---|---|---|
+| **M0：设计定稿** | Schema v1.0 + Trait v0.1 + Codex 审阅落地 | 内部对齐技术路径（**已完成 2026-05-25**） |
+| **M1：原型 demo** | PROTO-09 通过 | 内部演示，验证"AI Search for humans"概念 |
+| **M2：双平台 MVP** | MVP-28 通过 | 早期用户内测；可邀请 5-10 人试用 |
+| **M3：Beta 内测** | BETA-14 通过；安装包经 GitHub Releases 外发（2026-07-04 开源口径，原「签名安装包」作废） | 50-100 人公开测试；收集真实查询样本（脱敏） |
+| **M4：1.0 公开发布** | V10-12 | 正式发布；仓库主页 / GitHub Pages 上线（商店提交已随开源免费拍板取消——需开发者账号） |
+
+## 5. 长周期事项时间线（独立于代码节奏）
+
+| 事项 | 启动时间 | 完成时间 | 启动负责 | 说明 |
+|---|---|---|---|---|
+| ~~注册 Apple Developer Program~~ | — | — | — | **已取消（2026-07-04 开源免费拍板）**：不签名不公证，DMG 走 GitHub Releases + Gatekeeper 绕行文档（BETA-10 re-scoped） |
+| ~~采购 Windows OV/EV 代码签名证书~~ | — | — | — | **已取消（2026-07-04 开源免费拍板）**：接受 SmartScreen 未知发布者提示 + 说明文档（BETA-10A re-scoped） |
+| ~~注册核心域名（scout.ai / .app / .dev）~~ | — | — | — | **已取消（2026-07-04 开源免费拍板）**：GitHub 仓库 + GitHub Pages 足够 |
+| ~~提交 Scout 商标申请（中国 + 美国）~~ | — | — | — | **已取消（2026-07-04 开源免费拍板）**：撞名风险接受；全程用完整品牌名 Scout 降低风险 |
+| ~~评估第二梯队商标申请~~ | — | — | — | **已取消（2026-07-04 开源免费拍板）**：随商标申请一并取消 |
+| 建立 Third-party Notices 台账 | **PROTO-01 起强制**（引入第一个依赖时） | 持续维护 | 任一工具 | 引入 / 移除依赖时**当场**更新 [docs/third-party-licenses.md](./docs/third-party-licenses.md)；收工时检查"新依赖是否登记"作为 commit 前置 |
+| 简短隐私说明 + LICENSE（原「Privacy Policy / EULA 草案」，2026-07-04 开源免费拍板 re-scoped：律师版 EULA 取消） | Beta 外发前 | 数天 | 任一工具 + 用户 | LICENSE-MIT / LICENSE-APACHE 已入库（2026-07-04）；隐私说明归 BETA-00 |
+| ~~Apple Notarization 流程演练~~ | — | — | — | **已取消（2026-07-04 开源免费拍板）**：不公证 |
+| **获取设计伙伴 / 首个真实部署**（律所 / 审计 / 离职归档任一场景） | **B7 收尾期（2026-07 起）** | 持续 | 用户 | 护城河 P0（详 moat-plan-2026-07-04.md）：BETA-40 真实内网证据、BETA-44 真实语料、场景词表积累均以此为前提；性质是**主动获取**而非被动等待环境 |
+
+> 这些事项**不阻塞代码进度**但**阻塞分发**。Beta 外发前必须全部就绪。
+
+## 6. 度量指标（按阶段）
+
+> 由 Codex 审阅 must-fix #6 落地：每个性能 / 准确率指标必须明确**四要素 — 数据集 / 统计口径 / 运行环境 / 排除项**。
+> 由 Gemini 审阅 should-have #3 落地：性能指标必须明确**硬件画像**。
+
+**统一基准硬件画像**（除非另注，下列性能指标均基于此画像）：
+
+- **macOS 基准机**：Apple Silicon M 系列（M1/M2/M3 任一），16GB RAM，512GB SSD，macOS 14+，Spotlight 索引已完成
+- **Windows 基准机**：x86-64 8 核 CPU（Intel 12 代 / Ryzen 5000 级或更新），16GB RAM，512GB SSD，Windows 11，Windows Search 索引已完成
+
+低于基准画像的硬件不进入出场判定（但应在 issue tracker 记录"低配机器观测数据"）。
+
+### 6.1 P 阶段出场（原型）
+
+| 指标 | 阈值 | 数据集 | 统计口径 | 排除项 |
+|---|---|---|---|---|
+| 端到端准确率（NL → SearchIntent JSON → 结果集） | ≥ 80% | PROTO-08 v0.1 evals（47 条 + PROTO-05A 合成 fixture） | 严格匹配判定（intent 正确 + 关键字段一致） | — |
+| 规则解析路径响应（NL → SearchIntent） | p95 < 500ms | 47 条用例 | p95，不含 mdfind 执行 | 冷启动、首次 JIT |
+| CLI 端到端简单查询响应 | p95 < 1500ms | §7.1-§7.4 共 30 条 | p95 | 冷启动、Spotlight 首次索引 |
+| 在真实 macOS 14+ 环境运行无 panic | 100% | PROTO-09 烟雾测试 | 无 panic / 无 unwrap 触发 | — |
+| [trait §4.2](./docs/search-backend-trait.md) 实测验证清单 | 全勾选 | trait §4.2 | 逐项确认 | — |
+| Schema §3.5 Clarify 触发规则单元测试 | 100% 通过 | 触发规则表 | — | — |
+| Stub backend 不进入生产 fallback 链 | 集成测试断言通过 | 测试用例 | — | — |
+
+### 6.2 M 阶段出场（MVP）
+
+| 指标 | 阈值 | 数据集 | 统计口径 | 运行环境 | 排除项 |
+|---|---|---|---|---|---|
+| 简单文件搜索生成合法 SearchIntent JSON | ≥ 90% | MVP-25 v0.5 evals（500 条） | schema 校验通过率 | 双平台 | — |
+| 中文 / 英文 / 中英混合查询解析正确 | ≥ 85%（各语言子集分别） | MVP-25 按语言分桶 | 严格匹配 | 双平台 | — |
+| 简单查询响应（规则解析路径） | p95 < 500ms | MVP-25 标记为 simple 的用例 | p95 | 基准画像 | 冷启动 |
+| 复杂查询响应（含模型 fallback） | p95 < 3000ms | MVP-25 标记为 model 的用例 | p95 | 基准画像，模型常驻 | 模型首次加载 |
+| SearchBackend 调用成功率 | > 95% | MVP-26 跨平台一致性测试 | 按 backend 分桶 | 双平台 | `UnsupportedIntent` 不计为失败 |
+| **macOS / Windows evals 通过率差距** | **< 5 个百分点** | MVP-25 同份 evals 双平台跑 | 直接差值 | 双平台基准画像 | — |
+| 模型输出 JSON 合法率 | > 98% | MVP-25 触发模型的用例 | schema 校验通过率 | 基准画像 | — |
+| 文件操作权限策略 | 100% 通过安全 evals | MVP-25 安全子集（含 schema §7.6/§7.7） | 必须 100% | — | — |
+| Tauri 应用流畅运行 | 启动 < 3s / 操作响应 < 100ms | MVP-27 | p95 | **基准画像** | 应用首次启动 |
+| Stub backend 不进入生产 fallback 链 | 集成测试断言通过 | — | — | — | — |
+
+### 6.3 B 阶段出场（Beta）
+
+| 指标 | 阈值 | 数据集 | 统计口径 | 运行环境 | 排除项 |
+|---|---|---|---|---|---|
+| 总体 evals 通过率 | > 90% | BETA-13 v0.9 evals（1000 条） | 严格匹配 | 双平台基准画像 | — |
+| 音乐 artist / title 准确率 | > 85% | BETA-13 音乐子集 | Top-1 命中 | 基准画像 + 测试音频库 | — |
+| Office / PDF 内容 Top 5 命中率 | > 80% | BETA-13 文档内容子集 | Top-5 命中 | 基准画像 + 测试文档库 | — |
+| OCR Top 5 命中率 | > 75% | BETA-13 OCR 子集 | Top-5 命中 | 基准画像 + 测试图片库 | — |
+| macOS DMG 经 GitHub Releases 下载可装可用（2026-07-04 开源口径，替代原 Notarization 指标） | 真机安装成功 + Gatekeeper 绕行步骤文档化 | BETA-10 产物 | 通过 / 失败 | macOS 基准机 | — |
+| Windows 安装包经 GitHub Releases 下载可装可用（2026-07-04 开源口径，替代原 MSIX SmartScreen 指标） | 真机安装成功 + SmartScreen 说明文档化 | BETA-10A 产物 | 通过 / 失败 | Windows 基准机 | — |
+| 一键删除索引 / 日志 / 模型 / 配置 | 全部可用 | 手动验证 | 是 / 否 | 双平台 | — |
+| 后台索引 CPU 占用 | < 15% | 索引 100GB 测试库 | 平均 | **基准画像** | 索引完成阶段 |
+| 后台索引内存占用 | < 1GB | 同上 | RSS 峰值 | 基准画像 | — |
+
+### 6.4 V 阶段（1.0 发布）
+
+| 指标 | 阈值 | 数据集 / 验证方式 |
+|---|---|---|
+| 自动更新机制 | 端到端通过 | V10-04 演练（macOS Sparkle / Windows Squirrel） |
+| 崩溃恢复测试 | 模拟 5 类崩溃场景全恢复 | V10-05 测试 |
+| 测试矩阵 | macOS 14 / 15 / 26 × Windows 10 / 11 全部通过 | V10-11 v1.0 evals |
+| 法务文档 | LICENSE 双许可 / Third-party Notices / 隐私说明 全部就绪（2026-07-04 开源口径，律师签字取消） | V10-08 |
+| ~~商标~~ | 已取消（2026-07-04 开源免费拍板） | ~~V10-09~~ |
+| 插件系统 | SDK 文档 + 至少 1 个示例插件 | V10-01 |
+| 本地活动洞察模块 | 默认关闭、可选开启、隐私边界文档化 | V10-02 + privacy-security.md |
+
+### 6.5 不可回归约束（Codex 审阅 nice-to-have #14 落地）
+
+每阶段出场必须**重跑所有前序阶段 eval**，并满足：
+
+- 前序 eval 通过率 **不低于上一阶段出场报告**。
+- 任何下降必须在出场报告中明确豁免理由（如"v0.5 改了 X 字段，3 条用例预期重新校准"）。
+- 豁免数累计不得超过该 eval 集总数的 5%。
+
+实现：`packages/evals` 提供 `--regression-check <prev-report.json>` 选项；阶段出场报告必须包含回归对比表。
+
+## 7. 风险地图
+
+按发生概率 × 影响 排序，每条带触发条件与缓解措施。
+
+| 风险 | 概率 | 影响 | 触发条件 | 缓解 | 应对窗口 |
+|---|---|---|---|---|---|
+| **本地模型在低配机器上慢** | 高 | 中 | MVP 测试机内存 8GB / CPU 老 | 规则优先 + 模型常驻 + 默认 4-bit；提供"轻量模式"关闭模型 | MVP 出场前 |
+| **macOS Spotlight 排除目录导致结果缺失** | 中 | 中 | 用户搜不到明显存在的文件 | 引导授权 Full Disk Access；UI 明确告知结果范围；fallback 到自建轻量索引 | MVP-23 |
+| **Windows Search 被企业策略禁用** | 中 | 中 | 企业 / 政府机环境 | fallback 到 Everything；无 Everything 时提示用户 | MVP-11 |
+| **跨平台开发复杂度爆炸** | 中 | 高 | platform-specific 代码渗透到通用层 | 严格隔离 platform/* 与 search-backends/{spotlight,windows-search,everything}；通用层不 import 平台 API | 持续，CR 时严查 |
+| **Apple Notarization 失败** | 中 | 中 | Hardened Runtime / entitlements 配置错 | Beta 启动前演练（见 §5）；维护 notarization 错误排查 runbook | Beta 启动前 |
+| **IP 风险：暗示 Apple/MS/voidtools 背书** | 低 | 高 | 营销文案中误用 | 文案过 [IP 计划书 §7.3](./docs/Scout知识产权保护计划书.md) 与 [风险清单 §3.2](./docs/Scout项目注意事项与风险清单.md) | Beta 外发前 |
+| **训练数据混入真实用户敏感信息** | 中 | 高 | 直接抓取查询日志 | 严格用合成数据 + 手工标注；[训练数据版本化](./training/datasets/README.md)；commit 前 hook 校验 | LoRA 启动前 |
+| **Agent 误删用户文件** | 低 | 极高 | MVP 错误开放 delete | MVP 禁用 delete；写操作必须显式确认 + 移到回收站；删除批量阈值 clarify | MVP-03 |
+| ~~旧品牌同名冲突阻挡注册~~（2026-07-04 开源免费拍板后不再申请注册；残余风险 = 他人抢注同名，接受） | 低 | 低 | 他人注册同名商标并主张权利 | 全程用完整品牌 Scout；开源先发时间戳即公开在先使用证据 | — |
+| **本地活动洞察的隐私误判** | 低（V10） | 高 | 用户认为是监控 | 默认关闭；UI 明确说明数据本地；不收集网络访问 | V10-02 |
+| **系统搜索索引延迟 / 排序差异导致 eval flake**（Codex #13） | 高 | 中 | CI 上 47/500/1000 条 eval 间歇失败 | PROTO-05A fixture 预热；测试启动前等待 Spotlight 索引完成；backend 测试分层（翻译单元测试 vs 实机 smoke）；Top-K 容忍；报告中记录 OS / 索引状态 | PROTO-08 起持续 |
+| **应用商店 / 系统平台隐私政策收紧**（Gemini #5） | 中 | 中 | Apple 新增 Privacy Manifest 项 / Microsoft Store 政策变更 | Beta 启动前重读 App Store Review Guidelines；订阅 Apple / Microsoft 开发者新闻；BETA-00 法务审查覆盖最新政策 | Beta 启动前 + 1.0 前 |
+| **模型授权在不同司法辖区的商用限制**（Gemini #5） | 低 | 中 | 中国 / 美国 / 欧盟对模型商业使用差异 | 模型 license 台账（IP §7.5）按区标注；BETA-09 跨平台部署前确认；如 Qwen license 收紧准备备用基座模型清单 | Beta 启动前 |
+
+## 8. 阶段切换 checklist
+
+每个阶段切换必须由当前会话工具在 [STATUS.md](./STATUS.md) 留记录，并勾选下方对应 §6 出场指标。
+
+### P → M 切换
+
+- [ ] §6.1 全部指标达成
+- [ ] PROTO-09 评测报告落库（按 §6 报告模板）
+- [ ] [§5 长周期事项](#5-长周期事项时间线独立于代码节奏) 中 P 阶段第 0 天事项已启动
+
+### M → B 切换
+
+- [ ] §6.2 全部指标达成
+- [ ] **§6.5 不可回归约束**：47 条 P eval 通过率不低于 PROTO-09 报告
+- [ ] MVP-28 评测报告落库
+- [ ] **BETA-00 开源发布审查已启动**（LICENSE 双许可已入库 2026-07-04 ✅；剩 Everything SDK 条款核查 + 隐私说明 + 仓库脱敏）
+- [x] ~~商标申请 / Apple Developer 账号 / Windows 签名证书~~ **已取消（2026-07-04 开源免费拍板）**
+
+### B → V 切换
+
+- [ ] §6.3 全部指标达成
+- [ ] **§6.5 不可回归约束**：500 条 MVP eval + 47 条 P eval 通过率不低于上一阶段
+- [ ] BETA-14 评测报告落库
+- [ ] **BETA-00 开源发布审查完成**：LICENSE 双许可 / Third-party Notices / 隐私说明入库 + 仓库脱敏核查通过（律师签字要求已随 2026-07-04 开源免费拍板取消）
+- [ ] 公开内测反馈整理完成
+
+### V → 公开发布
+
+- [ ] §6.4 全部指标达成
+- [ ] **§6.5 不可回归约束**：1000 条 Beta eval + 全部前序 eval 通过率不低于 BETA-14
+- [ ] 官网 / 文档 / 发布稿就绪
+
+## 9. 出场报告模板
+
+PROTO-09 / MVP-28 / BETA-14 / V10-11 的出场报告统一遵循下方结构（Codex 审阅 nice-to-have #16 落地）：
+
+```markdown
+# {阶段} 出场报告
+
+> 评估人：{工具名}
+> 日期：YYYY-MM-DD
+> 阶段：{P / MVP / Beta / V1.0}
+
+## 1. 环境
+- macOS 基准机：{型号 / OS 版本 / 内存}
+- Windows 基准机：{型号 / OS 版本 / 内存}
+- 测试时 Spotlight / Windows Search 索引状态
+
+## 2. 数据集版本
+- evals 版本：v0.X，{N} 条
+- fixture 版本：vY，覆盖 ...
+
+## 3. 准确率
+- 总体：{X%}（vs 阈值 {Y%}）
+- 分桶：按 intent / 语言 / backend 分桶
+- 失败用例列表与归因
+
+## 4. 性能
+- 各项 p50 / p95 / p99
+- 与上一阶段对比
+
+## 5. 回归对比（§6.5 不可回归约束）
+- 前序 eval 通过率 vs 上一阶段
+- 豁免列表与理由
+
+## 6. 失败 / 警告 / 已知问题
+
+## 7. 出场指标 checklist
+- [ ] 逐项勾选 §6.X
+- [ ] §6.5 不可回归
+
+## 8. 下一阶段风险与准备
+```
+
+## 10. ROADMAP 维护规则
+
+- **谁更新**：任一工具均可更新 task 状态、添加新 task、修改估时；**重大方向调整**（阶段范围变化、关键路径任务删除）需用户确认。
+- **何时更新**：
+  - 收工时：把本会话改动的 task 状态同步到本文件（与 STATUS.md 同步进行）。
+  - 阶段切换时：完整勾选 §8 checklist 并产出 §9 模板的出场报告。
+  - 引入新依赖 / 删除任务：当场更新依赖图。
+- **不更新的内容**：当前 task 详情 / 当前 next step / 阻塞 → 这些在 STATUS.md，不要复述。
+- **审阅**：v0.1 → v1.0 由 Codex + Gemini 并行审阅完成；之后的版本只在阶段切换时复审。
+
+---
+
+## 11. v0.1 → v1.0 修订摘要（来自 Codex + Gemini 双轨审阅）
+
+完整审阅原文：
+- Codex 审阅（6 must-fix / 7 should-have / 3 nice-to-have / 2 out-of-scope）
+- Gemini 审阅（0 must-fix / 3 should-have / 2 nice-to-have）
+
+两份审阅**互补无冲突**，全部 must-fix 与 should-have 已采纳。
+
+### Codex must-fix（全部修订）
+
+| # | 修订点 | 落地位置 |
+|---|---|---|
+| 1 | P 阶段补合成 fixture 任务 | 新增 PROTO-05A；§3.1 依赖图更新 |
+| 2 | P 阶段补 macOS location resolver | 新增 PROTO-04A；§3.1 依赖图更新；MVP-13 改为跨平台扩展 |
+| 3 | Schema 用例口径统一为 47 条 | §3.1 PROTO-02/06/08 验收明确"47 条 + §7.1-§7.4 子集 30 条用于翻译实测" |
+| 4 | MVP 补 SearchBackend async/streaming 迁移 | 新增 MVP-07A |
+| 5 | MVP 补 FileActionTool | 新增 MVP-10A |
+| 6 | §6 指标定义四要素 | §6 全面重写为四要素表格 + 统一基准硬件画像 |
+
+### Codex should-have（全部修订）
+
+| # | 修订点 | 落地位置 |
+|---|---|---|
+| 7 | PROTO-03 "字节一致"改为语义一致 + 交叉测试 | PROTO-03 验收 |
+| 8 | PROTO-02/03 标注可并行 | PROTO-02 验收 + 依赖图 |
+| 9 | PROTO-05 估时 2d → 3d | PROTO-05 估时列；§3.1 关键路径更新为 7-8 天 |
+| 10 | PROTO-06 标题加"规则解析，不含模型 fallback" | PROTO-06 标题 + 验收 |
+| 11 | MVP 增加并行约束小节 | §3.2 M5 末尾新增小节 + §1 字段约定 |
+| 12 | Beta 阶段补依赖列 | §3.3 全表加依赖列 |
+| 13 | 风险地图补"系统搜索 eval flake" | §7 新增一行 |
+
+### Codex nice-to-have（全部采纳）
+
+| # | 修订点 | 落地位置 |
+|---|---|---|
+| 14 | 每阶段"不可回归"指标 | §6.5 新增；§8 各切换 checklist 加约束 |
+| 15 | PROTO-01 加 clippy / fmt lint gate | PROTO-01 标题 + 验收 |
+| 16 | 出场报告模板化 | §9 新增 |
+
+### Codex out-of-scope（保留原 ROADMAP 决策）
+
+- #17 本地模型不提前到 P：PROTO-06 标题已明确不含模型 fallback。
+- #18 P 阶段不做 Tauri UI：ROADMAP 一直未在 P 阶段安排 UI。
+
+### Gemini should-have（全部修订）
+
+| # | 修订点 | 落地位置 |
+|---|---|---|
+| 1 | Beta 前增加法务与安全审查 | §3.3 新增 BETA-00；§8 M→B / B→V checklist 加 BETA-00 前置 |
+| 2 | 长周期事项补"全球商标评估"+ 强化 Third-party Notices 起点 | §5 新增一行 + 修订 Third-party Notices 行 |
+| 3 | 性能基准明确硬件画像 | §6 顶部新增"统一基准硬件画像"小节 |
+
+### Gemini nice-to-have（全部采纳）
+
+| # | 修订点 | 落地位置 |
+|---|---|---|
+| 4 | 本地活动洞察"最近文件统计"可下沉到 Beta | BETA-04 加注释；V10-02 标题改为"工作时间分布 + 主题摘要" |
+| 5 | 风险地图加"商店隐私政策收紧" + "模型授权地区差异" | §7 新增两行 |
+
+### 2026-07-02 定位收敛修订（用户拍板 + Claude Code 起草 + Codex 评审）
+
+- **定位收敛**：Scout = 本地语义检索底座（个人桌面 + 团队/企业冷归档检索）；**不做分析层**（内容关联分析 / 摘要 / 比对 / 起草），经 BETA-32 MCP daemon + 外部 LLM 组合实现。目标企业场景三个：律所卷宗 / 内部审计 / 离职归档。
+- §3.3 新增 **B7 小节**（BETA-35~41 七卡，并行衍生子线、不进 §6.3 出场指标、不阻塞 B→V）。
+- §3.4 重定性三卡：**V10-13** re-scoped 并入 BETA-40；**V10-15** re-scoped 为 Frozen Index Pack（无内置 LLM 合成）；**V10-16** 重定性为 MCP/LLM 读取权限与出处闸门、依赖改挂 BETA-36/40。
+- 方案与 Codex 评审结论：APPROVE with required adjustments，修正意见已全部合入。
+
+### 2026-07-04 护城河规划修订（Codex 起草 + Claude Code 评审综合 + 用户拍板）
+
+- 护城河规划核心命题：「功能不构成壁垒（AI 时代天级可复制），评测资产 / 信任证据 / 客户侧沉淀 / 场景纵深才是」。
+- §3.3 B7 新增两卡：**BETA-43**（V10-16 先导：出处/权限闸门产品化）、**BETA-44**（enterprise eval 扩容 22→50 case）。
+- §3.4 **V10-16** 标注先导部分提前拆 BETA-43、估时缩量。
+- §5 新增「获取设计伙伴 / 首个真实部署」长周期事项（护城河 P0，主动获取）。
+- 红线不变：B7（含新两卡）仍不进 §6.3 出场指标、不阻塞 B→V 切换。
+
+### 2026-07-04 开源免费定位修订（用户拍板 + Claude Code 落地）
+
+- **决策**：Scout 走**开源免费**路线，MIT OR Apache-2.0 双许可（LICENSE-MIT / LICENSE-APACHE 入库，workspace `license` 字段同步）；放弃全部商业分发前置——商标注册 / 代码签名证书 / Apple Developer / 付费域名。
+- **§5 长周期事项**：Apple Developer / Windows 证书 / 域名 / 商标（含第二梯队评估）/ Notarization 演练 5 项标记已取消；Privacy Policy / EULA 行 re-scoped 为「简短隐私说明 + LICENSE」；双平台真机 evals 与设计伙伴获取**不受影响**（质量验证与护城河 P0 与商业分发无关）。
+- **task re-scope**：BETA-00 → 开源发布审查（LICENSE / Notices / 隐私说明 / 商标使用规范 / 仓库脱敏，律师协同取消，估时 2 weeks → 2-3d）；BETA-10 → macOS DMG 开源分发（GitHub Releases + Gatekeeper 绕行文档 + Homebrew cask 评估）；BETA-10A → Windows 开源分发（NSIS 产物 + SmartScreen 说明 + winget/Scoop 评估）；V10-08 缩量；V10-09 商标注册 dropped。
+- **出场指标**：§6.3 两条分发指标改「GitHub Releases 下载可装可用 + 绕行/说明文档化」；§6.4 法务行改开源口径、商标行取消；§8 M→B / B→V checklist 同步。
+- **新增开源前置检查**（归 BETA-00）：Everything SDK（voidtools License）再分发条款核查；BETA-44 真实语料 / 个人路径 / git 历史脱敏后方可公开仓库。
+
+### 后续
+
+ROADMAP v1.0 已发布；之后的修订（task 状态、估时、新增子 task）由各会话收工时同步，重大方向调整需用户确认；下一次完整审阅在 M→B 阶段切换时进行。

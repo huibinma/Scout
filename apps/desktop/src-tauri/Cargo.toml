@@ -1,0 +1,112 @@
+[package]
+name = "scout-desktop"
+version = "0.9.48"
+description = "Scout Desktop App"
+authors = ["Scout Project"]
+edition = "2021"
+rust-version = "1.80"
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }
+
+[dependencies]
+# tray-icon：Windows「关闭到托盘」用（tray.rs，仅 target_os = "windows" 编译）。
+tauri = { version = "2.0", features = ["tray-icon"] }
+tauri-plugin-global-shortcut = "2.0.0"
+# BETA-27：系统文件夹选择对话框（设置页「索引目录」选择器从 JS 侧调 open()）。
+tauri-plugin-dialog = "2"
+# BETA-33 cycle 9：单实例锁——第二实例启动即退出并聚焦既有窗口，
+# 防止两实例并发写同一 index.db / settings.json（2026-07-02 真机验证发现）。
+tauri-plugin-single-instance = "2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+scout-harness = { path = "../../../packages/harness" }
+
+# MVP-19 search command：复用 intent-parser + search-backends
+scout-intent-parser = { path = "../../../packages/intent-parser" }
+scout-search-backend = { path = "../../../packages/search-backends/common" }
+
+# BETA-04 多源融合：本地索引后端 + reindex 默认根目录（跨平台）
+scout-local-index-backend = { path = "../../../packages/search-backends/local-index" }
+scout-indexer = { path = "../../../packages/indexer" }
+dirs = "5"
+
+# BETA-05 多源结果排序
+scout-ranker = { path = "../../../packages/ranker" }
+
+# BETA-06 审计日志时间戳
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+
+# BETA-23 模型 fallback：model-runtime 本就是 intent-parser 的传递依赖，直依赖零额外成本；
+# tokio "time" 供推理同步等待超时（tokio::time::timeout）。
+scout-model-runtime = { path = "../../../packages/model-runtime" }
+# BETA-31：model_download 用 tokio::fs + AsyncWriteExt，需 fs + io-util；rt-multi-thread 让
+# tauri command 的 reqwest stream 在多线程 runtime 运行（tauri 主进程默认多线程 runtime）。
+# BETA-53：本机 MCP 服务需 net（TcpListener::bind 同步拿端口占用错误）+ sync（oneshot 关停信号 + Mutex 运行态）。
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "time", "fs", "io-util", "net", "sync"] }
+
+# BETA-15B-1 语义召回：embedding 索引 + 向量检索后端（包名 scout-semantic-index）。
+scout-search-backend-semantic = { package = "scout-semantic-index", path = "../../../packages/search-backends/semantic-index" }
+
+# BETA-15B-3 A-2：直依赖 result-normalizer，供 settings.rs 读取 DEFAULT_SEMANTIC_WEIGHT。
+scout-result-normalizer = { path = "../../../packages/result-normalizer" }
+
+# BETA-53：桌面内嵌「本机 MCP 服务」——复用 server 的 axum router 工厂 + attach_readonly
+# 只读挂载桌面 index.db，起 127.0.0.1 服务把 hybrid 检索经 MCP 暴露给本机 LLM 客户端。
+scout-server = { path = "../../../packages/scout-server" }
+# 凭据类型（bearer token 明文包 SecretString，Debug 输出 REDACTED、不泄漏进日志）。
+secrecy = "0.10"
+# BETA-53：随机 bearer token（OS CSPRNG，32 字节 → 64 hex 字符）。
+getrandom = "0.2"
+
+# BETA-31：模型下载 GUI（reqwest stream + futures-util StreamExt）。
+# default-features=false 关 default-tls 避免 openssl 平台依赖、用 pure-rust rustls。
+reqwest = { version = "0.12", default-features = false, features = ["stream", "rustls-tls"] }
+futures-util = "0.3"
+# Track A 搜索并发化：spawn_blocking 线程内用 futures_executor::block_on 驱动各后端
+# search_expanded 流（后端为同步阻塞体、无 tokio reactor 需求，故用 runtime 无关的
+# 单线程 executor，不与 tauri 全局 tokio runtime 耦合）。
+futures-executor = "0.3"
+
+# BETA-31-v3 cycle 2（v0.8.3）：诊断日志栈。默认 INFO 级别写文件到
+# <scout_data_dir>/scout.log（daily 滚动），env SCOUT_LOG 可覆盖
+# 级别（trace/debug/info/warn/error/off + per-target 形如 "scout_desktop=debug"）。
+# tracing-appender::non_blocking 保 WorkerGuard 在 main() 范围内 alive 保证 flush。
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tracing-appender = "0.2"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+scout-search-backend-spotlight = { path = "../../../packages/search-backends/spotlight" }
+scout-platform-macos = { path = "../../../platform/macos" }
+
+[target.'cfg(target_os = "windows")'.dependencies]
+scout-search-backend-windows-search = { path = "../../../packages/search-backends/windows-search" }
+scout-search-backend-everything = { path = "../../../packages/search-backends/everything" }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "time", "fs", "io-util"] }
+futures = "0.3"
+tempfile = "3"
+# BETA-31：model_download.rs 单测 mock HTTP server。注：spec 原写 `httptest_lite` 不存在、
+# 真实 crate 名为 `httptest`（v0.16）。
+httptest = "0.16"
+
+[features]
+# BETA-23：真实模型推理（llama-cpp 后端，构建需 cmake）。日常开发/CI 不开，
+# Release 构建与真机验证开。关闭时模型 fallback 静默降级为 parser-only。
+model-fallback = ["scout-model-runtime/llama-cpp"]
+# macOS 真机：metal 加速。
+model-fallback-metal = ["model-fallback", "scout-model-runtime/metal"]
+
+# BETA-15B-1：语义召回（embedding 索引 + 向量检索）。默认关，开启需 cmake。
+semantic-recall = ["scout-model-runtime/llama-cpp"]
+semantic-recall-metal = ["semantic-recall", "scout-model-runtime/metal"]
+
+# 注：用 unwind（非 abort），让 indexer 的 catch_unwind 能兜住提取器（pdf-extract 等）
+# 对畸形文件的 panic——否则 abort 下整个 app 崩（BETA-01A/02 真机 reindex 暴露）。
+[profile.release]
+codegen-units = 1
+lto = true
+incremental = false
+opt-level = "s"

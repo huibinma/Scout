@@ -1,0 +1,38 @@
+[package]
+name = "scout-indexer"
+description = "本地音乐 metadata 索引（BETA-01）：lofty 标签提取 + SQLite/FTS5 存储 + mtime 增量"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+rusqlite = { version = "0.32", features = ["bundled"] }
+lofty = "0.24"
+walkdir = "2"
+globset = "0.4"
+dirs = "5"
+thiserror = "2"
+rayon = "1"
+# BETA-02 文档内容提取
+calamine = "0.35"
+pdf-extract = "0.10"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+quick-xml = "0.40"
+pulldown-cmark = { version = "0.13", default-features = false }
+# BETA-31-v3 cycle 4（v0.8.5）：embed_pending per-doc 日志，下次 native crash 时
+# 能从 scout.log 最后一行锁定触发 crash 的文档（path + body_len）。tracing facade
+# 仅、subscriber 由调用方注入（桌面 app 已 wired tracing-appender 写文件）。
+tracing = "0.1"
+# BETA-33 cycle 7-a：IndexPhase enum 走 serde serialize，跨 crate 直接透传到桌面 IndexStatus 前端。
+serde = { version = "1.0", features = ["derive"] }
+# BETA-35：PDF 页渲染临时目录（PopplerPdfRasterizer 走 shell-out pdftoppm 出 PNG）。
+tempfile = "3"
+# BETA-37 邮件格式提取：eml MIME 解析（encoded-word / multipart / 传输编码）。
+# full_encoding 开 encoding_rs：企业归档邮件常见 GBK/GB18030/Big5 等历史 charset。
+mail-parser = { version = "0.11", features = ["full_encoding"] }

@@ -1,0 +1,89 @@
+# Scout SearchIntent JSON schema v1.0 → llama.cpp GBNF
+#
+# 用途：MVP-17 模型 fallback 启用受限解码（LlamaSampler::grammar）。
+# 严格度：覆盖 JSON 结构 + 全部 enum 值 + key 名；放过 required-conditional
+# 规则（如 rename → new_name）和 maxLength 等数值约束，那些由 schema validator
+# 后处理。
+#
+# 设计取舍：
+# - schema_version + intent 固定排在最前（顺序）
+# - 其它字段允许任意顺序（用 ("," ws field)* 实现），但每个字段值受 enum 约束
+# - 不要求"必填字段一定出现"，因为 GBNF 难以表达
+# - 模型偶尔重复字段：JSON 解析时后值覆盖前值，行为安全
+#
+# 语法约束（llama.cpp GBNF）：
+# - 规则名只能用 ASCII 字母、数字、连字符（不能用下划线）
+# - 多个 alternatives 必须在同一行或用括号组合（不支持下一行 | 续行）
+
+root ::= file-search | media-search | file-action | refine | clarify
+
+schema-version ::= "\"schema_version\"" ws ":" ws "\"1.0\""
+intent-fs ::= "\"intent\"" ws ":" ws "\"file_search\""
+intent-ms ::= "\"intent\"" ws ":" ws "\"media_search\""
+intent-fa ::= "\"intent\"" ws ":" ws "\"file_action\""
+intent-rf ::= "\"intent\"" ws ":" ws "\"refine\""
+intent-cl ::= "\"intent\"" ws ":" ws "\"clarify\""
+
+ws ::= ([ \t\n] ws)?
+language ::= "\"language\"" ws ":" ws lang-val
+lang-val ::= ("\"zh\"" | "\"en\"" | "\"mixed\"" | "\"unknown\"")
+
+string ::= "\"" char* "\""
+char ::= [^"\\\x00-\x1f] | "\\" escape
+escape ::= ["\\/bfnrt] | "u" hex hex hex hex
+hex ::= [0-9a-fA-F]
+
+integer ::= [1-9] [0-9]* | "0"
+number ::= integer ("." [0-9]+)?
+bool ::= "true" | "false"
+
+string-array ::= "[" ws (string (ws "," ws string)*)? ws "]"
+
+file-type ::= ("\"document\"" | "\"spreadsheet\"" | "\"presentation\"" | "\"image\"" | "\"screenshot\"" | "\"video\"" | "\"audio\"" | "\"archive\"" | "\"code\"" | "\"executable\"")
+file-type-array ::= "[" ws (file-type (ws "," ws file-type)*)? ws "]"
+
+sort-val ::= ("\"relevance_desc\"" | "\"modified_desc\"" | "\"modified_asc\"" | "\"created_desc\"" | "\"created_asc\"" | "\"accessed_desc\"" | "\"size_desc\"" | "\"size_asc\"" | "\"name_asc\"" | "\"name_desc\"")
+
+media-type ::= ("\"audio\"" | "\"image\"" | "\"video\"" | "\"screenshot\"")
+
+quality-val ::= ("\"lossless\"" | "\"high\"" | "\"standard\"" | "\"low\"" | "null")
+
+action-val ::= ("\"open\"" | "\"locate\"" | "\"copy\"" | "\"move\"" | "\"rename\"" | "\"delete\"")
+
+clarify-reason ::= ("\"ambiguous_time\"" | "\"ambiguous_location\"" | "\"ambiguous_type\"" | "\"ambiguous_action\"" | "\"unsafe_action\"" | "\"unknown\"")
+
+rel-time ::= ("\"today\"" | "\"yesterday\"" | "\"last_3_days\"" | "\"last_7_days\"" | "\"last_14_days\"" | "\"last_30_days\"" | "\"this_week\"" | "\"last_week\"" | "\"this_month\"" | "\"last_month\"" | "\"this_year\"" | "\"last_year\"")
+
+date-str ::= "\"" [0-9] [0-9] [0-9] [0-9] "-" [0-9] [0-9] "-" [0-9] [0-9] "\""
+
+time-expr ::= ("{" ws "\"type\"" ws ":" ws "\"relative\"" ws "," ws "\"value\"" ws ":" ws rel-time ws "}") | ("{" ws "\"type\"" ws ":" ws "\"absolute\"" ws "," ws "\"from\"" ws ":" ws date-str ws "," ws "\"to\"" ws ":" ws date-str ws "}") | ("{" ws "\"type\"" ws ":" ws ("\"before\"" | "\"after\"") ws "," ws "\"value\"" ws ":" ws date-str ws "}")
+
+size-unit ::= ("\"B\"" | "\"KB\"" | "\"MB\"" | "\"GB\"" | "\"s\"" | "\"m\"" | "\"h\"")
+size-expr ::= ("{" ws "\"type\"" ws ":" ws ("\"greater_than\"" | "\"less_than\"") ws "," ws "\"value\"" ws ":" ws number ws "," ws "\"unit\"" ws ":" ws size-unit ws "}") | ("{" ws "\"type\"" ws ":" ws "\"between\"" ws "," ws "\"min\"" ws ":" ws number ws "," ws "\"max\"" ws ":" ws number ws "," ws "\"unit\"" ws ":" ws size-unit ws "}")
+
+location-field ::= ("\"hint\"" ws ":" ws (string | "null")) | ("\"include\"" ws ":" ws (string-array | "null")) | ("\"exclude\"" ws ":" ws (string-array | "null"))
+location-obj ::= "{" ws (location-field (ws "," ws location-field)*)? ws "}"
+
+target-selector ::= ("{" ws "\"type\"" ws ":" ws "\"index\"" ws "," ws "\"value\"" ws ":" ws integer ws "}") | ("{" ws "\"type\"" ws ":" ws "\"indices\"" ws "," ws "\"values\"" ws ":" ws "[" ws integer (ws "," ws integer)* ws "]" ws "}") | ("{" ws "\"type\"" ws ":" ws "\"all\"" ws "}")
+target-ref ::= ("{" ws "\"source\"" ws ":" ws "\"last_results\"" ws "," ws "\"selector\"" ws ":" ws target-selector ws "}") | ("{" ws "\"source\"" ws ":" ws "\"path\"" ws "," ws "\"value\"" ws ":" ws string ws "}")
+
+clear-key ::= ("\"location\"" | "\"extensions\"" | "\"file_type\"" | "\"keywords\"" | "\"modified_time\"" | "\"created_time\"" | "\"accessed_time\"" | "\"size\"" | "\"exclude_extensions\"" | "\"exclude_file_type\"" | "\"artist\"" | "\"title\"" | "\"album\"" | "\"genre\"" | "\"quality\"" | "\"duration\"")
+clear-array ::= ("[" ws (clear-key (ws "," ws clear-key)*)? ws "]" | "null")
+
+fs-field ::= (language | ("\"keywords\"" ws ":" ws string-array) | ("\"extensions\"" ws ":" ws string-array) | ("\"file_type\"" ws ":" ws file-type) | ("\"location\"" ws ":" ws location-obj) | ("\"modified_time\"" ws ":" ws time-expr) | ("\"created_time\"" ws ":" ws time-expr) | ("\"accessed_time\"" ws ":" ws time-expr) | ("\"size\"" ws ":" ws size-expr) | ("\"exclude_extensions\"" ws ":" ws string-array) | ("\"exclude_file_type\"" ws ":" ws file-type-array) | ("\"sort\"" ws ":" ws sort-val) | ("\"limit\"" ws ":" ws integer))
+file-search ::= "{" ws schema-version ws "," ws intent-fs (ws "," ws fs-field)* ws "}"
+
+ms-field ::= (language | ("\"media_type\"" ws ":" ws media-type) | ("\"artist\"" ws ":" ws (string | "null")) | ("\"title\"" ws ":" ws (string | "null")) | ("\"album\"" ws ":" ws (string | "null")) | ("\"genre\"" ws ":" ws (string | "null")) | ("\"quality\"" ws ":" ws quality-val) | ("\"duration\"" ws ":" ws size-expr) | ("\"keywords\"" ws ":" ws string-array) | ("\"extensions\"" ws ":" ws string-array) | ("\"file_type\"" ws ":" ws file-type) | ("\"location\"" ws ":" ws location-obj) | ("\"modified_time\"" ws ":" ws time-expr) | ("\"created_time\"" ws ":" ws time-expr) | ("\"accessed_time\"" ws ":" ws time-expr) | ("\"size\"" ws ":" ws size-expr) | ("\"exclude_extensions\"" ws ":" ws string-array) | ("\"exclude_file_type\"" ws ":" ws file-type-array) | ("\"sort\"" ws ":" ws sort-val) | ("\"limit\"" ws ":" ws integer))
+media-search ::= "{" ws schema-version ws "," ws intent-ms (ws "," ws ms-field)* ws "}"
+
+fa-field ::= (language | ("\"action\"" ws ":" ws action-val) | ("\"target_ref\"" ws ":" ws target-ref) | ("\"destination\"" ws ":" ws (string | "null")) | ("\"new_name\"" ws ":" ws (string | "null")) | ("\"requires_confirmation\"" ws ":" ws bool))
+file-action ::= "{" ws schema-version ws "," ws intent-fa (ws "," ws fa-field)* ws "}"
+
+rf-delta-field ::= (("\"keywords\"" ws ":" ws string-array) | ("\"extensions\"" ws ":" ws string-array) | ("\"file_type\"" ws ":" ws file-type) | ("\"location\"" ws ":" ws location-obj) | ("\"modified_time\"" ws ":" ws time-expr) | ("\"created_time\"" ws ":" ws time-expr) | ("\"accessed_time\"" ws ":" ws time-expr) | ("\"size\"" ws ":" ws size-expr) | ("\"exclude_extensions\"" ws ":" ws string-array) | ("\"exclude_file_type\"" ws ":" ws file-type-array) | ("\"artist\"" ws ":" ws (string | "null")) | ("\"title\"" ws ":" ws (string | "null")) | ("\"album\"" ws ":" ws (string | "null")) | ("\"genre\"" ws ":" ws (string | "null")) | ("\"quality\"" ws ":" ws quality-val) | ("\"duration\"" ws ":" ws size-expr) | ("\"sort\"" ws ":" ws sort-val) | ("\"limit\"" ws ":" ws integer))
+rf-delta-obj ::= "{" ws (rf-delta-field (ws "," ws rf-delta-field)*)? ws "}"
+
+rf-field ::= (language | ("\"base_ref\"" ws ":" ws "\"last_intent\"") | ("\"delta\"" ws ":" ws rf-delta-obj) | ("\"clear\"" ws ":" ws clear-array))
+refine ::= "{" ws schema-version ws "," ws intent-rf (ws "," ws rf-field)* ws "}"
+
+cl-field ::= (language | ("\"reason\"" ws ":" ws clarify-reason) | ("\"question\"" ws ":" ws string) | ("\"options\"" ws ":" ws string-array))
+clarify ::= "{" ws schema-version ws "," ws intent-cl (ws "," ws cl-field)* ws "}"

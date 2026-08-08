@@ -1,0 +1,457 @@
+[
+  {
+    "id": "ce001",
+    "bucket": "scanned-pdf",
+    "query": "一审法院最后是怎么判的",
+    "relevant": [
+      { "doc_id": "e00005", "grade": 3 },
+      { "doc_id": "e00006", "grade": 2 },
+      { "doc_id": "e00007", "grade": 2 },
+      { "doc_id": "e00034", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce002",
+    "bucket": "scanned-pdf",
+    "query": "开庭时双方争交货时间责任的笔录",
+    "relevant": [
+      { "doc_id": "e00001", "grade": 3 },
+      { "doc_id": "e00032", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce003",
+    "bucket": "scanned-pdf",
+    "query": "货送到仓库签收的凭证",
+    "relevant": [
+      { "doc_id": "e00003", "grade": 3 },
+      { "doc_id": "e00043", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce004",
+    "bucket": "scanned-pdf",
+    "query": "催对方赶紧交货不然要追责的律师函",
+    "relevant": [
+      { "doc_id": "e00004", "grade": 3 }
+    ]
+  },
+  {
+    "id": "ce005",
+    "bucket": "scanned-pdf",
+    "query": "供应商开过来的增值税发票",
+    "relevant": [
+      { "doc_id": "e00041", "grade": 3 },
+      { "doc_id": "e00044", "grade": 2 },
+      { "doc_id": "e00045", "grade": 2 },
+      { "doc_id": "e00062", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce006",
+    "bucket": "scanned-pdf",
+    "query": "采购首期款打款的银行凭证",
+    "relevant": [
+      { "doc_id": "e00042", "grade": 3 },
+      { "doc_id": "e00025", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce007",
+    "bucket": "scanned-pdf",
+    "query": "设备到货验收数量不够的那张单子",
+    "relevant": [
+      { "doc_id": "e00043", "grade": 3 }
+    ]
+  },
+  {
+    "id": "ce008",
+    "bucket": "scanned-pdf",
+    "query": "员工入职时签的保密协议",
+    "relevant": [
+      { "doc_id": "e00078", "grade": 3 },
+      { "doc_id": "e00102", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce009",
+    "bucket": "scanned-pdf",
+    "query": "离职手续都办完的确认扫描件",
+    "relevant": [
+      { "doc_id": "e00079", "grade": 3 },
+      { "doc_id": "e00099", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce010",
+    "bucket": "scanned-pdf",
+    "query": "合同上盖了骑缝章的签署页",
+    "relevant": [
+      { "doc_id": "e00055", "grade": 3 }
+    ]
+  },
+  {
+    "id": "ce011",
+    "bucket": "email",
+    "query": "对方律师提调解方案的邮件",
+    "relevant": [
+      { "doc_id": "e00014", "grade": 3 },
+      { "doc_id": "e00022", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce012",
+    "bucket": "email",
+    "query": "客户说和解能接受到什么程度的邮件",
+    "relevant": [
+      { "doc_id": "e00015", "grade": 3 }
+    ]
+  },
+  {
+    "id": "ce013",
+    "bucket": "email",
+    "query": "匿名举报采购和供应商有私人关系的邮件",
+    "relevant": [
+      { "doc_id": "e00050", "grade": 3 },
+      { "doc_id": "e00066", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce014",
+    "bucket": "email",
+    "query": "领导出差没签字事后补审批的邮件",
+    "relevant": [
+      { "doc_id": "e00058", "grade": 3 }
+    ]
+  },
+  {
+    "id": "ce015",
+    "bucket": "email",
+    "query": "财务发现付款收款账户不对暂缓打款的邮件",
+    "relevant": [
+      { "doc_id": "e00036", "grade": 3 },
+      { "doc_id": "e00056", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce016",
+    "bucket": "email",
+    "query": "离职同事发的交接安排邮件",
+    "relevant": [
+      { "doc_id": "e00074", "grade": 3 },
+      { "doc_id": "e00082", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce017",
+    "bucket": "email",
+    "query": "审计要调系统日志和邮箱的授权邮件",
+    "relevant": [
+      { "doc_id": "e00064", "grade": 3 }
+    ]
+  },
+  {
+    "id": "ce018",
+    "bucket": "email",
+    "query": "离职时口令密钥怎么移交的规定邮件",
+    "relevant": [
+      { "doc_id": "e00087", "grade": 3 },
+      { "doc_id": "e00076", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce019",
+    "bucket": "email",
+    "query": "走之前留下没修完的问题清单邮件",
+    "relevant": [
+      { "doc_id": "e00093", "grade": 3 },
+      { "doc_id": "e00094", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce020",
+    "bucket": "email",
+    "query": "the email where the vendor sent us their quotation",
+    "relevant": [
+      { "doc_id": "e00037", "grade": 3 },
+      { "doc_id": "e00039", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce021",
+    "bucket": "attachment",
+    "query": "和解协议的草稿",
+    "relevant": [
+      { "doc_id": "e00017", "grade": 3 }
+    ]
+  },
+  {
+    "id": "ce022",
+    "bucket": "attachment",
+    "query": "迟延损失是怎么算出来的那张表",
+    "relevant": [
+      { "doc_id": "e00018", "grade": 3 }
+    ]
+  },
+  {
+    "id": "ce023",
+    "bucket": "attachment",
+    "query": "审批邮件里附的那份采购合同",
+    "relevant": [
+      { "doc_id": "e00038", "grade": 3 },
+      { "doc_id": "e00055", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce024",
+    "bucket": "attachment",
+    "query": "几家供应商报价对比打分的表",
+    "relevant": [
+      { "doc_id": "e00039", "grade": 3 }
+    ]
+  },
+  {
+    "id": "ce025",
+    "bucket": "attachment",
+    "query": "第二期款的付款申请单",
+    "relevant": [
+      { "doc_id": "e00040", "grade": 3 },
+      { "doc_id": "e00103", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce026",
+    "bucket": "attachment",
+    "query": "交接时给的数据库账号权限清单",
+    "relevant": [
+      { "doc_id": "e00076", "grade": 3 }
+    ]
+  },
+  {
+    "id": "ce027",
+    "bucket": "attachment",
+    "query": "对外接口怎么对接怎么鉴权的说明文档",
+    "relevant": [
+      { "doc_id": "e00077", "grade": 3 },
+      { "doc_id": "e00075", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce028",
+    "bucket": "attachment",
+    "query": "月度报表口径是怎么定义的说明",
+    "relevant": [
+      { "doc_id": "e00088", "grade": 3 },
+      { "doc_id": "e00095", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce029",
+    "bucket": "attachment",
+    "query": "遗留 bug 的复现步骤明细",
+    "relevant": [
+      { "doc_id": "e00094", "grade": 3 },
+      { "doc_id": "e00093", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce030",
+    "bucket": "attachment",
+    "query": "the attachment summarising vendor bank account changes in the master data log",
+    "relevant": [
+      { "doc_id": "e00067", "grade": 3 },
+      { "doc_id": "e00065", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce031",
+    "bucket": "crosslang-alias",
+    "query": "Northridge 那个案子的一审判决",
+    "relevant": [
+      { "doc_id": "e00005", "grade": 3 },
+      { "doc_id": "e00006", "grade": 2 },
+      { "doc_id": "e00007", "grade": 2 },
+      { "doc_id": "e00021", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce032",
+    "bucket": "crosslang-alias",
+    "query": "Bluebay 发过来谈调解的邮件",
+    "relevant": [
+      { "doc_id": "e00022", "grade": 3 },
+      { "doc_id": "e00014", "grade": 2 },
+      { "doc_id": "e00021", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce033",
+    "bucket": "crosslang-alias",
+    "query": "the closing report for the Northridge Machinery dispute",
+    "relevant": [
+      { "doc_id": "e00034", "grade": 3 },
+      { "doc_id": "e00021", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce034",
+    "bucket": "crosslang-alias",
+    "query": "Morningstar 开的发票",
+    "relevant": [
+      { "doc_id": "e00041", "grade": 3 },
+      { "doc_id": "e00044", "grade": 2 },
+      { "doc_id": "e00045", "grade": 2 },
+      { "doc_id": "e00051", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce035",
+    "bucket": "crosslang-alias",
+    "query": "interview notes with the procurement handler on Project Orion",
+    "relevant": [
+      { "doc_id": "e00047", "grade": 3 },
+      { "doc_id": "e00051", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce036",
+    "bucket": "crosslang-alias",
+    "query": "猎户座项目适用的英文采购制度条款",
+    "relevant": [
+      { "doc_id": "e00059", "grade": 3 },
+      { "doc_id": "e00051", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce037",
+    "bucket": "crosslang-alias",
+    "query": "Lighthouse 项目的架构设计",
+    "relevant": [
+      { "doc_id": "e00070", "grade": 3 },
+      { "doc_id": "e00080", "grade": 1 },
+      { "doc_id": "e00081", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce038",
+    "bucket": "crosslang-alias",
+    "query": "鲲鹏系统的英文值班手册",
+    "relevant": [
+      { "doc_id": "e00091", "grade": 3 },
+      { "doc_id": "e00071", "grade": 2 },
+      { "doc_id": "e00080", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce039",
+    "bucket": "crosslang-alias",
+    "query": "Kunpeng 结算系统的运维手册",
+    "relevant": [
+      { "doc_id": "e00071", "grade": 3 },
+      { "doc_id": "e00091", "grade": 2 },
+      { "doc_id": "e00080", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce040",
+    "bucket": "crosslang-alias",
+    "query": "the handover checklist for the Dengta gateway owner",
+    "relevant": [
+      { "doc_id": "e00069", "grade": 3 },
+      { "doc_id": "e00104", "grade": 2 },
+      { "doc_id": "e00080", "grade": 1 }
+    ]
+  },
+  {
+    "id": "ce041",
+    "bucket": "near-dup",
+    "query": "一审判决书所有归档版本",
+    "relevant": [
+      { "doc_id": "e00005", "grade": 3 },
+      { "doc_id": "e00006", "grade": 2 },
+      { "doc_id": "e00007", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce042",
+    "bucket": "near-dup",
+    "query": "财产保全申请书连同终稿",
+    "relevant": [
+      { "doc_id": "e00029", "grade": 3 },
+      { "doc_id": "e00030", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce043",
+    "bucket": "near-dup",
+    "query": "原告的证据清单各个版本",
+    "relevant": [
+      { "doc_id": "e00010", "grade": 3 },
+      { "doc_id": "e00028", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce044",
+    "bucket": "near-dup",
+    "query": "一体机采购发票的全部扫描件",
+    "relevant": [
+      { "doc_id": "e00041", "grade": 3 },
+      { "doc_id": "e00044", "grade": 2 },
+      { "doc_id": "e00045", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce045",
+    "bucket": "near-dup",
+    "query": "差旅报销汇总表包括迁移盘上那份",
+    "relevant": [
+      { "doc_id": "e00060", "grade": 3 },
+      { "doc_id": "e00061", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce046",
+    "bucket": "near-dup",
+    "query": "第二期付款申请单的所有副本",
+    "relevant": [
+      { "doc_id": "e00040", "grade": 3 },
+      { "doc_id": "e00103", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce047",
+    "bucket": "near-dup",
+    "query": "第四十周项目周报的两份存档",
+    "relevant": [
+      { "doc_id": "e00072", "grade": 3 },
+      { "doc_id": "e00073", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce048",
+    "bucket": "near-dup",
+    "query": "发布流程文档和压缩包里展开的那份",
+    "relevant": [
+      { "doc_id": "e00085", "grade": 3 },
+      { "doc_id": "e00086", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce049",
+    "bucket": "near-dup",
+    "query": "客户对账流程新旧两个版本",
+    "relevant": [
+      { "doc_id": "e00096", "grade": 3 },
+      { "doc_id": "e00097", "grade": 2 }
+    ]
+  },
+  {
+    "id": "ce050",
+    "bucket": "near-dup",
+    "query": "离职交接清单原件和共享盘副本",
+    "relevant": [
+      { "doc_id": "e00069", "grade": 3 },
+      { "doc_id": "e00104", "grade": 2 }
+    ]
+  }
+]

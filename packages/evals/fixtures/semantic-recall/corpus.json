@@ -1,0 +1,764 @@
+[
+  {
+    "doc_id": "s00001",
+    "lang": "zh",
+    "title": "年假与远程办公制度（v3）",
+    "body": "本制度适用于全体正式同事。入职满一年享有十天带薪休假，每满一年递增一天，封顶二十天。休假需提前三个工作日在内部系统提交，由直接主管批准。远程办公方面，团队成员每周可在家工作两天，需保证核心协作时段在线，并在日历上标注地点。跨城出差期间产生的食宿按约整数标准报销。未休假额度年底不结转，特殊情况经部门负责人书面批准可顺延一个季度。"
+  },
+  {
+    "doc_id": "s00002",
+    "lang": "en",
+    "title": "Paid Time Off and Distributed Work Handbook (v3)",
+    "body": "Every full member of staff accrues vacation entitlement after their first anniversary. The baseline grant is ten days, growing by one day each subsequent year up to a ceiling of twenty. Requests must be lodged in the internal portal at least three business days ahead and signed off by the line manager. Regarding working away from the office, colleagues may stay home up to two days weekly, provided they remain reachable during the shared overlap window and mark their whereabouts on the shared calendar. Unused balance does not roll into the next year unless a department head grants a written extension."
+  },
+  {
+    "doc_id": "s00003",
+    "lang": "zh",
+    "title": "订单服务分布式缓存设计方案",
+    "body": "为缓解数据库读压力，订单查询接口引入两级缓存。第一级为进程内本地缓存，存放热点商品元数据，过期时间短；第二级为集中式缓存集群，按订单号哈希分片。写操作采用先更新存储再失效缓存的策略，避免脏读。针对缓存击穿，对热点键加互斥锁重建;针对雪崩，过期时间附加随机抖动。监控侧上报命中率与回源耗时，命中率低于阈值触发告警。后续计划评估读写分离与一致性哈希扩容。"
+  },
+  {
+    "doc_id": "s00004",
+    "lang": "en",
+    "title": "Caching Architecture Proposal for the Booking Tier",
+    "body": "To relieve pressure on the primary datastore, the lookup endpoint adopts a layered approach. The near layer keeps frequently accessed catalog metadata inside each process with a brief lifetime. The shared layer is a clustered key-value fleet partitioned by reservation identifier. On mutation we persist first and then evict, sidestepping stale reads. Hot-key collapse is handled with a rebuild lock; correlated expiry storms are softened by jittering the lifetimes. Telemetry exposes the satisfaction ratio and the origin round-trip latency, alarming when the former dips below target."
+  },
+  {
+    "doc_id": "s00005",
+    "lang": "zh",
+    "title": "新同事入职第一周指引",
+    "body": "欢迎加入团队。第一天请到行政处领取门禁卡与设备，完成账号激活。上午由导师带领熟悉工位与协作工具，下午参加安全与合规简介。第二天起进入项目熟悉期，建议先读项目说明文档与最近三周的周报。第三天与直接主管约定本季度目标。第一周结束前完成必修的信息安全在线课程并通过测验。任何疑问可在团队群里提出，或预约导师答疑。"
+  },
+  {
+    "doc_id": "s00006",
+    "lang": "en",
+    "title": "Your First Week as a New Joiner",
+    "body": "Welcome aboard. On day one, collect your badge and laptop from the front desk and activate your accounts. Your buddy will walk you through the seating area and collaboration tooling in the morning, followed by a safety and compliance briefing after lunch. From the second day you enter a ramp-up period; start by reading the project overview and the last three status updates. On the third day, agree quarterly objectives with your manager. Before the week closes, finish the mandatory information-security course and pass its quiz."
+  },
+  {
+    "doc_id": "s00007",
+    "lang": "zh",
+    "title": "读书笔记：关于专注与心流的思考",
+    "body": "这本书的核心论点是，高价值产出来自不受打扰的长时间专注，而非碎片化的多任务切换。作者把这种能力比作一种可训练的肌肉，建议用固定时段、明确仪式和环境隔离来培养。书中区分了两类工作：需要认知密度的深度任务，和事务性的浅层任务。给我启发最大的是把每天的精力当作稀缺预算来分配，而不是被通知牵着走。我打算先从早晨九十分钟的免打扰窗口开始实践。"
+  },
+  {
+    "doc_id": "s00008",
+    "lang": "en",
+    "title": "Reading Notes on Sustained Concentration",
+    "body": "The central claim of this book is that the most valuable output flows from long, uninterrupted stretches of focus rather than from rapid task-switching. The author frames this capacity as a trainable muscle and recommends cultivating it through fixed slots, deliberate rituals, and environmental separation. A useful distinction is drawn between cognitively demanding tasks and routine administrative ones. What struck me most was treating each day's mental energy as a scarce budget to allocate, instead of being dragged around by notifications. I intend to begin with a ninety-minute morning window."
+  },
+  {
+    "doc_id": "s00009",
+    "lang": "zh",
+    "title": "第三方依赖许可证合规说明",
+    "body": "项目在打包前需核对所有第三方组件的许可证条款。宽松型许可证通常只要求保留版权声明，可放心引入。互惠型许可证要求衍生作品在分发时一并开放源码，需评估是否触发传染条款。对禁止商用或需署名的资源，必须在发布物中附带许可证全文与归属清单。我们维护一份依赖清单，记录每个组件的名称、版本、许可证类型与用途，发版时自动校验是否有未登记项。"
+  },
+  {
+    "doc_id": "s00010",
+    "lang": "en",
+    "title": "License Compliance Guide for Bundled Components",
+    "body": "Before shipping a release we must reconcile the terms of every external component. Permissive terms generally only ask that the copyright notice be retained, so they are safe to pull in. Reciprocal terms require that derivative works be disclosed when distributed, so we must judge whether the copyleft clause is triggered. For assets that forbid commercial use or demand attribution, the full text and an attribution roster must travel with the artifact. We keep a manifest recording each component's name, version, license class, and purpose, and validate at build time that nothing is unregistered."
+  },
+  {
+    "doc_id": "s00011",
+    "lang": "zh",
+    "title": "首页加载性能优化复盘",
+    "body": "上线初期首页打开缓慢，用户跳出率偏高。排查后定位到三个主因：图片未压缩、首屏请求串行、以及第三方脚本阻塞渲染。我们将图片改为按需懒加载并统一压缩，把首屏数据合并为单次请求，把非关键脚本延后到交互空闲时执行。优化后首屏可见时间缩短约一半，跳出率明显回落。复盘结论是性能要纳入发版门禁，避免再次回退。"
+  },
+  {
+    "doc_id": "s00012",
+    "lang": "en",
+    "title": "Retrospective on Landing-Page Speed",
+    "body": "Shortly after launch the landing page felt sluggish and the bounce rate ran high. Investigation pinned three culprits: uncompressed imagery, serialized above-the-fold requests, and third-party scripts blocking the paint. We switched images to on-demand lazy loading with uniform compression, folded the initial data fetch into a single round trip, and deferred non-essential scripts until the interaction went idle. Time-to-visible roughly halved and abandonment fell noticeably. The takeaway is that speed must become a release gate so we never regress this way again."
+  },
+  {
+    "doc_id": "s00013",
+    "lang": "zh",
+    "title": "差旅报销实施细则",
+    "body": "因公出差的交通、住宿、市内交通与餐补可按规定申请报销。机票优先选择经济舱,高铁优先二等座。住宿按城市分档,一线城市每晚标准较高。报销需在返程后十个工作日内提交,附行程单与正规发票。餐补按出差自然日计发,不需逐笔票据。无法取得发票的小额支出可填写情况说明,经主管核准。超标准部分原则上自理,确有特殊原因须事前申请。"
+  },
+  {
+    "doc_id": "s00014",
+    "lang": "en",
+    "title": "Business Trip Expense Rules",
+    "body": "Transport, lodging, local commuting, and meal allowances incurred on company travel may be claimed under policy. Air tickets should default to economy and rail to standard class. Lodging is tiered by city, with a higher nightly cap in major hubs. Claims must be filed within ten working days of return, accompanied by the itinerary and proper receipts. The meal allowance is paid per calendar day of travel and needs no line-by-line receipts. Small outlays without a receipt may be submitted with a written explanation approved by a manager. Amounts above the cap are normally borne by the traveler unless pre-approved."
+  },
+  {
+    "doc_id": "s00015",
+    "lang": "zh",
+    "title": "对外接口设计约定",
+    "body": "所有对外接口统一走版本前缀,字段命名用小写下划线风格,时间一律用带时区的标准格式。分页采用游标方式,返回下一页令牌而非偏移量,避免深翻页性能问题。错误响应携带稳定的错误码与可读信息,客户端据错误码做分支,不要解析文案。幂等写操作要求客户端携带幂等键。废弃字段先标注过渡期再移除,变更通过公告与变更日志通知调用方。"
+  },
+  {
+    "doc_id": "s00016",
+    "lang": "en",
+    "title": "Public Endpoint Design Conventions",
+    "body": "Every outward-facing endpoint carries a version prefix, field names follow lower snake style, and timestamps always use a timezone-aware standard format. Pagination is cursor-based, returning a token for the next page rather than an offset, which avoids deep-paging cost. Error responses include a stable code plus a human-readable message; clients branch on the code and must not parse the prose. Idempotent writes require the caller to supply an idempotency key. Retired fields are first marked with a grace window before removal, and changes are announced through a changelog."
+  },
+  {
+    "doc_id": "s00017",
+    "lang": "zh",
+    "title": "下季度部门预算编制说明",
+    "body": "请各组在月底前提交下一季度预算草案,分人力、采购、市场与差旅四类填报。人力按现有编制与已批准的招聘计划测算;采购需列明用途与预计单价,大额项目附比价说明。市场费用结合活动排期估算,差旅参照历史均值。总盘子较上季度上浮幅度控制在约一成以内,超出部分需说明理由。预算口径以约整数填写,精确到万。汇总后由财务初审,再上会评审。"
+  },
+  {
+    "doc_id": "s00018",
+    "lang": "en",
+    "title": "Departmental Budget Drafting Memo for Next Quarter",
+    "body": "Each team is asked to file a draft budget for the coming quarter before month-end, split across headcount, procurement, marketing, and travel. Headcount is modeled on the current establishment plus any approved hiring; procurement must state the purpose and unit estimate, with price comparisons attached for large items. Marketing spend follows the event calendar, and travel references historical averages. The overall envelope should grow no more than roughly a tenth over the prior quarter, with any excess justified. Figures are entered as rounded amounts to the nearest unit and consolidated for a finance pre-review."
+  },
+  {
+    "doc_id": "s00019",
+    "lang": "zh",
+    "title": "信息安全意识培训提纲",
+    "body": "本次培训面向全员,目标是降低人为安全风险。第一部分讲钓鱼识别:警惕伪装的发件地址、紧迫话术与可疑链接,不在陌生页面输入口令。第二部分讲口令与多因子:使用密码管理器、开启二次验证、避免在多处复用同一口令。第三部分讲数据分级与最小授权:敏感资料按密级处理,不在公共渠道传输。最后是事件上报流程:疑似泄露第一时间联系安全团队,不要自行删除证据。"
+  },
+  {
+    "doc_id": "s00020",
+    "lang": "en",
+    "title": "Security Awareness Training Outline",
+    "body": "This session targets all staff and aims to reduce human-driven risk. The first segment covers phishing recognition: be wary of spoofed sender addresses, urgent phrasing, and dubious links, and never enter credentials on an unfamiliar page. The second segment addresses passphrases and multi-factor: use a password manager, enable a second verification step, and avoid reusing one secret across many sites. The third covers data classification and least privilege: handle sensitive material by its tier and never move it over public channels. Finally, the incident path: contact the security team at once on suspected leakage and do not destroy evidence."
+  },
+  {
+    "doc_id": "s00021",
+    "lang": "zh",
+    "title": "高效会议纪要写法",
+    "body": "一份好的纪要不是逐字记录,而是把会议沉淀为可执行的结论。开头写明会议主题、时间与参会角色;中间分议题列出讨论要点与达成的决定;结尾集中列出待办事项,每条注明负责人与截止日期。争议未决的内容单独标注,约定下次跟进。纪要应在会后当天发出,便于参会者纠错。避免把所有发言原样堆砌,聚焦决定与行动才有价值。"
+  },
+  {
+    "doc_id": "s00022",
+    "lang": "en",
+    "title": "How to Write Useful Meeting Minutes",
+    "body": "Good minutes are not a transcript; they distill a meeting into executable conclusions. Open with the topic, the time, and the roles present. In the middle, group the discussion points and the decisions reached by agenda item. Close with a consolidated action list, each entry naming an owner and a due date. Items left unresolved are flagged separately with an agreed follow-up. Minutes should go out the same day so participants can correct errors. Avoid dumping every utterance verbatim; the value lies in focusing on decisions and actions."
+  },
+  {
+    "doc_id": "s00023",
+    "lang": "zh",
+    "title": "客户支持常见问题处理手册",
+    "body": "支持同事接到工单后,先归类问题类型,再判断是否为已知问题。账号登录类先核对验证方式与设备时间;支付失败类引导用户检查额度与重试,必要时升级到财务。功能疑问优先指向帮助文档对应章节,避免重复造轮子。无法当场解决的转研发并记录复现步骤。每个工单关闭前回访确认,满意度低的样本进入复盘。手册随版本迭代更新,旧条目标注过期。"
+  },
+  {
+    "doc_id": "s00024",
+    "lang": "en",
+    "title": "Customer Support Playbook for Common Tickets",
+    "body": "When an agent picks up a ticket, first classify the issue type, then decide whether it is a known case. For sign-in trouble, verify the method and the device clock; for failed payments, guide the user to check limits and retry, escalating to finance if needed. Route feature questions to the matching help-doc section to avoid reinventing answers. Anything not solvable on the spot goes to engineering with reproduction steps recorded. Before closing each ticket, follow up to confirm resolution, and route low-satisfaction samples into a review. The playbook is refreshed each release, with stale entries marked obsolete."
+  },
+  {
+    "doc_id": "s00025",
+    "lang": "zh",
+    "title": "海滨小城周末两日游计划",
+    "body": "周五傍晚出发,夜里抵达,先在码头附近的民宿落脚。第一天清晨去看日出,沿海岸步道慢走,中午尝当地海鲜面,下午逛老灯塔与小型海洋馆,傍晚在防波堤看晚霞。第二天上午租自行车环岛,经过几处安静的礁石滩拍照,午后启程返回。预算按人均约整数控制,主要花在住宿与餐饮。需带防晒、轻便外套与晕船药,潮汐时间出发前查好。"
+  },
+  {
+    "doc_id": "s00026",
+    "lang": "en",
+    "title": "A Two-Day Seaside Weekend Itinerary",
+    "body": "Set off on Friday evening, arrive at night, and settle into a guesthouse near the harbor. On the first morning catch the sunrise and stroll the coastal boardwalk, sample the local seafood noodles at noon, tour the old lighthouse and a small aquarium in the afternoon, then watch the dusk glow from the breakwater. The next morning, rent bicycles to loop the island, stopping at a few quiet rocky coves for photos, and head home after lunch. Keep the budget to a rounded per-person figure, mostly lodging and meals. Bring sunscreen, a light jacket, and motion-sickness tablets, and check the tide chart before leaving."
+  },
+  {
+    "doc_id": "s00027",
+    "lang": "zh",
+    "title": "搜索结果分组功能需求说明",
+    "body": "目标是在结果页按文件类型把命中项分组展示,降低用户在长列表中的查找成本。当结果数超过一屏时,默认折叠次要分组,只展开命中最多的两组。每组显示数量徽标与展开/收起控件,记住用户的偏好。分组规则可配置,管理员可调整顺序与合并相近类型。键盘可在组间跳转,保证可达性。指标上关注分组后用户找到目标项的平均点击次数是否下降。"
+  },
+  {
+    "doc_id": "s00028",
+    "lang": "en",
+    "title": "Product Requirement: Grouped Search Results",
+    "body": "The goal is to cluster hits on the results page by file kind, lowering the cost of scanning a long flat list. When the result count exceeds one screen, minor groups collapse by default and only the two largest expand. Each group shows a count badge and an expand/collapse control, remembering the user's preference. The grouping rule is configurable so an administrator can reorder or merge similar kinds. Keyboard navigation must hop between groups for accessibility. The metric to watch is whether the average number of clicks to reach the target item drops after grouping ships."
+  },
+  {
+    "doc_id": "s00029",
+    "lang": "zh",
+    "title": "技术债盘点与偿还计划",
+    "body": "我们对现有代码做了一轮技术债盘点,把问题按影响与修复成本分成四象限。高影响低成本的优先处理,例如补齐关键路径的测试与移除重复实现。高影响高成本的拆成小步,排进后续迭代,避免一次性大重构带来的回退风险。低影响的记录在册但暂不投入。每个迭代固定留出一成精力偿还旧债,并在评审中跟踪债务总量是否下降,防止只增不减。"
+  },
+  {
+    "doc_id": "s00030",
+    "lang": "en",
+    "title": "Technical Debt Inventory and Paydown Plan",
+    "body": "We ran a sweep of the codebase and sorted the debt into four quadrants by impact and remediation cost. High-impact, low-cost items go first, such as adding tests on critical paths and removing duplicated implementations. High-impact, high-cost items are broken into small steps and scheduled across later iterations to avoid the regression risk of a single big rewrite. Low-impact entries are logged but parked. Each iteration reserves about a tenth of capacity to pay down old debt, and reviews track whether the total balance is shrinking so it does not only ever grow."
+  },
+  {
+    "doc_id": "s00031",
+    "lang": "zh",
+    "title": "团队责任边界与协作机制建议",
+    "body": "跨组协作经常出问题不是因为能力,而是因为责任边界模糊,出了问题互相推诿。建议建立明确的负责人制度:每件事都有唯一对接人,而不是一群人共同负责却无人负责。引入无指责的复盘文化,关注流程缺陷而非追究个人,让大家敢于暴露问题。把交接点写成清单,谁交付给谁、验收标准是什么一目了然。当目标一致、边界清晰时,扯皮自然减少,协作效率随之提升。"
+  },
+  {
+    "doc_id": "s00032",
+    "lang": "en",
+    "title": "Reducing Finger-Pointing Across Teams",
+    "body": "Cross-team friction usually stems not from a lack of skill but from blurry ownership, so when something breaks people pass the blame around. The recommendation is a clear single-owner model: every item has exactly one point of contact rather than a crowd that is collectively responsible and therefore individually accountable to no one. Adopt a blameless review culture that examines process gaps instead of hunting individuals, so people dare to surface problems. Write the handoff points as a checklist that shows who delivers to whom and what the acceptance bar is. When goals align and edges are sharp, the bickering fades on its own."
+  },
+  {
+    "doc_id": "s00033",
+    "lang": "zh",
+    "title": "本周项目周报（示例样板）",
+    "body": "本周主要推进了检索质量评测的语料准备工作,完成了合成文档的初稿与分级标注的草案。遇到的主要风险是跨语言样本的难度把控,过于直白会让关键词检索也命中,削弱对比意义。下周计划补足干扰文档到目标量,并跑一轮完整性校验。需要协调的是评审同事的时间,以便对标注口径达成一致。整体进度符合预期,无明显阻塞。"
+  },
+  {
+    "doc_id": "s00034",
+    "lang": "en",
+    "title": "Weekly Status Report (Sample Template)",
+    "body": "This week the main push was preparing the corpus for the retrieval-quality benchmark, finishing a first draft of the synthetic documents and a draft of the graded labels. The chief risk encountered was calibrating the difficulty of cross-language samples: too literal and keyword search also hits, weakening the comparison's value. Next week the plan is to top up the distractor documents to the target count and run a full integrity check. The coordination need is a reviewer's time so we can align on labeling criteria. Overall progress matches the plan with no notable blockers."
+  },
+  {
+    "doc_id": "s00035",
+    "lang": "zh",
+    "title": "年度工作总结（个人述职）",
+    "body": "回顾这一年,我主要负责检索相关性的迭代与评测体系搭建。年初接手关键词召回的回归,逐步补齐了自动化门禁,把人工核对的工作量降下来。年中参与了一次较大的重构,把散落的评分逻辑收敛到统一模块。下半年牵头做了语义召回的可信化方向,产出了可解释的初版。不足之处是文档治理投入偏少,部分设计决策没有及时沉淀。明年希望在跨语言检索上做出更扎实的成果。"
+  },
+  {
+    "doc_id": "s00036",
+    "lang": "zh",
+    "title": "关于推进自动化测试覆盖率的内部提案",
+    "body": "目前关键模块的自动化覆盖参差不齐,部分核心路径仍依赖人工回归,发版前耗时长且容易遗漏。提案建议分三步推进:先为最高频的故障路径补齐用例,再把覆盖率纳入合并前的检查项,最后把慢速集成测试拆分并行,缩短反馈时间。预计投入两个迭代,收益是发版信心提升与回归成本下降。需要的支持是为存量补测留出固定的工时配额。"
+  },
+  {
+    "doc_id": "s00037",
+    "lang": "zh",
+    "title": "团队季度目标对齐文档",
+    "body": "本季度团队聚焦三个方向:检索质量、稳定性与开发体验。检索质量上,完成语义召回的评测基线并在关键桶建立回归门;稳定性上,把线上告警的误报率降到可接受区间;开发体验上,缩短本地构建与测试的等待时间。每个方向指定一名负责人,双周同步进展。目标遵循可衡量原则,避免空泛口号。季度末统一复盘达成情况,作为下季度规划输入。"
+  },
+  {
+    "doc_id": "s00038",
+    "lang": "zh",
+    "title": "向量检索召回率不稳定问题排查记录",
+    "body": "近期发现语义召回在部分查询上结果抖动较大,同一查询多次跑命中集合不一致。排查发现两个因素:一是归一化前的相似度阈值偏低,引入了大量边缘命中;二是候选集排序在分数相近时缺乏稳定的次级排序键。处理方式是抬高阈值并加入文档号作为确定性的次级排序。复跑后结果稳定,关键桶指标未回退。结论是评测必须固定随机性来源,确保可复现。"
+  },
+  {
+    "doc_id": "s00039",
+    "lang": "zh",
+    "title": "客户访谈记录:对搜索体验的反馈",
+    "body": "我们与几位重度用户做了访谈,了解他们对当前搜索的真实感受。普遍反馈是按文件名能找到的场景满意,但凭印象描述内容时经常找不到,比如只记得文件讲了什么却忘了叫什么。还有跨语言的痛点:用中文描述去找一份英文资料几乎搜不到。用户希望搜索能理解意思而不只是匹配字面。这些反馈印证了我们投入语义召回的方向。"
+  },
+  {
+    "doc_id": "s00040",
+    "lang": "zh",
+    "title": "缓存扩容方案评审意见",
+    "body": "评审组讨论了订单服务的缓存改造方案,总体认可分层思路,但对上线节奏提出意见。主要分歧在于是先扩容缓存集群再加应用机器,还是反过来。结论倾向于先把缓存容量补足、稳住读路径,再按压测结果决定是否横向扩应用,避免在热点未缓解时盲目加机器导致回源风暴。同时要求补齐命中率与回源耗时的看板,作为后续扩容的依据。"
+  },
+  {
+    "doc_id": "s00041",
+    "lang": "zh",
+    "title": "远程办公设备申领与安全须知",
+    "body": "在家办公的同事可申领一台笔记本与一套外设,申领走资产系统,归还时核验序列号。设备需开启全盘加密与屏幕自动锁定,安装统一的终端防护。公司资料只在受管设备上处理,不拷贝到私人存储。连接内部系统须经由安全通道,公共网络下避免处理敏感数据。设备遗失立即上报,远程锁定与擦除。违反须知造成数据泄露的,按制度处理。"
+  },
+  {
+    "doc_id": "s00042",
+    "lang": "zh",
+    "title": "项目立项申请:本地个人搜索助手",
+    "body": "申请立项开发一款面向个人的本地搜索助手,核心价值是在不上传云端的前提下,帮助用户用自然语言找到自己电脑里的文件。区别于传统按文件名匹配,我们希望支持按意思检索与跨语言查找。范围限定在个人单机场景,强调隐私不外传。里程碑包括关键词召回、语义召回与混合排序三个阶段。风险主要在模型体积与本地算力的平衡。"
+  },
+  {
+    "doc_id": "s00043",
+    "lang": "zh",
+    "title": "食堂菜单意见反馈汇总",
+    "body": "本月收集了同事对食堂的意见。多数希望增加少油少盐的清淡选项,部分同事建议延长晚餐供应时间以照顾加班人群。有反馈说排队高峰拥挤,建议错峰或增加取餐窗口。甜点种类偏少也被多次提及。后厨回应将试点轻食窗口一个月,根据反馈决定是否长期保留。整体满意度较上月略有提升。"
+  },
+  {
+    "doc_id": "s00044",
+    "lang": "zh",
+    "title": "办公室绿植养护小贴士",
+    "body": "办公区新添了几盆绿植,提醒大家共同照看。多肉类怕涝,一周浇一次即可,放在有散射光的窗边。观叶植物喜湿,可经常向叶面喷水,避免空调直吹。发现叶片发黄多半是浇水过多,应减少频率并松土。请勿把咖啡或茶水倒进花盆。养护表贴在茶水间,认领的同事可在表上记录浇水日期。"
+  },
+  {
+    "doc_id": "s00045",
+    "lang": "zh",
+    "title": "年会节目征集通知",
+    "body": "一年一度的团队聚会节目开始征集。形式不限,可以是合唱、小品、乐器演奏或趣味游戏,鼓励跨组组队。报名在内部表单填写节目名称与参与人,排练可借用大会议室,提前预约。表演时长控制在几分钟内,避免冗长。优秀节目有纪念奖品。希望大家踊跃参与,让聚会更热闹。"
+  },
+  {
+    "doc_id": "s00046",
+    "lang": "zh",
+    "title": "打印机使用与节约纸张倡议",
+    "body": "为减少浪费,倡议大家非必要不打印,确需打印优先双面与黑白。打印机默认设为双面,如需单面请临时调整。废纸投入指定回收箱,背面可作草稿。机密文件打印后及时取走,避免遗留在出纸口。卡纸时请按面板提示处理,切勿强行拉扯。耗材不足请联系行政补充,不要私自拆装。"
+  },
+  {
+    "doc_id": "s00047",
+    "lang": "zh",
+    "title": "健身房使用规范",
+    "body": "公司健身房向全员开放,使用前请阅读规范。器械使用后归位并擦拭,重物训练建议有人保护。高峰时段单台器械连续使用不宜过久,方便他人轮换。储物柜当日使用当日清空,贵重物品自行保管。身体不适请勿勉强训练。场地内禁止饮食,饮用水除外。如发现器械损坏请上报,不要继续使用以免受伤。"
+  },
+  {
+    "doc_id": "s00048",
+    "lang": "zh",
+    "title": "快递收发管理办法",
+    "body": "为规范收发,个人快递统一寄到前台代收,到件后系统通知本人当日领取。超过三天未取的退回或暂存,空间有限请尽快处理。大件与生鲜请尽量寄到家,前台不便长时间存放。寄件请自行打包并填写单据,公司不承担私人寄件费用。冒领他人快递按规定处理。节假日期间收发暂停,请提前安排。"
+  },
+  {
+    "doc_id": "s00049",
+    "lang": "zh",
+    "title": "会议室预定规则更新",
+    "body": "会议室预定改为线上系统统一管理。预定以半小时为单位,单次最长两小时,如需更长请说明事由。开始十五分钟内无人签到自动释放,避免空占。临时取消请及时释放资源。大会议室优先用于跨组或对外会议,小型讨论请用洽谈区。设备故障请上报行政,不要自行拆改。请按时结束,给下一场留出布置时间。"
+  },
+  {
+    "doc_id": "s00050",
+    "lang": "zh",
+    "title": "员工兴趣社团招新",
+    "body": "几个兴趣社团开始招募新成员。读书会每两周共读一本书并线下交流;跑步团周末晨跑,强度自选;桌游社不定期组织聚会。社团活动自愿参加,费用 AA。报名在表单选择感兴趣的社团并留下联系方式。社团旨在丰富业余生活、促进跨组交流,欢迎新同事加入,也欢迎发起新社团。"
+  },
+  {
+    "doc_id": "s00051",
+    "lang": "zh",
+    "title": "节能减排办公倡议",
+    "body": "为践行绿色办公,倡议大家随手关灯关屏。午休与下班离开工位时关闭显示器,长时间不用的设备彻底断电。空调温度设置在适宜区间,避免与开窗同时进行。纸杯逐步替换为可重复使用的水杯。会议尽量线上,减少不必要的差旅。这些习惯看似微小,长期积累的节约相当可观,也降低了运营成本。"
+  },
+  {
+    "doc_id": "s00052",
+    "lang": "zh",
+    "title": "内部技术分享日程",
+    "body": "本月技术分享面向全员开放。第一场介绍检索系统的整体架构与数据流;第二场讲一次线上故障的排查过程与经验;第三场分享一个提升本地开发效率的小工具。每场约一小时,含答疑。鼓励非本方向的同事参加,拓宽视野。分享材料会后归档到内部知识库。有意分享的同事可报名,题目不限,实用即可。"
+  },
+  {
+    "doc_id": "s00053",
+    "lang": "zh",
+    "title": "食物过敏与共享零食提示",
+    "body": "茶水间的共享零食越来越多,提醒有食物过敏的同事注意成分。常见致敏原包括坚果、乳制品与海鲜。提供共享零食时,建议在标签上简单注明主要成分。开封后的零食请密封保存,过期及时清理。请勿将个人专属食品放入共享区。互相体谅,既享受美食也照顾彼此的健康。"
+  },
+  {
+    "doc_id": "s00054",
+    "lang": "zh",
+    "title": "停车位轮换与管理通知",
+    "body": "地下车位有限,采用月度轮换以兼顾公平。需要车位的同事在系统登记车牌与用车频率,按规则排序分配。临时访客车位需提前预约,当日有效。请勿占用消防通道与他人固定车位。充电桩车位仅供充电期间停放,充满请及时挪车。违规停放将贴条提醒,多次违规取消申请资格。"
+  },
+  {
+    "doc_id": "s00055",
+    "lang": "zh",
+    "title": "工位调整与搬迁安排",
+    "body": "因团队规模变化,下周将进行一次工位调整。请在本周内整理个人物品,贴好标签,贵重与易碎品自行携带。公共设备由行政统一搬运,搬迁期间网络可能短暂中断。新工位图已在群里发布,请提前确认座位。搬迁尽量安排在非高峰时段,减少对工作的影响。有特殊需求如靠窗或安静区,可提前提出协调。"
+  },
+  {
+    "doc_id": "s00056",
+    "lang": "zh",
+    "title": "空调与室温投诉处理流程",
+    "body": "近期收到关于室温的多条反馈,部分区域偏冷部分偏热。行政将分区检测温度并调整送风。个人感受差异较大,建议靠近出风口的同事备一件外套。如某区域持续异常,请在系统提交工单并标注位置,便于定位风口或设备问题。请勿私自调节中央空调主机,以免影响整层。我们会在一周内给出改善反馈。"
+  },
+  {
+    "doc_id": "s00057",
+    "lang": "zh",
+    "title": "饮水机滤芯更换与卫生",
+    "body": "饮水机滤芯按周期更换,确保水质。更换记录贴在机身,到期未换请提醒行政。接水时请勿让杯口接触出水口,保持卫生。机器周边保持干燥,洒水及时擦拭以防滑倒。如出现异味或水流变小,多为滤芯到期或管路问题,请上报处理,不要自行拆机。鼓励自带水杯,减少一次性纸杯使用。"
+  },
+  {
+    "doc_id": "s00058",
+    "lang": "en",
+    "title": "Annual Self-Appraisal Summary",
+    "body": "Looking back on the year, my main responsibility was iterating retrieval relevance and building the evaluation harness. Early on I took over the keyword-recall regression and gradually filled in automated gates, cutting the manual checking load. Mid-year I joined a sizable refactor that consolidated scattered scoring logic into one module. In the second half I led the trustworthy semantic-recall track and produced a first explainable version. A shortfall was light investment in documentation, leaving some design decisions uncaptured. Next year I hope to deliver solid results on cross-language retrieval."
+  },
+  {
+    "doc_id": "s00059",
+    "lang": "en",
+    "title": "Proposal to Raise Automated Test Coverage",
+    "body": "Automated coverage across critical modules is uneven today, with some core paths still leaning on manual regression that is slow before a release and easy to miss. The proposal advances in three steps: first add cases to the most frequently failing paths, then make coverage a pre-merge check, and finally split the slow integration suite to run in parallel and shorten feedback. The effort is estimated at two iterations, returning higher release confidence and lower regression cost. The support needed is a fixed time quota to backfill tests on existing code."
+  },
+  {
+    "doc_id": "s00060",
+    "lang": "en",
+    "title": "Customer Interview Notes on Search Experience",
+    "body": "We interviewed several power users about how today's search actually feels to them. The common theme: they are happy when they can find things by file name, but when they describe content from memory they often come up empty, recalling what a file was about while forgetting what it was called. Another pain point is cross-language: using one language to look for material written in another almost never works. Users want search to understand meaning rather than only matching the literal surface. These signals reinforce our investment in semantic recall."
+  },
+  {
+    "doc_id": "s00061",
+    "lang": "en",
+    "title": "Cafeteria Menu Feedback Roundup",
+    "body": "We gathered colleagues' comments on the canteen this month. Most asked for more light, low-oil options, and some suggested extending dinner hours for those working late. A few noted crowding at peak times and proposed staggering or adding a serving window. The narrow dessert selection came up repeatedly. The kitchen will pilot a light-meal window for a month and decide whether to keep it based on feedback. Overall satisfaction edged up from last month."
+  },
+  {
+    "doc_id": "s00062",
+    "lang": "en",
+    "title": "Tips for Caring for Office Plants",
+    "body": "A few plants now brighten the workspace, so please help look after them. Succulents dislike soggy roots; water once a week and place them by a window with indirect light. Foliage plants enjoy humidity, so mist the leaves and keep them out of direct airflow from the air conditioner. Yellowing leaves usually mean overwatering, so reduce frequency and loosen the soil. Please do not pour coffee or tea into the pots. A care sheet is posted in the pantry."
+  },
+  {
+    "doc_id": "s00063",
+    "lang": "en",
+    "title": "Call for Year-End Party Acts",
+    "body": "The annual team gathering is collecting performance acts. Any format is welcome: a choir, a skit, an instrument, or a party game, and cross-team teaming is encouraged. Sign up on the internal form with the act name and participants; rehearsals may use the large meeting room by reservation. Keep each act to a few minutes to avoid dragging. Standout acts win small keepsakes. We hope everyone joins in to make the gathering livelier."
+  },
+  {
+    "doc_id": "s00064",
+    "lang": "en",
+    "title": "Printer Use and Paper-Saving Appeal",
+    "body": "To cut waste, please avoid printing unless necessary, and when you must, prefer double-sided and grayscale. The printer defaults to duplex; switch temporarily if you need single-sided. Drop scrap paper into the recycling bin and reuse the blank side as drafts. Collect confidential prints promptly so nothing is left at the tray. For paper jams, follow the panel prompts and never yank the sheet. Contact facilities when supplies run low."
+  },
+  {
+    "doc_id": "s00065",
+    "lang": "en",
+    "title": "Gym Usage Guidelines",
+    "body": "The company gym is open to all; please read the rules before use. Re-rack equipment and wipe it down after use, and have a spotter for heavy lifts. During peak hours, avoid hogging a single machine so others can rotate. Clear lockers the same day and keep valuables with you. Do not train through illness. No food is allowed on the floor, water aside. Report any damaged equipment and stop using it to avoid injury."
+  },
+  {
+    "doc_id": "s00066",
+    "lang": "en",
+    "title": "Parcel Handling Rules",
+    "body": "To keep things orderly, personal parcels are received at the front desk, and you are notified to collect on the day of arrival. Items uncollected after three days may be returned or held, but space is tight, so act quickly. Please ship bulky or fresh goods to your home, as the desk cannot store them long. Pack and label your own outbound items; the company does not cover private shipping. Handling pauses over holidays, so plan ahead."
+  },
+  {
+    "doc_id": "s00067",
+    "lang": "en",
+    "title": "Meeting Room Booking Rules Update",
+    "body": "Room booking now runs through one online system. Reserve in half-hour units, two hours maximum per booking, and state a reason for anything longer. A no-show within the first fifteen minutes auto-releases the slot to prevent idle holds. Release resources promptly on cancellation. Large rooms are prioritized for cross-team or external meetings; use the lounge for small chats. Report equipment faults to facilities and end on time so the next group can set up."
+  },
+  {
+    "doc_id": "s00068",
+    "lang": "en",
+    "title": "Interest Club Recruitment",
+    "body": "Several interest clubs are recruiting. The book circle reads one book every two weeks with an in-person chat; the running group does weekend morning jogs at your own pace; the board-game club meets occasionally. Participation is voluntary and costs are split. Sign up on the form, pick the clubs you like, and leave a contact. The clubs aim to enrich downtime and foster cross-team mixing, and new colleagues are warmly welcome to join or start one."
+  },
+  {
+    "doc_id": "s00069",
+    "lang": "en",
+    "title": "Energy-Saving Office Appeal",
+    "body": "To practice greener work, please switch off lights and screens as you go. Turn off the monitor when you leave for lunch or for the day, and fully power down idle gear. Set the air conditioner to a sensible range and avoid running it with the windows open. Paper cups will gradually give way to reusable bottles. Hold meetings online where possible to cut needless travel. These small habits add up to meaningful savings over time."
+  },
+  {
+    "doc_id": "s00070",
+    "lang": "en",
+    "title": "Internal Tech Talk Schedule",
+    "body": "This month's tech talks are open to everyone. The first introduces the overall architecture and data flow of the retrieval system; the second walks through diagnosing a production incident and its lessons; the third shares a small tool that speeds up local development. Each runs about an hour with Q&A. Colleagues outside the area are encouraged to attend and broaden their view. Slides are archived to the internal knowledge base afterward."
+  },
+  {
+    "doc_id": "s00071",
+    "lang": "en",
+    "title": "Allergy Note for Shared Snacks",
+    "body": "The shared snacks in the pantry keep growing, so a reminder for colleagues with food allergies. Common triggers include nuts, dairy, and seafood. When you bring shared snacks, please jot the main ingredients on the label. Reseal opened snacks and clear out expired ones promptly. Do not place strictly personal food in the shared area. A little mutual care lets everyone enjoy the treats while looking out for each other's health."
+  },
+  {
+    "doc_id": "s00072",
+    "lang": "en",
+    "title": "Parking Rotation Notice",
+    "body": "Underground spots are limited, so a monthly rotation keeps things fair. Colleagues needing a spot register their plate and usage frequency in the system and are ranked by rule. Visitor spots require advance booking and are valid for the day. Do not block fire lanes or others' fixed spaces. Charging bays are for active charging only; move once full. Violations get a reminder slip, and repeat offenders lose eligibility."
+  },
+  {
+    "doc_id": "s00073",
+    "lang": "en",
+    "title": "Desk Move Arrangements",
+    "body": "Owing to a change in team size, a desk reshuffle happens next week. Please tidy your belongings this week and label them, carrying valuables and fragile items yourself. Facilities will move shared equipment, and the network may blink briefly during the move. The new seating map is posted in the group chat; confirm your seat ahead of time. We will schedule the move off-peak to limit disruption. Raise special needs such as a window seat early so we can coordinate."
+  },
+  {
+    "doc_id": "s00074",
+    "lang": "en",
+    "title": "Room Temperature Complaint Process",
+    "body": "We have received several comments about room temperature, with some zones too cold and others too warm. Facilities will measure by zone and adjust airflow. Personal tolerance varies, so colleagues near a vent may want a jacket on hand. If a zone stays abnormal, file a ticket noting the location to help pinpoint the vent or unit. Please do not adjust the central unit yourself, as it affects the whole floor. We will report improvements within a week."
+  },
+  {
+    "doc_id": "s00075",
+    "lang": "en",
+    "title": "Water Dispenser Filter and Hygiene",
+    "body": "Dispenser filters are replaced on a cycle to keep water clean. The change log is on the unit; remind facilities if a due date passes. When filling, keep the cup rim off the nozzle for hygiene. Keep the surrounding area dry and wipe spills to prevent slips. An odor or weak flow usually means an expired filter or a line issue; report it rather than opening the machine yourself. Bringing your own bottle reduces disposable-cup use."
+  },
+  {
+    "doc_id": "s00076",
+    "lang": "en",
+    "title": "Study Notes on Habit Formation",
+    "body": "These notes capture a book about how small habits compound. The core idea is that identity-based change beats outcome-chasing: you become the kind of person who does the thing, and the behavior follows. The author proposes making good habits obvious, attractive, easy, and satisfying, and inverting those levers to break bad ones. The two-minute rule, shrinking a new habit to a trivial start, stood out as the most actionable. I plan to anchor one new habit to an existing daily routine."
+  },
+  {
+    "doc_id": "s00077",
+    "lang": "en",
+    "title": "Onboarding Checklist for Contractors",
+    "body": "Short-term contractors follow a lighter onboarding than full staff. On the first day, collect a guest badge with scoped access and sign the confidentiality terms. Accounts are provisioned with least privilege and expire automatically at the engagement's end. A coordinator pairs the contractor with a point of contact and shares only the documents relevant to the scope. Equipment is loaned and tracked, returned on the last day. Access is reviewed weekly and revoked promptly once the work concludes."
+  },
+  {
+    "doc_id": "s00078",
+    "lang": "en",
+    "title": "Postmortem of a Deployment Incident",
+    "body": "A routine deploy caused a brief outage, and this postmortem records the timeline blamelessly. The change shipped a config that pointed traffic at a half-warmed pool, so latency spiked and a fraction of requests timed out. Detection lagged because the alert threshold was too loose. We rolled back within minutes once the pattern was clear. Action items: pre-warm pools before cutover, tighten the alert, and add a smoke check to the release gate. No data was lost and no individual is at fault."
+  },
+  {
+    "doc_id": "s00079",
+    "lang": "en",
+    "title": "Guide to Running a Blameless Retro",
+    "body": "A blameless retro turns an incident into shared learning rather than a search for someone to punish. Set the tone up front that the goal is to improve the system, not to judge people. Walk the timeline with facts, ask why each gap existed, and resist hindsight bias. Capture concrete action items with owners and dates, and track them to closure in the next retro. When people trust they will not be punished for honesty, the quality of the analysis rises sharply."
+  },
+  {
+    "doc_id": "s00080",
+    "lang": "en",
+    "title": "Style Guide for Commit Messages",
+    "body": "A clear commit message explains the why, not just the what. Keep the summary line short and in the imperative mood, then leave a blank line before a body that gives context and trade-offs. Reference the issue or task being addressed, and avoid lumping unrelated changes into one commit. Do not paste large diffs into the message. Reviewers read the message first, so a good one speeds review and helps the next person who runs a blame on the line."
+  },
+  {
+    "doc_id": "s00081",
+    "lang": "en",
+    "title": "Notes on Designing a Rate Limiter",
+    "body": "These notes compare approaches to throttling request volume. A fixed window is simple but allows bursts at the boundary; a sliding window smooths this at higher bookkeeping cost. The token bucket permits controlled bursts by refilling tokens at a steady rate, which suits user-facing endpoints. Keys are chosen per client or per route, and limits are returned in response headers so callers can back off. The limiter must fail open carefully to avoid turning a dependency blip into an outage."
+  },
+  {
+    "doc_id": "s00082",
+    "lang": "en",
+    "title": "Travel Plan for a Mountain Hiking Weekend",
+    "body": "Drive up Saturday morning, park at the trailhead, and take the moderate loop that climbs to a ridge with valley views. Pack layers, plenty of water, and trail snacks, and start early to beat the afternoon weather. Lunch is at the saddle, then descend by the gentler path past a small waterfall. Stay overnight in a cabin and watch the stars if the sky is clear. On Sunday, do a short morning walk before heading home, keeping the budget to a rounded per-person figure."
+  },
+  {
+    "doc_id": "s00083",
+    "lang": "zh",
+    "title": "数据备份与恢复演练记录",
+    "body": "本季度进行了一次数据备份恢复演练,验证从冷备恢复关键服务的可行性。演练在隔离环境进行,按预案逐步恢复,记录每步耗时与发现的问题。结果显示恢复流程基本可用,但部分文档与实际脚本存在偏差,已同步更新。演练暴露的最大风险是备份覆盖范围不全,个别配置未纳入,后续补齐。下次演练计划缩短恢复目标时间。"
+  },
+  {
+    "doc_id": "s00084",
+    "lang": "zh",
+    "title": "代码评审礼仪指南",
+    "body": "良好的代码评审是协作而非挑刺。评审者先理解意图再提意见,区分必须改与建议改,避免主观偏好绑架作者。提问优于命令,给出理由而非简单否定。作者要心态开放,把评审看作共同提高的机会,对合理意见及时回应,对不认同的礼貌讨论。评审聚焦正确性、可读性与边界处理,不在风格细节上反复纠缠,风格交给工具统一。"
+  },
+  {
+    "doc_id": "s00085",
+    "lang": "zh",
+    "title": "本地开发环境搭建笔记",
+    "body": "记录一次本地环境搭建过程,便于新同事参考。先安装统一版本的工具链,避免版本漂移;再拉取代码并初始化子模块。配置文件从示例模板复制,填入本地参数,敏感项不入库。首次构建较慢,后续走缓存。常见问题是依赖未对齐导致编译失败,按错误提示对照版本清单即可。跑通基础测试后再开始开发,确保环境正常。"
+  },
+  {
+    "doc_id": "s00086",
+    "lang": "zh",
+    "title": "个人知识管理方法小结",
+    "body": "整理了一套适合自己的笔记方法。核心是分层:速记捕捉灵感,定期回顾整理成结构化笔记,再把成熟内容沉淀为长期可复用的条目。标签与双向链接帮助建立联系,避免笔记成为孤岛。关键是降低记录门槛、提高复用频率,而不是追求工具花哨。每周留出固定时间做整理,把零散输入转化为可检索的知识,真正用起来才有价值。"
+  },
+  {
+    "doc_id": "s00087",
+    "lang": "zh",
+    "title": "产品上线检查清单",
+    "body": "上线前按清单逐项核对,降低事故概率。功能层面确认核心路径通过验收,边界与异常分支已覆盖。性能层面跑过压测,关键指标在阈值内。安全层面完成权限与数据校验。回滚预案就绪,可一键回退到上个版本。监控与告警配置到位,发布后专人值守一段时间。文档与公告同步更新,通知相关方。清单逐项打勾,缺项不放行。"
+  },
+  {
+    "doc_id": "s00088",
+    "lang": "en",
+    "title": "Runbook for On-Call Handover",
+    "body": "This runbook standardizes the on-call handover so context is not lost between shifts. The outgoing engineer summarizes open incidents, ongoing mitigations, and any fragile areas to watch. Pending alerts and their current status are listed, along with links to relevant dashboards. The incoming engineer confirms access and acknowledges the summary. Anything still unresolved is assigned a clear next step. A short written handover beats a hurried verbal one and prevents repeating diagnosis already done."
+  },
+  {
+    "doc_id": "s00089",
+    "lang": "en",
+    "title": "Notes on Choosing a Logging Strategy",
+    "body": "These notes weigh structured versus free-text logging. Structured logs carry typed fields that machines can filter and aggregate, at the cost of a little discipline at the call site. Levels should be used consistently so noise can be tuned without code changes. Avoid logging secrets or full file paths, and sample high-volume paths to control cost. Correlation identifiers tie a request's logs together across services. The goal is logs you can actually query during an incident, not a wall of prose."
+  },
+  {
+    "doc_id": "s00090",
+    "lang": "en",
+    "title": "Local Setup Notes for New Engineers",
+    "body": "A record of setting up the local environment so new colleagues have a reference. First install the pinned toolchain to avoid version drift, then clone the code and initialize submodules. Copy the config from the sample template and fill in local parameters, keeping secrets out of the repository. The first build is slow; later ones use the cache. A common snag is a dependency mismatch causing a compile failure, fixed by checking against the version manifest. Run the base tests before starting work."
+  },
+  {
+    "doc_id": "s00091",
+    "lang": "en",
+    "title": "Checklist Before a Production Release",
+    "body": "Work the checklist item by item before release to lower the chance of an incident. On function, confirm the core paths pass acceptance and that edge and error branches are covered. On performance, run the load test and keep key metrics within threshold. On security, complete the permission and data validation. Have a rollback ready that returns to the previous version in one step. Ensure monitoring and alerts are in place, and staff a watch after release. Tick every box; do not ship with gaps."
+  },
+  {
+    "doc_id": "s00092",
+    "lang": "en",
+    "title": "Personal Productivity Review",
+    "body": "A quarterly look at my own working habits. I tracked where the hours actually went and found meetings and context-switching ate more than expected. The fix I am trying is batching shallow tasks into a single afternoon block and protecting mornings for focused work. I also pruned recurring meetings that no longer earned their place. The point is not to squeeze every minute but to spend attention on what matters and to leave slack for the unexpected."
+  },
+  {
+    "doc_id": "s00093",
+    "lang": "zh",
+    "title": "年度健康体检安排通知",
+    "body": "公司组织一年一度的健康体检,面向全体在职同事。体检在指定机构进行,可在预约系统选择时间段,错峰前往避免排队。空腹项目请提前留意须知,当天清晨不要进食。报告通常一周内出具,可在系统查看与下载,隐私严格保护。如对结果有疑问,机构提供免费咨询。建议大家重视体检,早发现早处理。未预约者可在补检窗口安排。"
+  },
+  {
+    "doc_id": "s00094",
+    "lang": "zh",
+    "title": "企业邮箱使用规范",
+    "body": "企业邮箱用于工作沟通,请勿用于注册无关的外部服务。主题应简明扼要,正文条理清晰,需要对方行动时明确说明事项与时限。大范围群发请慎重,避免打扰无关同事。附件较大时用内部文件链接代替直接发送。离职或长假请设置自动回复并交接收件人。涉密内容不在邮件中明文传递,按安全规范处理。定期清理邮箱,保持容量充裕。"
+  },
+  {
+    "doc_id": "s00095",
+    "lang": "zh",
+    "title": "项目风险登记册说明",
+    "body": "风险登记册集中记录项目识别出的风险,便于跟踪与应对。每条风险登记其描述、可能性、影响、责任人与应对策略。应对分为规避、减轻、转移与接受四类,根据成本收益选择。高优先级风险定期复盘,更新状态;已关闭的归档但保留记录以备复盘。新风险随时补登,鼓励团队成员主动上报。登记册并非走形式,关键在于真正驱动应对行动。"
+  },
+  {
+    "doc_id": "s00096",
+    "lang": "zh",
+    "title": "加班与调休管理办法",
+    "body": "因项目需要的加班须事前申请并经主管批准,事后据实记录。加班可按规定折算调休,调休在合理期限内安排,避免长期累积。鼓励合理安排工作节奏,不提倡无效加班与形式主义。法定节假日加班按规定执行。调休申请走统一系统,与休假统一管理。管理者应关注团队负荷,长期高强度需评估人力配置,保障可持续。"
+  },
+  {
+    "doc_id": "s00097",
+    "lang": "zh",
+    "title": "内部工具账号权限申请流程",
+    "body": "申请内部工具账号或提权,需在系统提交工单,说明用途与所需权限范围。遵循最小授权原则,只开通完成工作所必需的权限。敏感系统的提权需上级与系统负责人双重审批。权限定期复核,离职或转岗及时回收。临时权限设置到期时间,到期自动失效。请勿共享个人账号或代他人操作。违规授权一经发现按制度处理并记录在案。"
+  },
+  {
+    "doc_id": "s00098",
+    "lang": "zh",
+    "title": "会议室设备故障报修指引",
+    "body": "会议室投影、音视频或网络出现故障时,请先按面板提示自助排查,如重新连接或切换信号源。仍无法解决的在系统提交报修工单,注明会议室编号与故障现象,紧急会议可同时电话联系行政。请勿自行拆卸设备或更换线缆,以免扩大故障。报修后行政会尽快响应并反馈处理进度。日常请爱护设备,使用后关闭电源并归位遥控器。"
+  },
+  {
+    "doc_id": "s00099",
+    "lang": "zh",
+    "title": "供应商对接与采购流程",
+    "body": "对接新供应商前需完成资质审核与比价,留存记录备查。采购需求由用人方提出,经预算确认后发起。大额采购按规定走多家比价或招标,避免单一来源。合同条款重点关注交付时间、质保与违约责任,签署前法务复核。到货验收合格后方可付款,异常及时反馈。供应商表现纳入定期评估,不合格的逐步替换,合作良好的优先续约。"
+  },
+  {
+    "doc_id": "s00100",
+    "lang": "zh",
+    "title": "用户反馈收集与处理机制",
+    "body": "我们通过多渠道收集用户反馈,包括应用内入口、客服工单与定期访谈。反馈统一汇入登记系统,按主题归类与去重,标注影响范围与频次。高频且影响大的进入需求池排期,体验类小改在迭代中顺手处理。处理结果适当回访告知用户,形成闭环。定期输出反馈分析,识别共性问题,驱动产品改进,避免反馈石沉大海。"
+  },
+  {
+    "doc_id": "s00101",
+    "lang": "en",
+    "title": "Annual Health Check Notice",
+    "body": "The company arranges a yearly health check for all active staff. Examinations take place at a designated facility, and you may pick a slot in the booking system, going off-peak to avoid queues. Note the fasting requirements in advance and skip breakfast that morning for the relevant tests. Reports are usually issued within a week, viewable and downloadable in the system with privacy strictly protected. The facility offers free consultation for questions. A make-up window is available for anyone who missed booking."
+  },
+  {
+    "doc_id": "s00102",
+    "lang": "en",
+    "title": "Corporate Email Usage Standards",
+    "body": "Corporate email is for work communication; please do not use it to register for unrelated external services. Keep subject lines concise and the body well organized, stating the action and deadline clearly when you need a response. Be cautious with broad distribution lists so you do not disturb unrelated colleagues. For large attachments, share an internal file link rather than sending directly. Set an auto-reply and hand over recipients before leave. Do not send confidential content in plain text; handle it per security rules."
+  },
+  {
+    "doc_id": "s00103",
+    "lang": "en",
+    "title": "Project Risk Register Guide",
+    "body": "The risk register centralizes the project's identified risks for tracking and response. Each entry records its description, likelihood, impact, owner, and mitigation. Responses fall into avoid, reduce, transfer, and accept, chosen by cost and benefit. High-priority risks are reviewed regularly and their status updated; closed ones are archived but retained for later learning. New risks are logged as they appear, and team members are encouraged to raise them proactively. The register is not a formality; its point is to drive real action."
+  },
+  {
+    "doc_id": "s00104",
+    "lang": "en",
+    "title": "Overtime and Time-Off-in-Lieu Policy",
+    "body": "Overtime needed for a project must be requested in advance and approved by a manager, then recorded accurately afterward. It may be converted to time off in lieu under policy, scheduled within a reasonable window to avoid long accumulation. We encourage a sustainable pace and discourage performative or ineffective overtime. Statutory-holiday work follows the rules. Lieu requests go through the unified system alongside leave. Managers should watch team load and reassess staffing when intensity stays high, to keep the work sustainable."
+  },
+  {
+    "doc_id": "s00105",
+    "lang": "en",
+    "title": "Internal Tool Access Request Flow",
+    "body": "To request a tool account or an access elevation, file a ticket stating the purpose and the scope of permissions needed. Follow least privilege and grant only what the work requires. Elevations on sensitive systems need dual approval from a manager and the system owner. Access is reviewed periodically and revoked promptly on departure or role change. Temporary grants carry an expiry and lapse automatically. Do not share personal accounts or act on someone else's behalf; improper grants are handled per policy and logged."
+  },
+  {
+    "doc_id": "s00106",
+    "lang": "en",
+    "title": "Meeting Room Fault Reporting Guide",
+    "body": "When a meeting room's projector, audio-video, or network fails, first self-check via the panel prompts, such as reconnecting or switching the input source. If it persists, file a repair ticket in the system noting the room number and the symptom, and for an urgent meeting also phone facilities. Please do not dismantle equipment or swap cables yourself, which can widen the fault. Facilities will respond promptly and report progress. Day to day, treat the gear with care and power it down after use."
+  },
+  {
+    "doc_id": "s00107",
+    "lang": "en",
+    "title": "Vendor Engagement and Procurement Flow",
+    "body": "Before engaging a new vendor, complete a qualification check and price comparison, keeping records for audit. The requesting team raises the need, which proceeds after budget confirmation. Large purchases follow multi-quote comparison or tender per policy to avoid a single source. Contract terms focus on delivery time, warranty, and breach liability, with legal review before signing. Payment follows successful acceptance, with anomalies flagged promptly. Vendor performance feeds a periodic review; poor performers are phased out and strong ones get renewal priority."
+  },
+  {
+    "doc_id": "s00108",
+    "lang": "en",
+    "title": "User Feedback Intake and Handling",
+    "body": "We collect user feedback through several channels, including an in-app entry, support tickets, and periodic interviews. Feedback flows into one registry, grouped and de-duplicated by theme with impact and frequency tagged. High-frequency, high-impact items enter the backlog for scheduling, while small experience tweaks are handled within iterations. We follow up with users on outcomes to close the loop. A periodic analysis surfaces common problems and drives product improvement, so feedback does not simply vanish."
+  },
+  {
+    "doc_id": "s00109",
+    "lang": "zh",
+    "title": "分布式任务重试规约（草案）",
+    "body": "对外部依赖调用统一走重试封装。首次失败立即记录上下文,后续按指数退避策略,基数取一秒、倍数取二,封顶三十秒。为防止集群同步抖动,在退避基础上再叠加随机抖动,范围取上一次等待时间的两成。重试上限按调用方分级:在线读类放开到五次,写类收紧到两次,异步任务可放到八次。每次重试都需上报指标,统计成功率与平均尝试次数。对幂等性不明的接口禁用自动重试,改为人工审查。"
+  },
+  {
+    "doc_id": "s00110",
+    "lang": "en",
+    "title": "Retry Contract for Outbound Calls",
+    "body": "All outbound dependency calls go through the shared retry wrapper. The first failure is logged with full context, then truncated exponential backoff kicks in with a base of one second and a doubling factor, capped at thirty seconds. To avoid herd retries we layer jitter on top, sampled uniformly from twenty percent of the previous wait. Retry budgets vary by call class: online reads allow up to five attempts, writes are tightened to two, async jobs may go to eight. Each attempt emits a metric so we can track success rate and average tries. Endpoints whose idempotency is unclear are excluded from auto-retry and require human review."
+  },
+  {
+    "doc_id": "s00111",
+    "lang": "zh",
+    "title": "实验平台样本量计算说明（v2）",
+    "body": "新建实验前先估算最小样本量,避免跑出无统计意义的结论。计算流程:先确定主指标的基线均值和最低可检测效应,再选定显著性水平和功效要求,然后按双样本检验公式反推每组样本量。若指标方差未知,可用历史一周数据近似。样本量计算结果会直接生成在实验创建表单上,作者需在备注里写出预计运行天数与流量分配。若结果偏离预估超出两成需重新评估并备注原因。功效达成前禁止解读结果以免被随机波动误导。"
+  },
+  {
+    "doc_id": "s00112",
+    "lang": "zh",
+    "title": "推荐系统冷启动池规则",
+    "body": "对新用户与新物品采用人工冷启池规则补足召回。新用户在没有交互记录时,默认从分类的热门池中按多样性约束采样。新物品入库后挂在对应主题与标签下,享有为期七天的曝光保护,期间不被纯协同过滤压低。冷启池由编辑维护,每周根据点击率与停留时长复盘剔除老化项。规则之外的精排仍走原模型,冷启池只影响候选阶段的纳入而非最终排序。所有冷启决策记录在审计日志便于事后归因。"
+  },
+  {
+    "doc_id": "s00113",
+    "lang": "en",
+    "title": "Cold-Start Pool Rules for Recommendations",
+    "body": "When the recommender has no interaction history, we lean on manual cold-start pools to bootstrap recall. New users default to category-based popular pools sampled under a diversity constraint. New items, upon ingestion, are tagged with their topic and granted a seven-day exposure window so that pure collaborative filtering cannot suppress them prematurely. The pool itself is curated by editors and pruned weekly based on click-through and dwell time. Beyond pool admission, the ranker remains unchanged: cold-start rules affect candidate inclusion, never final ranking. Every cold-start decision is logged for post-hoc attribution."
+  },
+  {
+    "doc_id": "s00114",
+    "lang": "zh",
+    "title": "内部沟通工具内容审核制度",
+    "body": "公司内部 IM 表情包与自定义贴纸需先经审核再上架到团队空间。提交人填写来源与用途,审核人按三档判定:可公开使用、限定团队使用、需修改。涉及肖像权、品牌商标、政治宗教与歧视性内容的一律拒绝。审核通过后存入资源库并打标签便于检索;不通过的需说明理由让提交人自查。每季度由审核组随机抽查已上架资源,过期或失当的下架。日常使用中若有员工举报不当资源,审核组在两个工作日内复核。"
+  },
+  {
+    "doc_id": "s00115",
+    "lang": "en",
+    "title": "Internal Messaging Sticker and Emoji Approval Policy",
+    "body": "Custom stickers and emoji intended for company chat tools must clear an approval queue before they appear in any team workspace. Submitters describe the source and intended usage. Reviewers triage into three buckets: open to all, scoped to a single team, or send back for edits. Anything touching likeness rights, brand marks, political or religious imagery, or discriminatory content is rejected outright. Approved assets land in the shared library with tags for discovery; rejections come with written reasons for self-review. Each quarter the review group spot-checks live assets and retires anything stale or off-policy. Day-to-day user reports are reviewed within two business days."
+  },
+  {
+    "doc_id": "s00116",
+    "lang": "zh",
+    "title": "事故复盘报告模板（5 Whys 框架）",
+    "body": "事故复盘以理解系统失效为目的,不以追究个人责任为目的。每次复盘按 5 Whys 框架进行五层追问下钻:第一个 why 找直接现象的直接原因(proximate cause),第二个 why 基于上一层答案问触发条件,第三个 why 追到机制或自动化缺失,第四个 why 追到流程或评审环节,第五个 why 锚定到系统设计或组织约束(root cause)。每一层 why 的答案必须可被独立验证,否则视为推测、需重新追问。中途若答案落到「某人没做某事」,继续追问「为什么这套流程允许此遗漏发生」,直到根因落到流程/机制/设计层而非人。报告里不写人名,只写角色与系统组件。复盘结尾必须列出具体改进项,每项有负责团队、完成时间、验证方式,严格区分症状层改进(treat the symptom)与根因层改进(fix the root)。复盘记录归档便于后续模式识别与重复根因聚类。"
+  },
+  {
+    "doc_id": "s00117",
+    "lang": "en",
+    "title": "Blameless Postmortem Template with 5 Whys",
+    "body": "The goal of a postmortem is to understand how a system failed, not to assign blame. Each session follows the 5 Whys framework as an iterative five-layer drilldown: the first why surfaces the proximate cause behind the observable symptom; the second why asks what enabled that proximate cause; the third why pushes into missing automation or guardrails; the fourth why exposes a process or review gap; the fifth why anchors at a system design or organizational constraint (the root cause). Each layer's answer must be independently verifiable or it is treated as speculation and re-asked. If a why ever lands on \"someone did not do X,\" the next why is \"why did the process allow that omission\" — the chain stops only when the root cause sits at the process, mechanism, or design level, never at the person level. Reports avoid individual names and refer to roles or system components only. Every postmortem closes with concrete action items, each tagged with an owning team, a completion date, and a verification method, and clearly separates symptom-level fixes (treat the symptom) from root-cause-level fixes (fix the root). Records are archived to support later pattern recognition and clustering of recurring root causes."
+  },
+  {
+    "doc_id": "s00118",
+    "lang": "zh",
+    "title": "灰度发布与自动回滚机制说明",
+    "body": "新版本发布前先经过灰度流程,按三档放量验证稳态。第一档 5% 流量持续半小时,主要看错误率与延迟分位数是否漂移。第二档 25% 流量持续一小时,重点观察长尾接口与下游依赖。第三档全量后继续观察一天,确认无回归再关掉旧版本。每档放量前后采样核心指标对比,任意核心指标偏离基线超过预设阈值即自动回滚到上一版本,操作人事后复核。回滚动作记录在发布日志,异常需在下一次发布前定位修复。整套流程对生产事故的暴露时间控制在小时级。"
+  },
+  {
+    "doc_id": "s00119",
+    "lang": "en",
+    "title": "Canary Deployment Runbook with Rollback Gates",
+    "body": "Releases go through a canary process before reaching the full user base. The first tier routes 5% of traffic to the new version for thirty minutes, watching error rate and latency percentiles for drift. The second tier moves to 25% for an hour, with closer attention paid to long-tail endpoints and downstream dependencies. The third tier promotes to full traffic, followed by a one-day soak period to confirm no regression before retiring the old build. Each tier brackets a sampling of core metrics against baseline. Any core metric that drifts beyond its preset threshold triggers an automatic rollback to the previous build, with operators reviewing after the fact. Rollback actions are logged in the release record. The whole process keeps production exposure to incidents on the order of hours."
+  },
+  {
+    "doc_id": "s00120",
+    "lang": "zh",
+    "title": "对外接口版本管理与废弃周期约定",
+    "body": "对外接口采用语义化版本号,主版本号变化代表不兼容变更。任何不兼容变更需提前至少两个版本对外公告,并提供迁移指南。每个主版本保留至少一个 LTS 周期,期间只接受安全修复,不再加新特性。废弃接口在响应头里加 sunset 字段告知下线日期,文档站显著标注。下线前一个月,接口仍可用但响应延迟人为加倍以督促迁移。下线日生效后返回固定的迁移指引错误码,避免静默 404。整套约定写入 API 治理文档,接入前必读。"
+  },
+  {
+    "doc_id": "s00121",
+    "lang": "en",
+    "title": "API Versioning and Deprecation Policy",
+    "body": "Public APIs use semantic versioning, where a major version bump signals a breaking change. Every breaking change is announced at least two versions ahead, paired with a written migration guide. Each major version retains support for at least one LTS cycle, during which only security fixes ship and no new features land. Deprecated endpoints add a sunset header carrying the retirement date, and the documentation site flags them prominently. One month before retirement the endpoint continues to function but artificially doubles its response latency to push migration. After the retirement date it returns a fixed migration-pointer error code instead of a silent not-found. The full policy lives in the API governance document and is required reading before onboarding."
+  },
+  {
+    "doc_id": "s00122",
+    "lang": "zh",
+    "title": "线上告警分级与升级流程",
+    "body": "线上告警按影响面分三档处理。P0 表示用户可感知的全局故障,半小时内需升级到 leader 介入,所有相关同事中断手头工作支援。P1 表示部分用户或子系统受影响,两小时内由值班同事响应,必要时拉小组协同。P2 表示监控指标异常但用户尚未感知,在当日工作时段处理即可。每档告警都附带响应模板,包含止血、定位、复盘三个阶段的标准动作。误报需在事后归档原因,频繁误报触发阈值调整或规则下线。告警接收人轮值,周末与节假日有备份候选。"
+  },
+  {
+    "doc_id": "s00123",
+    "lang": "zh",
+    "title": "服务端异常日志结构化字段规范",
+    "body": "服务端异常日志统一走结构化输出,便于检索与跨服务关联。每条日志必须带三个核心字段:trace_id 用于贯穿一次请求的所有服务调用、span_id 用于定位本次调用在调用链中的位置、错误码用于快速归类故障类型。除核心字段外,栈帧信息按需附加,生产环境只保留前若干层防止日志体积爆炸。敏感字段如手机号、邮箱、身份号在日志写入前必须脱敏。日志等级遵守 ERROR / WARN / INFO 三档约定,DEBUG 级别只在本地开发开启。规范变更需经平台组评审。"
+  },
+  {
+    "doc_id": "s00124",
+    "lang": "en",
+    "title": "Data Retention Policy with Anonymization",
+    "body": "User-generated data is retained only for as long as it remains useful for product operations or is required by regulation. The default retention window is twelve months from creation. After the window closes, records are not hard-deleted; instead, identifying fields are replaced with stable hashes so aggregate analytics remain possible without exposing individuals. Hard deletion happens at thirty-six months, except where legal hold applies. Backups follow the same lifecycle on a one-month lag. Each system that stores user data declares its retention class in a central inventory and is audited quarterly for compliance. Exceptions require written sign-off from the privacy review group and are reviewed annually."
+  },
+  {
+    "doc_id": "s00125",
+    "lang": "zh",
+    "title": "事故复盘 5 Whys 模板与示例",
+    "body": "本模板用于结构化地组织一次线上事故的复盘,核心方法是 5 Whys:针对一个明确的故障现象,连续追问五层为什么,直到逼近可改造的根因,而不是停在表层操作失误。每一层 why 应该回答一个具体可证伪的问题,避免使用模糊词,例如把『因为同事没注意』改写成『因为发布脚本默认开启某项实验开关、且 CI 阶段没有强制提示』。\n\n示例场景:某虚构内部服务凌晨两点告警延迟八分钟,值班同事被电话叫醒后才发现核心队列积压。\n\nWhy 1:为什么告警延迟八分钟才到值班同事?排除假设:监控平台宕机(否,平台日志正常)。落点:告警通道走了邮件兜底,短信通道在凌晨被静默策略阻断。\n\nWhy 2:为什么短信通道被静默?排除假设:运营商问题(否,其他业务短信正常)。落点:静默策略上周新加了一条按时段过滤的规则,凌晨段被误标为非工作时间。\n\nWhy 3:为什么静默策略改动未经评审就上线?排除假设:评审流程缺失(否,流程存在)。落点:本次改动走的是配置热更新通道,绕过了发布流水线,因此跳过了评审 hook。\n\nWhy 4:为什么配置热更新通道不接评审 hook?落点:历史上为追求秒级生效,该通道与发布流水线解耦,变更只走二人 review,没有强制告警类配置的额外校验。\n\nWhy 5:为什么二人 review 没拦下?落点:reviewer 默认按代码视角看 diff,缺乏告警系统专属的 lint 提示,review 时只看到一条 cron 表达式新增,没意识到它会覆盖凌晨段。\n\nWhy 6(可选深挖):为什么平台层缺少告警系统专属 lint?落点:告警系统改造由独立小组维护,lint 工具链由平台基础组维护,两组接口约定一年未更新,告警类配置类型自始就未被纳入 lint 注册表,新增字段时也没有触发交叉评审的强制流程。\n\n改进 action item:第一,给告警类配置加专属 lint,凡命中时段过滤、静默策略、覆盖窗口三类字段都强制弹出确认面板。第二,把配置热更新通道接入与发布流水线相同的评审 hook,关键类目至少需要一名告警系统 owner 同意。第三,值班手册补充告警通道兜底校验步骤,每月一次定时演练静默策略覆盖范围。第四,监控阈值评审节奏从季度改为月度,新增条目当月内必须 review 一次。第五,告警系统组与平台基础组建立每月一次的接口同步会,新增告警类字段需在同步会上登记并纳入 lint 注册表。每条 action item 指定 owner 与截止日期,并在下一次复盘会议回看完成情况。\n\n复盘会议流程:会议由事故 owner 召集,参会角色包含事故主责工程师、值班同事、相关系统 owner、平台代表与一名独立 facilitator。议程时间分配:现象与时间线还原十分钟,5 Whys 推演二十五分钟,action item 讨论二十分钟,跟踪机制五分钟。输出文档结构遵循固定模板:摘要段、时间线表、根因链、action item 表、待办风险列表。跟踪机制由 facilitator 负责,每两周回看一次未关闭项,直到全部 close 为止。\n\n5 Whys 与其他根因分析方法对比:5 Whys 适合根因链条相对线性的场景,节奏快、易上手,但容易停在某一层就收手。鱼骨图(Ishikawa)适合根因分布在多个维度时,例如人员、流程、工具、环境四象交叉。故障树分析(FTA)适合系统层级深、需要量化分支概率的场景,常用于安全关键系统。本模板默认用 5 Whys,允许在发现根因分支时切换到鱼骨图;若涉及多个独立失效叠加,则升级到故障树分析,并在文档里注明切换原因。"
+  },
+  {
+    "doc_id": "s00126",
+    "lang": "en",
+    "title": "Canary release strategy and traffic splitting guidelines",
+    "body": "This document describes the canary release strategy used for backend services and the traffic splitting ladder that governs every progressive rollout. The intent is to catch regressions on a small slice of real traffic before the change reaches the entire fleet, and to make rollback a routine operation rather than an incident.\n\nA canary release is a deploy that initially serves only a small fraction of production traffic. The remaining traffic continues to hit the previous stable version. The two versions run side by side for a defined observation window, during which automated metrics gates decide whether the canary advances, holds, or is rolled back. The goal is not zero risk; it is bounded blast radius and fast detection.\n\nTraffic splitting ladder. Every rollout follows the same default ladder unless a service owner documents a deviation. Stage one routes one percent of traffic to the canary for at least thirty minutes. Stage two raises the share to five percent for at least one hour. Stage three goes to twenty five percent for at least two hours. Stage four routes one hundred percent and the rollout is considered complete after a final soak of four hours during which the previous version remains warm and reachable for emergency rollback. Owners may insert an additional ten percent step between stage two and stage three for services with thin traffic or strong tail sensitivity. Skipping a stage requires written justification in the rollout ticket.\n\nMetrics gates. Each stage gates on a fixed set of signals computed over the canary cohort and compared against the baseline cohort. Error rate must stay within an absolute delta of zero point two percent or a relative delta of twenty percent, whichever is tighter. The five xx rate must not exceed one and a half times the baseline. Request p99 latency must not regress by more than fifteen percent. Saturation signals, including queue depth and worker utilization, must not exceed seventy percent for a sustained five minute window. Business health checks, where defined by the service owner, are evaluated alongside the technical signals and have equal authority to halt the rollout.\n\nRollback triggers. Any single hard trigger causes immediate automated rollback without human approval. Hard triggers include a sustained error rate breach for two consecutive one minute windows, any panic or crash loop in the canary pods, an SLO burn rate above fourteen for a five minute window, or a manual halt by the on call engineer. Soft triggers, such as a modest p99 regression or a single elevated five xx spike, pause the ladder and require an owner to either advance with justification or revert. The system records the decision and the reasoning in the rollout ticket.\n\nHealth check expectations. Every service exposes a readiness endpoint and a deeper health endpoint that exercises critical downstream dependencies. The deployment system will not advance a canary stage until readiness has been green across all canary pods for the full stage duration. Pods that flap between ready and not ready more than three times in a stage are treated as a soft trigger.\n\nObservability requirements. The rollout dashboard for every service must surface, at minimum, request rate, error rate, latency percentiles, saturation, and the canary versus baseline comparison for each. Dashboards are linked from the rollout ticket automatically. A rollout cannot start unless the dashboard renders without missing panels.\n\nDeploy playbook. The on call engineer opens the rollout ticket, confirms the change log is complete, and triggers the canary at stage one. They monitor the dashboard for the full stage duration, acknowledge the gate result, and approve advancement. If any gate fails, they execute the documented rollback action, which restores traffic to the previous version within ninety seconds. After rollback, the engineer files a short note describing the failed signal and links it to the change for follow up. No rollout is considered complete until the four hour soak at one hundred percent has passed and the previous version has been drained.\n\nException handling. Emergency hotfixes may compress the ladder to stages one and four with a thirty minute soak each, but only with the on call lead approval and only when the change is itself addressing an active incident. Compressed rollouts must still meet every gate.\n\nThis strategy is reviewed every six months. Service owners are expected to read it before their first rollout and to revisit it whenever the deployment system or the gating rules change."
+  },
+  {
+    "doc_id": "s00127",
+    "lang": "en",
+    "title": "Log retention policy and compliance considerations",
+    "body": "This policy defines how application and infrastructure logs are stored, tiered, archived, and eventually purged. The intent is to balance operational utility, storage cost, and regulatory obligations, while keeping the data lifecycle auditable end to end.\n\nRetention tiers. Logs move through four tiers as they age. The hot tier holds the most recent seven days, fully indexed and queryable in seconds for incident response. The warm tier covers days eight through thirty, indexed at a coarser granularity, with typical query latency in tens of seconds. The cold tier spans days thirty one through one hundred eighty, stored in compressed columnar format on object storage, queryable on demand with a documented minutes scale latency. The archive tier covers days one hundred eighty one through the end of the retention period, stored in a write once read seldom medium and retrievable only via a ticketed restore process. The default end of the retention period is three hundred and ninety five days, chosen to comfortably exceed a one year audit window with a thirty day buffer.\n\nClassification. Every log stream declares a class on creation. Class A covers user facing transaction logs and security events; these follow the full retention ladder. Class B covers internal service logs without identifying content; these may be truncated at the cold tier after ninety days. Class C covers debug and trace logs; these are kept only in the hot tier and are purged on day seven. Reclassification requires a written request and review by the platform and privacy teams.\n\nCompliance considerations. The policy is written to satisfy the internal control framework, referenced internally as policy ACME DR twenty twenty four, which itself was drafted to align with widely recognized regimes. Where general data protection style rules apply, identifying fields in retained logs are minimized and hashed using a rotating salt at the point of ingestion. Where financial reporting style rules apply, security and access logs for systems classified as in scope are held for the full retention window and never reclassified downward. Where health information style rules apply, additional access controls gate retrieval from the cold and archive tiers, with every access producing its own audit record.\n\nArchival flow. Logs transition from cold to archive automatically on day one hundred eighty one. The transition job verifies a checksum match between the source and the archive copy, records the manifest in the central inventory, and only then releases the cold copy for deletion. Failed transitions block deletion and page the storage on call. Archive copies are stored across two regions for durability.\n\nPurge flow. Purges run on a daily schedule. A purge candidate must satisfy three conditions: the retention window has passed, no legal hold tag is attached, and the inventory marks the stream as eligible. The purge job logs every deletion to a tamper evident audit trail. Streams under legal hold are excluded automatically and surface in a weekly report for the legal and security review.\n\nAudit cadence. The retention configuration of every stream is reviewed quarterly by the platform team and annually by an independent review group. Any drift between the declared retention class and the actual tier transitions is treated as a control finding and tracked to closure. Restore activity from the cold and archive tiers is summarized in a monthly compliance report.\n\nException handling. Extending retention beyond the default window requires a documented business or legal justification, sign off from the privacy review group, and a review date no later than twelve months out. Shortening retention follows the same process. Streams that are accidentally purged before the end of the window are reported as incidents and trigger a root cause investigation.\n\nOwnership and review. The data platform team owns this policy. Service owners are responsible for declaring the correct class for every log stream they create and for revisiting the declaration whenever the underlying system changes meaningfully. The policy itself is reviewed every twelve months or whenever a referenced regime changes materially, whichever comes first."
+  }
+]

@@ -1,0 +1,323 @@
+version: 1
+language: zh
+
+groups:
+  # ——————————————————————————————————————————
+  # 桶 1：office 汇报（15 组）
+  # ——————————————————————————————————————————
+
+  # 用户 demo query: "找一份工作汇报相关的幻灯片"
+  - head: 工作汇报
+    aliases: [述职, 年度总结, 季度汇报, 月度汇报]
+    domain: office
+
+  # 用户 demo query: "上周的周报在哪"
+  - head: 周报
+    aliases: [周总结, 周工作小结]
+    domain: office
+
+  # 用户 demo query: "投简历用的那份个人简历"
+  - head: 简历
+    aliases: [个人简历, 求职简历]
+    domain: office
+
+  # 用户 demo query: "年底做的总结文档"
+  - head: 总结
+    aliases: [复盘, 回顾]
+    domain: office
+
+  # 用户 demo query: "下个月的工作计划"
+  - head: 工作计划
+    aliases: [行动计划, 任务计划]
+    domain: office
+
+  # 用户 demo query: "昨天开会的记录"
+  - head: 会议纪要
+    aliases: [会议记录, 会议备忘]
+    domain: office
+
+  # 用户 demo query: "提给老板的项目提案"
+  - head: 提案
+    aliases: [方案建议, 提议]
+    domain: office
+
+  # 用户 demo query: "季度项目方案文档"
+  - head: 项目方案
+    aliases: [实施方案, 解决方案]
+    domain: office
+
+  # 用户 demo query: "年终奖的那个表格"
+  - head: 年终奖
+    aliases: [年终绩效奖金]
+    domain: office
+
+  # 用户 demo query: "上次的绩效评估结果"
+  - head: 绩效评估
+    aliases: [绩效考核, 年度考核]
+    domain: office
+
+  # 用户 demo query: "下季度的目标文档"
+  - head: 目标
+    aliases: [季度目标, 年度目标]
+    domain: office
+
+  # 用户 demo query: "给客户的汇报材料"
+  - head: 汇报材料
+    aliases: [汇报稿, 汇报文档]
+    domain: office
+
+  # 用户 demo query: "新员工入职须知"
+  - head: 入职材料
+    aliases: [入职须知, 入职指南]
+    domain: office
+
+  # 用户 demo query: "预算申请表"
+  - head: 预算
+    aliases: [费用预算, 预算表]
+    domain: office
+
+  # 用户 demo query: "离职交接文档"
+  - head: 交接文档
+    aliases: [工作交接, 离职交接]
+    domain: office
+
+  # ——————————————————————————————————————————
+  # 桶 2：文件类型（12 组）
+  # ——————————————————————————————————————————
+
+  # 用户 demo query: "找那个演示的幻灯片"
+  - head: 幻灯片
+    aliases: [演示文稿, 演示材料]
+    domain: file_type
+
+  # 用户 demo query: "数据都在表格里"
+  - head: 表格
+    aliases: [电子表格, 数据表]
+    domain: file_type
+
+  # 用户 demo query: "那份文稿发哪了"
+  - head: 文档
+    aliases: [文稿, 文件]
+    domain: file_type
+
+  # 用户 demo query: "产品大纲在哪个文件夹"
+  - head: 大纲
+    aliases: [提纲, 内容框架]
+    domain: file_type
+
+  # 用户 demo query: "草稿还没改完"
+  - head: 草稿
+    aliases: [初稿, 草案]
+    domain: file_type
+
+  # 用户 demo query: "模板文件在模板文件夹"
+  - head: 模板
+    aliases: [样板, 范本]
+    domain: file_type
+
+  # 用户 demo query: "活动的海报图"
+  - head: 海报
+    aliases: [宣传海报, 活动海报]
+    domain: file_type
+
+  # 用户 demo query: "书的封面图片"
+  - head: 封面
+    aliases: [书封, 封底]
+    domain: file_type
+
+  # 用户 demo query: "手册里有操作步骤"
+  - head: 手册
+    aliases: [工具书, 操作指南]
+    domain: file_type
+
+  # 用户 demo query: "附件里是报价单"
+  - head: 附件
+    aliases: [附录]
+    domain: file_type
+
+  # 用户 demo query: "最新版本的规范文件"
+  - head: 规范
+    aliases: [规格说明, 技术规范]
+    domain: file_type
+
+  # 用户 demo query: "产品的需求文档"
+  - head: 需求文档
+    aliases: [需求说明, 产品需求]
+    domain: file_type
+
+  # ——————————————————————————————————————————
+  # 桶 3：媒体文件（12 组）
+  # ——————————————————————————————————————————
+
+  # 用户 demo query: "找最近的截图"
+  - head: 截图
+    aliases: [截屏, 屏幕截图]
+    domain: media
+
+  # 用户 demo query: "手机里的照片"
+  - head: 照片
+    aliases: [相片, 图片]
+    domain: media
+
+  # 用户 demo query: "上次录的视频"
+  - head: 视频
+    aliases: [影片, 录像]
+    domain: media
+
+  # 用户 demo query: "会议录音文件"
+  - head: 录音
+    aliases: [音频, 语音录音]
+    domain: media
+
+  # 用户 demo query: "头像换一张"
+  - head: 头像
+    aliases: [个人头像, 用户头像]
+    domain: media
+
+  # 用户 demo query: "桌面壁纸文件夹"
+  - head: 壁纸
+    aliases: [桌面壁纸, 桌面背景]
+    domain: media
+
+  # 用户 demo query: "封面图片用哪张"
+  - head: 封面图
+    aliases: [封面照片, 缩略图]
+    domain: media
+
+  # 用户 demo query: "图标素材包"
+  - head: 图标
+    aliases: [图标素材]
+    domain: media
+
+  # 用户 demo query: "直播的片段剪辑"
+  - head: 片段
+    aliases: [剪辑, 视频片段]
+    domain: media
+
+  # 用户 demo query: "产品的动图"
+  - head: 动图
+    aliases: [动态图, 动态图片]
+    domain: media
+
+  # 用户 demo query: "背景音乐文件"
+  - head: 背景音乐
+    aliases: [配乐, 音乐素材]
+    domain: media
+
+  # 用户 demo query: "语音备忘录"
+  - head: 语音备忘
+    aliases: [语音笔记, 语音记录]
+    domain: media
+
+  # ——————————————————————————————————————————
+  # 桶 4：文档管理（11 组）
+  # ——————————————————————————————————————————
+
+  # 用户 demo query: "找之前签的合同"
+  - head: 合同
+    aliases: [协议, 合约]
+    domain: document
+
+  # 用户 demo query: "上次出差的发票"
+  - head: 发票
+    aliases: [票据, 收据]
+    domain: document
+
+  # 用户 demo query: "餐饮报销的单据"
+  - head: 报销
+    aliases: [报账, 费用报销]
+    domain: document
+
+  # 用户 demo query: "身份证扫描件"
+  - head: 证件
+    aliases: [证明文件, 身份证件]
+    domain: document
+
+  # 用户 demo query: "公司盖章的授权书"
+  - head: 授权书
+    aliases: [委托书, 授权文件]
+    domain: document
+
+  # 用户 demo query: "给供应商的通知"
+  - head: 通知
+    aliases: [公告, 通告]
+    domain: document
+
+  # 用户 demo query: "客户邀请函模板"
+  - head: 邀请函
+    aliases: [邀请信, 邀请书]
+    domain: document
+
+  # 用户 demo query: "项目验收报告"
+  - head: 报告
+    aliases: [调研报告, 分析报告]
+    domain: document
+
+  # 用户 demo query: "产品说明书在哪"
+  - head: 说明书
+    aliases: [使用说明, 产品说明]
+    domain: document
+
+  # 用户 demo query: "公司注册的营业执照"
+  - head: 营业执照
+    aliases: [执照, 经营许可]
+    domain: document
+
+  # 用户 demo query: "上次谈判的备忘录"
+  - head: 备忘录
+    aliases: [备忘, 备忘事项]
+    domain: document
+
+  # ——————————————————————————————————————————
+  # 桶 5：个人 / 家庭（10 组）
+  # ——————————————————————————————————————————
+
+  # 用户 demo query: "读书时候写的笔记"
+  - head: 笔记
+    aliases: [札记, 读书笔记]
+    domain: personal
+
+  # 用户 demo query: "产品的设计稿"
+  - head: 设计稿
+    aliases: [设计文件, 设计图]
+    domain: design
+
+  # 用户 demo query: "个人日记文件"
+  - head: 日记
+    aliases: [日志, 私人日记]
+    domain: personal
+
+  # 用户 demo query: "学习记录在哪"
+  - head: 学习记录
+    aliases: [学习笔记, 学习日志]
+    domain: personal
+
+  # 用户 demo query: "妈妈的食谱文件"
+  - head: 食谱
+    aliases: [菜谱, 烹饪食谱]
+    domain: personal
+
+  # 用户 demo query: "去日本的旅行计划"
+  - head: 旅行计划
+    aliases: [旅游攻略, 出行计划]
+    domain: personal
+
+  # 用户 demo query: "体检报告存哪了"
+  - head: 体检报告
+    aliases: [健康报告, 体检结果]
+    domain: personal
+
+  # 用户 demo query: "家庭账单整理"
+  - head: 账单
+    aliases: [账单记录, 消费清单]
+    domain: personal
+
+  # 用户 demo query: "家庭通讯录"
+  - head: 通讯录
+    aliases: [联系人列表, 联系人]
+    domain: personal
+
+  # 用户 demo query: "电影观看清单"
+  - head: 清单
+    aliases: [待办清单, 任务清单]
+    domain: personal

@@ -1,0 +1,1113 @@
+[
+  {
+    "id": "c001",
+    "bucket": "synonym",
+    "query": "找一下我的述职报告",
+    "relevant": [
+      {
+        "doc_id": "s00035",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00058",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c002",
+    "bucket": "synonym",
+    "query": "提升测试覆盖的那份倡议",
+    "relevant": [
+      {
+        "doc_id": "s00036",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00059",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c003",
+    "bucket": "synonym",
+    "query": "本季度团队要冲的几个指标",
+    "relevant": [
+      {
+        "doc_id": "s00037",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c004",
+    "bucket": "synonym",
+    "query": "招新员工头几天该干什么的指南",
+    "relevant": [
+      {
+        "doc_id": "s00005",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00006",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c005",
+    "bucket": "synonym",
+    "query": "把开会结论记下来的写法",
+    "relevant": [
+      {
+        "doc_id": "s00021",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00022",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c006",
+    "bucket": "synonym",
+    "query": "在家办公领电脑的须知",
+    "relevant": [
+      {
+        "doc_id": "s00041",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00001",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c007",
+    "bucket": "synonym",
+    "query": "处理客诉工单的操作手册",
+    "relevant": [
+      {
+        "doc_id": "s00023",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00024",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c008",
+    "bucket": "synonym",
+    "query": "短期外包人员入职怎么弄",
+    "relevant": [
+      {
+        "doc_id": "s00077",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c009",
+    "bucket": "synonym",
+    "query": "怎么写让人看得懂的提交说明",
+    "relevant": [
+      {
+        "doc_id": "s00080",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c010",
+    "bucket": "synonym",
+    "query": "出差花的钱怎么报",
+    "relevant": [
+      {
+        "doc_id": "s00013",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00014",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c011",
+    "bucket": "synonym",
+    "query": "公司给的假怎么休、能不能在家上班",
+    "relevant": [
+      {
+        "doc_id": "s00001",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00002",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c012",
+    "bucket": "synonym",
+    "query": "把旧代码里的烂账理一理的计划",
+    "relevant": [
+      {
+        "doc_id": "s00029",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00030",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c013",
+    "bucket": "concept",
+    "query": "那篇讲怎么让团队不互相甩锅的文章",
+    "relevant": [
+      {
+        "doc_id": "s00031",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00032",
+        "grade": 2
+      }
+    ]
+  },
+  {
+    "id": "c014",
+    "bucket": "concept",
+    "query": "讲不批评个人、只看流程问题的复盘文化那篇",
+    "relevant": [
+      {
+        "doc_id": "s00032",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00031",
+        "grade": 2
+      }
+    ]
+  },
+  {
+    "id": "c015",
+    "bucket": "concept",
+    "query": "讨论怎么长时间不被打扰地专心做事的笔记",
+    "relevant": [
+      {
+        "doc_id": "s00007",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00008",
+        "grade": 2
+      }
+    ]
+  },
+  {
+    "id": "c016",
+    "bucket": "concept",
+    "query": "讲微习惯怎么靠积累改变自己的读书心得",
+    "relevant": [
+      {
+        "doc_id": "s00076",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c017",
+    "bucket": "concept",
+    "query": "用户记得文件讲啥却忘了叫啥的痛点",
+    "relevant": [
+      {
+        "doc_id": "s00039",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00060",
+        "grade": 2
+      }
+    ]
+  },
+  {
+    "id": "c018",
+    "bucket": "concept",
+    "query": "把每天精力当稀缺预算来分配的观点",
+    "relevant": [
+      {
+        "doc_id": "s00007",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00008",
+        "grade": 2
+      }
+    ]
+  },
+  {
+    "id": "c019",
+    "bucket": "concept",
+    "query": "保护系统不被请求洪峰打垮的几种限流思路",
+    "relevant": [
+      {
+        "doc_id": "s00081",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c020",
+    "bucket": "concept",
+    "query": "让搜索懂意思而不是只对字面的诉求",
+    "relevant": [
+      {
+        "doc_id": "s00060",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00039",
+        "grade": 2
+      },
+      {
+        "doc_id": "s00042",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c021",
+    "bucket": "concept",
+    "query": "唯一负责人比一群人共同负责更靠谱的论点",
+    "relevant": [
+      {
+        "doc_id": "s00032",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00031",
+        "grade": 2
+      }
+    ]
+  },
+  {
+    "id": "c022",
+    "bucket": "concept",
+    "query": "不上传云端、在本机找文件的产品设想",
+    "relevant": [
+      {
+        "doc_id": "s00042",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c023",
+    "bucket": "concept",
+    "query": "把当天精力留给最重要的事、给意外留余地",
+    "relevant": [
+      {
+        "doc_id": "s00092",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c024",
+    "bucket": "concept",
+    "query": "讲身份认同驱动改变比追结果更有效的笔记",
+    "relevant": [
+      {
+        "doc_id": "s00076",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c025",
+    "bucket": "crosslang",
+    "query": "年假规定和在家办公能休几天",
+    "relevant": [
+      {
+        "doc_id": "s00002",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00001",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c026",
+    "bucket": "crosslang",
+    "query": "订单接口的两级缓存怎么设计",
+    "relevant": [
+      {
+        "doc_id": "s00004",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00003",
+        "grade": 1
+      },
+      {
+        "doc_id": "s00040",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c027",
+    "bucket": "crosslang",
+    "query": "新人头一周的安排",
+    "relevant": [
+      {
+        "doc_id": "s00006",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00005",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c028",
+    "bucket": "crosslang",
+    "query": "信息安全意识培训讲什么",
+    "relevant": [
+      {
+        "doc_id": "s00020",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00019",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c029",
+    "bucket": "crosslang",
+    "query": "对外接口的字段命名和分页约定",
+    "relevant": [
+      {
+        "doc_id": "s00016",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00015",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c030",
+    "bucket": "crosslang",
+    "query": "差旅报销的标准和时限",
+    "relevant": [
+      {
+        "doc_id": "s00014",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00013",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c031",
+    "bucket": "crosslang",
+    "query": "下季度预算怎么填报",
+    "relevant": [
+      {
+        "doc_id": "s00018",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00017",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c032",
+    "bucket": "crosslang",
+    "query": "海边玩两天的行程",
+    "relevant": [
+      {
+        "doc_id": "s00026",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00025",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c033",
+    "bucket": "crosslang",
+    "query": "搜索结果按文件类型分组的需求",
+    "relevant": [
+      {
+        "doc_id": "s00028",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00027",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c034",
+    "bucket": "crosslang",
+    "query": "开源依赖许可证合规要注意什么",
+    "relevant": [
+      {
+        "doc_id": "s00010",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00009",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c035",
+    "bucket": "crosslang",
+    "query": "首页打开慢怎么优化的复盘",
+    "relevant": [
+      {
+        "doc_id": "s00012",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00011",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c036",
+    "bucket": "crosslang",
+    "query": "how do we cut cross-team blame and fix ownership",
+    "relevant": [
+      {
+        "doc_id": "s00031",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00032",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c037",
+    "bucket": "crosslang",
+    "query": "rules for reimbursing business trip costs",
+    "relevant": [
+      {
+        "doc_id": "s00013",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00014",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c038",
+    "bucket": "content-not-name",
+    "query": "提到要先扩缓存再加机器的那份评审意见",
+    "relevant": [
+      {
+        "doc_id": "s00040",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00003",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c039",
+    "bucket": "content-not-name",
+    "query": "里面说命中率低于阈值就告警的缓存方案",
+    "relevant": [
+      {
+        "doc_id": "s00003",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00004",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c040",
+    "bucket": "content-not-name",
+    "query": "讲热点键加互斥锁、过期时间加随机抖动的设计",
+    "relevant": [
+      {
+        "doc_id": "s00003",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00004",
+        "grade": 2
+      }
+    ]
+  },
+  {
+    "id": "c041",
+    "bucket": "content-not-name",
+    "query": "那份说同一查询多次跑结果不一致、要加确定性次级排序的记录",
+    "relevant": [
+      {
+        "doc_id": "s00038",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c042",
+    "bucket": "content-not-name",
+    "query": "建议把覆盖率纳入合并前检查、慢测试拆并行的提案",
+    "relevant": [
+      {
+        "doc_id": "s00036",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00059",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c043",
+    "bucket": "content-not-name",
+    "query": "讲先持久化再失效缓存、避免脏读的英文方案",
+    "relevant": [
+      {
+        "doc_id": "s00004",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00003",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c044",
+    "bucket": "content-not-name",
+    "query": "里面提到把交接点写成清单、谁交付给谁的建议",
+    "relevant": [
+      {
+        "doc_id": "s00031",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00032",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c045",
+    "bucket": "content-not-name",
+    "query": "the note that says detection lagged because the alert threshold was too loose",
+    "relevant": [
+      {
+        "doc_id": "s00078",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c046",
+    "bucket": "content-not-name",
+    "query": "讲休假未休额度年底不结转、特殊情况可顺延一季的制度",
+    "relevant": [
+      {
+        "doc_id": "s00001",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00002",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c047",
+    "bucket": "content-not-name",
+    "query": "那份说图片懒加载、首屏合并一次请求、脚本延后的复盘",
+    "relevant": [
+      {
+        "doc_id": "s00011",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00012",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c048",
+    "bucket": "content-not-name",
+    "query": "the doc warning never to enter credentials on an unfamiliar page",
+    "relevant": [
+      {
+        "doc_id": "s00020",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00019",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c049",
+    "bucket": "exact-name",
+    "query": "年假与远程办公制度（v3）",
+    "relevant": [
+      {
+        "doc_id": "s00001",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c050",
+    "bucket": "exact-name",
+    "query": "订单服务分布式缓存设计方案",
+    "relevant": [
+      {
+        "doc_id": "s00003",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c051",
+    "bucket": "exact-name",
+    "query": "Security Awareness Training Outline",
+    "relevant": [
+      {
+        "doc_id": "s00020",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c052",
+    "bucket": "exact-name",
+    "query": "年度工作总结（个人述职）",
+    "relevant": [
+      {
+        "doc_id": "s00035",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c053",
+    "bucket": "exact-name",
+    "query": "Caching Architecture Proposal for the Booking Tier",
+    "relevant": [
+      {
+        "doc_id": "s00004",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c054",
+    "bucket": "exact-name",
+    "query": "技术债盘点与偿还计划",
+    "relevant": [
+      {
+        "doc_id": "s00029",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c055",
+    "bucket": "exact-name",
+    "query": "Public Endpoint Design Conventions",
+    "relevant": [
+      {
+        "doc_id": "s00016",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c056",
+    "bucket": "exact-name",
+    "query": "项目立项申请:本地个人搜索助手",
+    "relevant": [
+      {
+        "doc_id": "s00042",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c057",
+    "bucket": "exact-name",
+    "query": "差旅报销实施细则",
+    "relevant": [
+      {
+        "doc_id": "s00013",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c058",
+    "bucket": "exact-name",
+    "query": "Reading Notes on Sustained Concentration",
+    "relevant": [
+      {
+        "doc_id": "s00008",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c059",
+    "bucket": "exact-name",
+    "query": "团队责任边界与协作机制建议",
+    "relevant": [
+      {
+        "doc_id": "s00031",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c060",
+    "bucket": "content-not-name",
+    "query": "那份说重试机制要用指数退避配合抖动二者结合的方案",
+    "relevant": [
+      {
+        "doc_id": "s00109",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00110",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c061",
+    "bucket": "content-not-name",
+    "query": "提到 A/B 实验最小样本量按统计功效算的复盘记录",
+    "relevant": [
+      {
+        "doc_id": "s00111",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c062",
+    "bucket": "content-not-name",
+    "query": "讲冷启动数据稀疏用人工冷启池规则的方案",
+    "relevant": [
+      {
+        "doc_id": "s00112",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00113",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c063",
+    "bucket": "content-not-name",
+    "query": "那篇关于多语言客服话术规约的内容",
+    "relevant": [
+      {
+        "doc_id": "s00023",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00024",
+        "grade": 2
+      }
+    ]
+  },
+  {
+    "id": "c064",
+    "bucket": "content-not-name",
+    "query": "提到内部 IM 表情包审核制度的那份",
+    "relevant": [
+      {
+        "doc_id": "s00114",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00115",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c065",
+    "bucket": "content-not-name",
+    "query": "the spec saying retries must use truncated exponential backoff with jitter",
+    "relevant": [
+      {
+        "doc_id": "s00110",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00109",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c066",
+    "bucket": "content-not-name",
+    "query": "the doc explaining cold-start data sparsity with manual cold pool rules",
+    "relevant": [
+      {
+        "doc_id": "s00113",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00112",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c067",
+    "bucket": "content-not-name",
+    "query": "the policy on internal IM emoji approval workflow",
+    "relevant": [
+      {
+        "doc_id": "s00115",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00114",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c068",
+    "bucket": "content-not-name",
+    "query": "the writeup on multilingual customer support phrasing conventions",
+    "relevant": [
+      {
+        "doc_id": "s00024",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00023",
+        "grade": 2
+      }
+    ]
+  },
+  {
+    "id": "c069",
+    "bucket": "content-not-name",
+    "query": "那份说复盘要按 5 Whys 一层层追问、不归责到个人的模板",
+    "relevant": [
+      {
+        "doc_id": "s00116",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00117",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c070",
+    "bucket": "content-not-name",
+    "query": "提到灰度发布要按 5% / 25% / 100% 三档放量、错误率超阈值自动回滚的方案",
+    "relevant": [
+      {
+        "doc_id": "s00118",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00119",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c071",
+    "bucket": "content-not-name",
+    "query": "讲对外接口废弃要提前两个版本告知、保留至少一个 LTS 周期的约定",
+    "relevant": [
+      {
+        "doc_id": "s00120",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00121",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c072",
+    "bucket": "content-not-name",
+    "query": "the postmortem template asking five rounds of why without naming individuals",
+    "relevant": [
+      {
+        "doc_id": "s00117",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00116",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c073",
+    "bucket": "content-not-name",
+    "query": "the runbook describing canary deployment with auto-rollback when error rate exceeds threshold",
+    "relevant": [
+      {
+        "doc_id": "s00119",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00118",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c074",
+    "bucket": "content-not-name",
+    "query": "the policy stating API deprecation must give two-version notice and one LTS cycle",
+    "relevant": [
+      {
+        "doc_id": "s00121",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00120",
+        "grade": 1
+      }
+    ]
+  },
+  {
+    "id": "c075",
+    "bucket": "content-not-name",
+    "query": "那份按 P0 / P1 / P2 分级、P0 半小时升级到 leader 的告警制度",
+    "relevant": [
+      {
+        "doc_id": "s00122",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c076",
+    "bucket": "content-not-name",
+    "query": "提到异常日志要带 trace_id / span_id / 错误码三个字段的规范",
+    "relevant": [
+      {
+        "doc_id": "s00123",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c077",
+    "bucket": "content-not-name",
+    "query": "那份说首屏指标对比要按 P50 / P95 各画一张图、配版本号纵线的设计",
+    "relevant": [
+      {
+        "doc_id": "s00011",
+        "grade": 3
+      },
+      {
+        "doc_id": "s00012",
+        "grade": 2
+      }
+    ]
+  },
+  {
+    "id": "c078",
+    "bucket": "content-not-name",
+    "query": "the policy explaining data retention with anonymization after the retention window",
+    "relevant": [
+      {
+        "doc_id": "s00124",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c079",
+    "bucket": "content-not-name",
+    "query": "故障复盘怎么用 5 Whys 一层层追到根因并落实改进项",
+    "relevant": [
+      {
+        "doc_id": "s00125",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c080",
+    "bucket": "content-not-name",
+    "query": "progressive rollout playbook with traffic splitting and rollback triggers",
+    "relevant": [
+      {
+        "doc_id": "s00126",
+        "grade": 3
+      }
+    ]
+  },
+  {
+    "id": "c081",
+    "bucket": "crosslang",
+    "query": "日志按冷热分层保存多久、什么时候归档、合规审计怎么走",
+    "relevant": [
+      {
+        "doc_id": "s00127",
+        "grade": 3
+      }
+    ]
+  }
+]

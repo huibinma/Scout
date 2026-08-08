@@ -1,0 +1,103 @@
+﻿# scoutd 企业三场景测试配置示例。
+# 路径使用相对占位；实际运行时替换为本目录的绝对路径。
+
+[server]
+bind = "127.0.0.1:8765"
+
+[audit]
+log_query = true
+
+[[collections]]
+id = "case-2026-blueharbor"
+display_name = "蓝湾贸易合同纠纷案（一审）"
+subject_kind = "case"
+roots = ["test-materials/enterprise-scenarios-raw/lawfirm/case-2026-blueharbor"]
+read_only = true
+audit_tags = ["litigation", "contract-dispute"]
+# BETA-43：缺省 false（read_document 仅片段模式）；显式 true 才放开全文读取。
+allow_full_read = false
+
+[[collections]]
+id = "case-2026-northfield"
+display_name = "北原并购尽调项目"
+subject_kind = "case"
+roots = ["test-materials/enterprise-scenarios-raw/lawfirm/case-2026-northfield"]
+read_only = false
+audit_tags = ["ma", "due-diligence", "conflict-wall"]
+
+[[collections]]
+id = "audit-2026-procurement"
+display_name = "2026 行政采购专项审计"
+subject_kind = "audit_project"
+roots = ["test-materials/enterprise-scenarios-raw/audit/audit-2026-procurement"]
+read_only = true
+audit_tags = ["audit", "procurement", "q2-2026"]
+
+[[collections]]
+id = "audit-2025-facilities"
+display_name = "2025 设施维护专项审计"
+subject_kind = "audit_project"
+roots = ["test-materials/enterprise-scenarios-raw/audit/audit-2025-facilities"]
+read_only = true
+audit_tags = ["audit", "facilities", "negative-sample"]
+
+[[collections]]
+id = "offboarding-lishili-tech"
+display_name = "李示例 · 技术交接归档"
+subject_kind = "employee"
+roots = ["test-materials/enterprise-scenarios-raw/offboarding/lishili-tech"]
+read_only = true
+audit_tags = ["offboarding", "tech-handover"]
+
+[[collections]]
+id = "offboarding-lishili-hr"
+display_name = "李示例 · HR 手续归档"
+subject_kind = "employee"
+roots = ["test-materials/enterprise-scenarios-raw/offboarding/lishili-hr"]
+read_only = true
+audit_tags = ["offboarding", "hr-sensitive"]
+
+[[collections]]
+id = "offboarding-other-tech"
+display_name = "王样本 · 技术交接归档"
+subject_kind = "employee"
+roots = ["test-materials/enterprise-scenarios-raw/offboarding/other-employee-tech"]
+read_only = true
+audit_tags = ["offboarding", "negative-sample"]
+
+[[tokens]]
+token = "test-token-lawyer-zhang-0123456789abcdef01234567"
+subject = "zhang.san"
+collections = ["case-2026-blueharbor"]
+
+[[tokens]]
+token = "test-token-lawyer-li-0123456789abcdef01234567"
+subject = "li.si"
+collections = ["case-2026-northfield"]
+
+[[tokens]]
+token = "test-token-auditor-wang-0123456789abcdef01234567"
+subject = "auditor.wang"
+collections = ["audit-2026-procurement"]
+
+[[tokens]]
+token = "test-token-reviewer-chen-0123456789abcdef01234567"
+subject = "reviewer.chen"
+collections = ["audit-2026-procurement"]
+
+[[tokens]]
+token = "test-token-successor-0123456789abcdef01234567"
+subject = "wang.yangben"
+collections = ["offboarding-lishili-tech"]
+
+[[tokens]]
+token = "test-token-hr-0123456789abcdef01234567"
+subject = "hr.zhao"
+collections = ["offboarding-lishili-hr"]
+
+[[tokens]]
+token = "test-token-admin-0123456789abcdef01234567"
+subject = "it.ops"
+collections = ["*"]
+admin = true
+

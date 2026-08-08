@@ -1,0 +1,24 @@
+path	scenario	format	purpose
+audit/acceptance-shortage-scanned.pdf	audit	pdf	real-format fixture
+audit/audit-fieldwork-brief.pptx	audit	pptx	real-format fixture
+audit/bank-payment-receipt-scanned.pdf	audit	pdf	real-format fixture
+audit/invoice-morningstar-scanned.pdf	audit	pdf	real-format fixture
+audit/orion-procurement-contract.docx	audit	docx	real-format fixture
+audit/quotation-scoring.xlsx	audit	xlsx	real-format fixture
+audit/warehouse-acceptance-photo.png	audit	png	real-format fixture
+lawfirm/blueharbor-judgment-scanned.pdf	lawfirm	pdf	real-format fixture
+lawfirm/blueharbor-judgment-text-layer.pdf	lawfirm	pdf	real-format fixture
+lawfirm/contract-supply-equipment.docx	lawfirm	docx	real-format fixture
+lawfirm/delay-loss-calculation.xlsx	lawfirm	xlsx	real-format fixture
+lawfirm/evidence-delivery-site.jpg	lawfirm	jpg	real-format fixture
+lawfirm/settlement-brief.pptx	lawfirm	pptx	real-format fixture
+lawfirm/trial-transcript-scanned.pdf	lawfirm	pdf	real-format fixture
+offboarding/database-account-permissions.xlsx	offboarding	xlsx	real-format fixture
+offboarding/exit-confirmation-scanned.pdf	offboarding	pdf	real-format fixture
+offboarding/hr-nda-scanned.pdf	offboarding	pdf	real-format fixture
+offboarding/kunpeng-api-authentication.docx	offboarding	docx	real-format fixture
+offboarding/kunpeng-dashboard-screenshot.png	offboarding	png	real-format fixture
+offboarding/kunpeng-oncall-runbook.docx	offboarding	docx	real-format fixture
+offboarding/lighthouse-architecture.pptx	offboarding	pptx	real-format fixture
+offboarding/lighthouse-report-screenshot.jpg	offboarding	jpg	real-format fixture
+README.md	README.md	md	real-format fixture

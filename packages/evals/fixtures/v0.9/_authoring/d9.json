@@ -1,0 +1,147 @@
+[
+  {
+    "id": "v09-d9-zh-001",
+    "query": "找 pdf 和 doc 文件",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "extensions": [
+        "doc",
+        "docx",
+        "pdf"
+      ],
+      "sort": "modified_desc",
+      "file_type": "document"
+    }
+  },
+  {
+    "id": "v09-d9-zh-002",
+    "query": "把 pdf 和图片都找出来",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": [
+        "document",
+        "image"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d9-zh-003",
+    "query": "word 或 excel 文档",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": [
+        "document",
+        "spreadsheet"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d9-zh-004",
+    "query": "音乐和视频",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": [
+        "audio",
+        "video"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d9-zh-005",
+    "query": "截图和视频都列出来",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "file_type": [
+        "screenshot",
+        "video"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d9-zh-006",
+    "query": "音乐视频",
+    "language": "zh",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "zh",
+      "media_type": "video",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d9-en-001",
+    "query": "find pdf and doc files",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "extensions": [
+        "doc",
+        "docx",
+        "pdf"
+      ],
+      "sort": "modified_desc",
+      "file_type": "document"
+    }
+  },
+  {
+    "id": "v09-d9-en-002",
+    "query": "music and videos",
+    "language": "en",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "file_type": [
+        "audio",
+        "video"
+      ],
+      "sort": "modified_desc"
+    }
+  },
+  {
+    "id": "v09-d9-en-003",
+    "query": "music video",
+    "language": "en",
+    "expected_intent": {
+      "intent": "media_search",
+      "schema_version": "1.0",
+      "language": "en",
+      "media_type": "video",
+      "sort": "relevance_desc"
+    }
+  },
+  {
+    "id": "v09-d9-mixed-001",
+    "query": "找 video 文件",
+    "language": "mixed",
+    "expected_intent": {
+      "intent": "file_search",
+      "schema_version": "1.0",
+      "language": "mixed",
+      "file_type": "video",
+      "sort": "modified_desc"
+    }
+  }
+]
