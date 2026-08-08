@@ -382,6 +382,11 @@ body {
   border-color: var(--accent);
 }
 
+.prefs-kbd.disabled {
+  color: var(--muted);
+  background: var(--workspace-bg);
+}
+
 /* 2026-07-06（cycle 9 真机反馈二轮）：三行卡片式——纵向排（路径 / 统计 / 操作），
    单行 flex 会把路径挤到极窄逐字断行。卡片间用下边框分隔。 */
 .prefs-root-row {

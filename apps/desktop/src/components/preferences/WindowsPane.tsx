@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { AppSettings } from "../../hooks/useAppSettings";
 
 type WinIndexStatus = "Indexed" | "NotIndexed" | "Unknown" | "NotApplicable";
 
@@ -8,16 +7,12 @@ type WinIndexStatus = "Indexed" | "NotIndexed" | "Unknown" | "NotApplicable";
  * BETA-47：「Windows」系统集成面板（仅 Windows tab 树中出现）。
  * Windows 搜索服务（WSearch）状态检测 + 打开系统「索引选项」——与快速入门第 1 步
  * （WindowsSearchCheckStep）同一探测命令，装完后从选项页也能随时复查。
- * 2026-07-26：加「关闭到托盘」开关（settings.close_to_tray，Rust 侧 main.rs 的
- * CloseRequested 拦截 + tray.rs 消费）。
+ * 2026-07-26：曾加过「关闭到托盘」开关（settings.close_to_tray，Rust 侧 main.rs 的
+ * CloseRequested 拦截 + tray.rs 消费）；2026-08-08 挪去 GeneralPane 顶部与「全局
+ * 唤起快捷键」合并——两者是同一件事的一体两面（关窗不驻留托盘则快捷键唤不起已退出
+ * 的进程），合并后快捷键录制器能直接反映这层依赖，不再各自为政。
  */
-export function WindowsPane({
-  settings,
-  setSettings,
-}: {
-  settings: AppSettings;
-  setSettings: (s: AppSettings) => void;
-}) {
+export function WindowsPane() {
   // null = 首次检测中。
   const [status, setStatus] = useState<WinIndexStatus | null>(null);
   const [msg, setMsg] = useState("");
@@ -91,28 +86,6 @@ export function WindowsPane({
           </button>
           {msg && <span className="prefs-status">{msg}</span>}
         </div>
-      </div>
-
-      <div className="prefs-field">
-        <label className="prefs-checkbox">
-          <input
-            type="checkbox"
-            checked={settings.close_to_tray}
-            onChange={(e) =>
-              setSettings({ ...settings, close_to_tray: e.target.checked })
-            }
-          />
-          <span>
-            <strong>关闭窗口时驻留系统托盘</strong>
-            <br />
-            <span className="prefs-hint">
-              开启后，点窗口右上角关闭按钮只隐藏窗口——Scout
-              继续在后台索引、监听全局快捷键；系统托盘保留一个常驻图标，随时可通过{" "}
-              <code>{settings.global_shortcut}</code>{" "}
-              或托盘图标唤起。托盘菜单里的「退出 Scout」才会真正退出程序。关闭本开关后，关窗恢复为直接退出。
-            </span>
-          </span>
-        </label>
       </div>
     </div>
   );

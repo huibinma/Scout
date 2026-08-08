@@ -14,7 +14,18 @@ import {
  * 不必等重启后发现快捷键唤不起来；也因此不经「常规」表单的整体 Save，
  * 避免挂载时的旧快照把刚生效的新值冲回去。
  */
-export function ShortcutRecorder({ initialValue }: { initialValue: string }) {
+export function ShortcutRecorder({
+  initialValue,
+  disabled = false,
+  disabledHint,
+}: {
+  initialValue: string;
+  /** 为 true 时只读展示当前值、不可录制——用于「关窗即退出时快捷键其实唤不起来」
+   *  这类场景，调用方（GeneralPane）负责判断何时禁用，本组件不关心具体原因。 */
+  disabled?: boolean;
+  /** disabled 为 true 时替换默认提示文案，说明为什么现在改不了。 */
+  disabledHint?: string;
+}) {
   const [current, setCurrent] = useState(
     initialValue || DEFAULT_GLOBAL_SHORTCUT,
   );
@@ -39,6 +50,12 @@ export function ShortcutRecorder({ initialValue }: { initialValue: string }) {
       setBusy(false);
     }
   };
+
+  useEffect(() => {
+    // 录制过程中外部条件变化（如用户顺手关掉了「关闭窗口时驻留系统托盘」）
+    // 导致快捷键变不可用——立刻退出录制，别让用户对着一个不会生效的输入框按键。
+    if (disabled && recording) setRecording(false);
+  }, [disabled, recording]);
 
   useEffect(() => {
     if (!recording) return;
@@ -74,13 +91,15 @@ export function ShortcutRecorder({ initialValue }: { initialValue: string }) {
     <div className="prefs-field">
       <label className="prefs-label">全局唤起快捷键</label>
       <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-        <kbd className={`prefs-kbd${recording ? " recording" : ""}`}>
+        <kbd
+          className={`prefs-kbd${recording ? " recording" : ""}${disabled ? " disabled" : ""}`}
+        >
           {recording ? "请按下新的快捷键…" : formatShortcutForDisplay(current)}
         </kbd>
         <button
           type="button"
           className="prefs-btn small"
-          disabled={busy}
+          disabled={busy || disabled}
           onClick={() => setRecording((r) => !r)}
         >
           {recording ? "取消（Esc）" : "修改"}
@@ -89,7 +108,7 @@ export function ShortcutRecorder({ initialValue }: { initialValue: string }) {
           <button
             type="button"
             className="prefs-btn small"
-            disabled={busy || recording}
+            disabled={busy || recording || disabled}
             onClick={() => void apply(DEFAULT_GLOBAL_SHORTCUT)}
           >
             恢复默认
@@ -105,9 +124,11 @@ export function ShortcutRecorder({ initialValue }: { initialValue: string }) {
         </p>
       )}
       <p className="prefs-hint">
-        点击「修改」后按下想要的组合键（须含 Ctrl / Alt / Shift / Cmd
-        中至少一个修饰键）。若与其他程序冲突会当场提示、不会保存；按 Esc
-        取消录制。
+        {disabled && disabledHint
+          ? disabledHint
+          : "点击「修改」后按下想要的组合键（须含 Ctrl / Alt / Shift / Cmd " +
+            "中至少一个修饰键）。若与其他程序冲突会当场提示、不会保存；按 Esc " +
+            "取消录制。"}
       </p>
     </div>
   );
