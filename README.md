@@ -1,5 +1,7 @@
 # Scout
 
+![Scout 产品宣传图](./docs/marketing/scout-product-promo-16x9-zh.png)
+
 **Deep Local Search.** 一个面向 **AI agent** 的本地文件搜索工具——通过 [MCP](https://modelcontextprotocol.io/)（Model Context Protocol）把本地文件的语义检索能力开放给 Claude Code、Codex、Cline 或任何自研 agent 调用；同时也内置跨平台（macOS + Windows）桌面应用，可直接供人用自然语言搜索本机文件。本地优先、开源免费，MIT 许可。
 
 核心形态是 `scoutd`——一个 headless daemon，经 MCP 把自然语言语义检索、关键字文本检索、元数据等文件属性检索暴露为标准工具，供各类 agent 直接调用，适用于团队冷归档、审计取证等场景（agent 代人检索，而非人直接操作）。同一套检索能力也打包成桌面应用，供人直接使用：查找电脑里的文件、文档、音乐、图片、截图——记不清文件名、跨中英文也能找到，无需学习 Spotlight 操作符或 Everything 通配符语法。一切都在本地处理，不联网不上传数据。项目定位与目标场景以 [PROJECT.md](./PROJECT.md) 为准。
