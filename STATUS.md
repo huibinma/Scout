@@ -7,27 +7,23 @@
 ## 📍 速览
 
 - **阶段**：B（Beta）进行中；P ✅ / M 代码层 ✅，M→B 正式切换仍待 [ROADMAP §8](./ROADMAP.md) 长周期项；总体 parser-only evals 已达 99.4%（994/6/0、fail=0）。
-- **版本**：**v0.9.49 已 push + tag ⏳**（CI / Release macOS / Release Windows 已触发，结果未 poll 确认）。**仓库已转公开**：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
+- **版本**：**v0.9.50 已发布**（CI / Release macOS / Release Windows 三个 workflow 全绿，DMG + NSIS 资产已上传、changelog 已补全）。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
 - **定位**：开源免费（MIT）本地语义检索底座——**面向 agent 的本地文件搜索工具**（经 MCP 接入 Claude Code / Codex 等），同时提供桌面应用供人直接使用；不做分析层，分析经 MCP daemon + 外部 LLM 组合。口号 **Deep Local Search**。以 [PROJECT.md](./PROJECT.md) 为准。
-- **当前 task**：**仓库转公开 + BETA-73 已完成**——详见下方「当前 Task」节。
-- **下一步 top-3**：① 确认 v0.9.49 CI / Release 产物结果并补 changelog；② 真机验证积压（BETA-64~73，均需真机走查）；③ 获取设计伙伴/首个真实部署。
+- **当前 task**：**BETA-74 桌面自动更新已完成并发布**——详见下方「当前 Task」节。
+- **下一步 top-3**：① 自动更新「发现新版本」端到端真机回归（需下一个真实版本发布后测）；② 真机验证积压（BETA-64~74）；③ 获取设计伙伴/首个真实部署。
 - **阻塞**：Class A 仅剩双平台 evals 真机；Class B 已清零。
 
 ## 当前 Task
 
-**2026-08-08（最新）— 仓库转公开 + BETA-73：全局快捷键可自定义、与托盘驻留联动禁用**
+**2026-08-09（最新）— BETA-74：桌面自动更新（提前实现 V10-04），发布 v0.9.50**
 
-**仓库转公开**：`huibinma/Scout` 改名归档为 `huibinma/scout-archive`（private，保留完整 122 提交历史）；新建 `huibinma/Scout`（public，orphan 单提交 `c10f5e3` 起步，LociFind 时期内容与提交历史清零、作者身份统一 `huibinma@users.noreply.github.com`）；README 定位改写为"面向 agent 的本地文件搜索工具（经 MCP 接入）+ 供人直接用的桌面应用"，不再是"个人搜索 Agent"措辞。
-
-**BETA-73**：全局唤起快捷键改为真正可自定义——此前 UI 是禁用输入框、注册逻辑完全无视 settings.json；新增 `update_global_shortcut` 命令校验 + 重新注册 + 落盘，与其他程序冲突时当场报错、不落盘。默认值改回 `Ctrl+Space`（跨平台统一；BETA-72 刚改成 `Ctrl+Alt+S` 防冲突，本轮用户明确要求改回，已知取舍）。「关闭窗口时驻留系统托盘」从 WindowsPane 底部挪到常规面板顶部与快捷键合并一个分区，取消勾选（Windows 默认态）时快捷键录制器联动禁用——关窗不驻留托盘＝进程真退出，快捷键唤不起已退出的程序。详见 [ROADMAP BETA-73](./ROADMAP.md)。
-
-**本轮发版**：bump v0.9.49，已 push main + tag，CI / Release macOS / Release Windows 均已触发；用户明确无需等待结果，本轮未 poll 确认产物，下轮会话或用户自查。
+轻量自研（不接 `tauri-plugin-updater`，理由与 `$UpdateMode` 数据保留机制见 [ROADMAP BETA-74](./ROADMAP.md)）：默认每 4 小时轮询 GitHub Releases，发现新版本左下角提醒，点「更新」后台下载对应平台安装包静默安装（保留配置/索引/模型/MCP token），装完自动重启；「常规」设置新增开关 + 检查间隔（默认 4 小时，可调 30 分钟~24 小时）。bump v0.9.50，push + tag，CI/Release macOS/Release Windows 三个 workflow 全绿，`gh release edit` 已补真实 changelog。**插曲**：release 进行中用户要求"disable 掉签名 action"，排查发现 SignPath 集成从未提交/推送（仅 working tree 一份未 commit 的 diff），实际跑在 CI 上的 workflow 本就是未签名版本，无需改动，已说明并保持原状。
 
 ## 下一步
 
-1. **确认 v0.9.49 CI / Release 结果**：`gh run list`/`gh release view v0.9.49` 复查三个 workflow 是否全绿，成功后 `gh release edit v0.9.49 --notes` 补真实 changelog（本轮改动：全局快捷键可自定义 + 默认改回 Ctrl+Space + 与托盘驻留联动禁用）。
-2. **SignPath 代码签名工作流**：`.github/workflows/release-windows.yml`/`PROJECT.md`/`docs/install.md`/`README.md` 有一份**未提交**的 SignPath Foundation 免费签名集成改动（新增 `CODE_SIGNING.md`/`.signpath/artifact-configuration.xml`），本轮会话未触碰、留给用户/相关会话自行核对并提交。
-3. **真机验证积压（BETA-64~73）**：新设置页结构、数据目录统一迁移、`optimize_fts` 大库提速、多条件检索过滤、Windows 关闭到托盘、发现层枚举、快捷键/模型本地导入/gguf 多后端发现、本轮快捷键可自定义与托盘联动——均需 Windows/macOS 真机走查，清单见各 ROADMAP BETA 卡片。
+1. **自动更新端到端真机回归**：需下一个真实版本发布后，用旧版本装包实测「发现新版本 → 下载 → 安装 → 保留数据 → 自动重启」全链路（macOS + Windows）。
+2. **SignPath 代码签名工作流**：仍是**未提交**的本地改动（`.github/workflows/release-windows.yml` diff + `CODE_SIGNING.md` + `.signpath/` + `README.md`/`PROJECT.md`/`docs/install.md` 部分改动）——2026-08-09 用户确认证书申请暂搁置，下一会话**不要**主动完成/提交它，等用户明确重新推进。
+3. **真机验证积压（BETA-64~74）**：新设置页结构、数据目录统一迁移、`optimize_fts` 大库提速、多条件检索过滤、Windows 关闭到托盘、发现层枚举、快捷键/模型本地导入/gguf 多后端发现、快捷键可自定义与托盘联动、桌面自动更新——均需 Windows/macOS 真机走查，清单见各 ROADMAP BETA 卡片。
 4. **`SCOUT_ENABLE_EMBED` 默认禁用是否重新评估**：语义索引在生产默认配置下完全不工作，是否值得专门验证修复能否覆盖 v0.8.5 那次原始崩溃场景（需要真机 + 小范围受控测试，不能直接改默认值）。
 5. **embeddinggemma-300m 的 cosine_threshold 正式评审**：按 bge-m3 同款流程确定校准值后回填 `CALIBRATED_COSINE_THRESHOLDS`。
 6. **设计伙伴 / 首个真实部署获取**：律所卷宗、内部审计或离职归档任一场景。
@@ -39,10 +35,15 @@
 - **Class A（外部条件，阻塞出场评测、不阻塞代码）**：BETA-09(a)/MVP-26/28 双平台 evals——需 Windows 真机 + 完整 Spotlight 索引 macOS。
 - **Class B（产品决策）**：已全部清零。
 - **发布操作项**：无；GitHub CLI keyring 登录与 SSH push 均已验证。
+- **SignPath 集成暂缓**：2026-08-09 用户确认证书申请暂搁置，working tree 里的未提交改动保持原状，不要在未经用户确认时提交/推进。
 
 ## 会话日志
 
 > 摘要 ≤5 条；更早历史见 `git log`。
+
+### 2026-08-09 — Claude Code (Sonnet 5) — BETA-74：桌面自动更新（提前实现 V10-04），发布 v0.9.50
+
+**承接**：用户要求给桌面端做自动更新——定期检查 GitHub 新 Release、左下角提醒、点更新后台下载静默安装、保留配置数据 MCP token、装完自动重启；随后追加要求把「自动更新」「轮询间隔」做成设置项（默认开 + 4 小时，允许关闭 + 30 分钟~24 小时可调，原始需求是 8 小时后改 4 小时）。**关键决策**：技术方案用 AskUserQuestion 向用户核实后选「轻量自研」而非 `tauri-plugin-updater`——后者需生成新签名密钥对存 GitHub secret、且要改两个 Release workflow 生成合并 `latest.json`，两个 workflow 都标 `prerelease: true` 导致 GitHub `/releases/latest` 别名不可用还得另建固定 tag 托管 manifest，工作量和对发布流水线的改动明显更大；轻量方案直接调 GitHub Releases API + 下载既有安装包静默装，不碰 CI、不需要签名密钥。走读代码发现 `nsis/uninstall-hooks.nsh` 本就有 `$UpdateMode` 守卫，静默重装本就是官方支持的原地升级路径，settings.json/index.db/models/MCP token 全部自动保留，不需要自己另写保留逻辑。**产出**：新增 `update.rs`（镜像 `model_download.rs` 既有约定：reqwest stream 下载 + 进度 event + in-flight 守卫）+ `UpdateToast.tsx`/`useAutoUpdate.ts`（左下角四态 toast）；`settings.rs` 新增 `auto_update_enabled`/`auto_update_interval_minutes`（默认开 + 240 分钟，读取 clamp [30,1440]）+ `GeneralPane.tsx` 新增开关与间隔下拉，联动禁用。bump v0.9.50，push + tag，CI/Release macOS/Release Windows 三个 workflow 全部成功，`gh release edit` 补全真实 changelog。**插曲**：release 进行中用户提出"SignPath 签名暂时搁置，disable 掉 release workflow 里的签名 action"——排查发现 SignPath 集成从未提交/推送（只是 working tree 里一份未 commit 的 120 行 diff，此前 STATUS「下一步」条目已记录留给用户），实际跑在 CI 上的 `release-windows.yml` 本就是未签名版本（committed HEAD 从未含 SignPath 引用），无需任何改动，已向用户说明并保持原状不动。**验证**：Rust 新增 12 个单测全绿（版本比较/资产平台匹配/mock GitHub 响应解析/settings 默认值与 clamp 边界），`cargo test -p scout-desktop` 211 全绿，`clippy -D warnings`/`fmt --check` 在 macOS 与 `--target x86_64-pc-windows-gnu` 两目标均净；`tsc`/`vite build` 全绿；浏览器预览注入 `window.__TAURI_INTERNALS__` invoke/事件 stub，逐一截图验证左下角提醒四态定位与交互、设置页开关联动禁用、`update_settings` 保存回传正确值；针对真实 `api.github.com/repos/huibinma/Scout/releases` 拉取核对资产命名与匹配规则一致。**未尽事宜**：自动更新「发现新版本」真实路径未做端到端真机验证（需下一个真实版本发布后用旧版本装包测）；未加「手动检查更新」按钮、也未做失败时的权限提升重试，均超出用户原始需求范围、保持最小实现；SignPath 集成仍保持未提交搁置状态，等用户重新推进证书申请后再处理。
 
 ### 2026-08-08 — Claude Code (Sonnet 5) — 仓库转公开 + BETA-73：全局快捷键可自定义、与托盘驻留联动
 
@@ -51,8 +52,4 @@
 ### 2026-08-08 — Claude Code (Sonnet 5) — BETA-72：易用性四项（快捷键 / 模型本地导入 / 路径检测提示 / gguf 多后端发现）
 
 **承接**：用户提四项易用性问题：Everything 未装安装提示 + 快捷键防冲突；模型下载支持指定本地文件 + 统一"嵌入模型"措辞；"扫描本机 gguf"扩展多后端 + 路径覆盖"检测"给具体信息。**关键决策**：走读发现 winget 安装提示（`EverythingCheckStep.tsx`/`EverythingPane.tsx`）已在 BETA-71 前完整实现，报"已存在"而非重做，只改了确有缺口的快捷键默认值；模型本地导入复用已有 `import_local_model` 命令接原生文件选择器，不新建流程；gguf 多后端发现给 `windows-search`/`spotlight` 各加一个 `find_files_by_extension`，镜像 everything crate 已跑通的同名写法；`probe_model_file` 加 `kind` 参数复用 `resolve_target_paths`（单一信源），避免探测口径与加载口径 drift。**产出**：见 [ROADMAP BETA-72](./ROADMAP.md) 完整清单。**验证**：`scripts/ci.sh` 全套 + `--target x86_64-pc-windows-gnu` 交叉编译验证 Windows 专属分支 + `tsc`/`vite build` 全绿；`scoutd` e2e 3 个失败复现既有本机沙盒问题（本轮未触及该模块）。**未尽事宜**：均未做真机验证，需下一轮确认。
-
-### 2026-07-30 — Claude Code (Sonnet 5) — BETA-71：v0.9.46 Windows 真机回归四项修复
-
-**承接**：用户 v0.9.46 发布后在 Windows 真机连续四轮反馈：新图标不合适、按钮配色四种混用、Everything 检测按钮多余、快速入门第 3/4 步莫名跳过；之后又追加删除第 6 步示例板块与更新关于弹窗文案两项小需求。**关键决策**：图标直接 `git checkout v0.9.45 --` 逐文件回退而非重新设计，最小化改动面；按钮配色统一前先枚举全部实际用到的 `<button>`/内联样式点（而非只改样式表里的类），发现 Onboarding 六个文件里散落同款内联黑/橙样式，一并处理；诊断"步骤跳过"没有停在表面猜测"可能已下载过"，而是走读 `ModelDownloadStep.tsx` 的两个 `useEffect`，定位到只有它比其余 onboarding 步骤多一条"检测到已存在就静默推进"的 effect——这是唯一例外，据此判定是设计不一致而非用户环境问题，移除该 effect 而不是简单加长延时掩盖；顺带在同一文件发现 Rust 侧幂等短路缺体积校验的独立 bug，一并修复。删除示例板块前先验证其 `onPickExample` 的 `/?q=` 从未被 `SearchView.tsx` 消费，确认功能本就不生效、删除无损失。**产出**：见 [ROADMAP BETA-71](./ROADMAP.md) 完整清单（图标 9 文件回退、`styles.css`/Onboarding 6 文件/`SynonymsPane.tsx` 按钮配色统一、`EverythingPane.tsx`/`WindowsPane.tsx` 检测口径对齐、`ModelDownloadStep.tsx`+两平台 Onboarding 页 Onboarding 跳过修复、`model_download.rs` 幂等校验修复、`FirstIndexStep.tsx` 示例板块删除 + `ExampleQueries.tsx` 孤儿组件删除、`AboutDialog.tsx` 文案）。**验证**：`scripts/ci.sh` 全套（fmt/clippy/build/test/synonym-recall）跑通，`scoutd` e2e 3 个失败复现既有本机沙盒问题（非本轮引入）；`tsc`/`vite build` 全绿；浏览器预览逐项截图确认。**未尽事宜**：均未做真机验证，需下一轮确认实际效果。
 
