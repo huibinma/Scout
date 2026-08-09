@@ -11,6 +11,7 @@ import AboutDialog from "./components/AboutDialog";
 import PreferencesDialog from "./components/PreferencesDialog";
 import ShortcutBanner from "./components/ShortcutBanner";
 import StatusIndicator from "./components/StatusIndicator";
+import UpdateToast from "./components/UpdateToast";
 import { Category } from "./components/preferences/shared";
 import { useShouldShowOnboarding } from "./hooks/useShouldShowOnboarding";
 import { emitMenuAction, onMenuAction } from "./lib/menu-events";
@@ -219,6 +220,7 @@ function App() {
       </section>
 
       {showAbout && <AboutDialog onClose={() => setShowAbout(false)} />}
+      <UpdateToast />
     </div>
   );
 }

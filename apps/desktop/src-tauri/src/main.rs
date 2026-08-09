@@ -13,6 +13,7 @@ mod status;
 #[cfg(target_os = "windows")]
 mod tray;
 mod uninstall;
+mod update;
 mod user_synonyms;
 
 use std::sync::{Arc, Mutex};
@@ -873,6 +874,14 @@ fn main() {
                     }
                 }
             });
+            // 自动更新：每 8 小时轮询 GitHub Releases，发现新版本经 `update://available`
+            // event 通知前端左下角提醒（见 update.rs 顶部注释：轻量自研，不接
+            // tauri-plugin-updater，不需要签名密钥/改动 release workflow）。
+            tauri::async_runtime::spawn(update::run_update_check_loop(
+                app.handle().clone(),
+                settings::settings_file_path(&app.handle().clone()),
+            ));
+
             // 全局快捷键是锦上添花：注册失败（如默认 Ctrl+Space 被其他程序占用）只告警，
             // 绝不让整个 app 崩溃——否则用户表现为「双击没反应 / 闪退」。用户可在「常规」
             // 设置里通过 shortcut::update_global_shortcut 改用其他组合避开冲突。
@@ -942,6 +951,7 @@ fn main() {
             mcp_service::stop_mcp_service,
             mcp_service::mcp_service_status,
             mcp_service::reset_mcp_token,
+            update::install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

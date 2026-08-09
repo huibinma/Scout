@@ -81,6 +81,54 @@ export function GeneralPane({
         </p>
       </div>
 
+      <div className="prefs-field">
+        <label className="prefs-checkbox">
+          <input
+            type="checkbox"
+            checked={settings.auto_update_enabled}
+            onChange={(e) =>
+              setSettings({ ...settings, auto_update_enabled: e.target.checked })
+            }
+          />
+          <span>
+            <strong>自动检查更新</strong>
+            <br />
+            <span className="prefs-hint">
+              定期检查 GitHub 上是否有新版本，发现新版本会在窗口左下角提醒，点「更新」后台下载并静默安装，安装时保留所有配置、数据与
+              MCP token，装完自动重启。
+            </span>
+          </span>
+        </label>
+        <label
+          className="prefs-label"
+          htmlFor="auto-update-interval"
+          style={{ marginTop: 10 }}
+        >
+          检查间隔
+        </label>
+        <select
+          id="auto-update-interval"
+          className="prefs-input"
+          disabled={!settings.auto_update_enabled}
+          value={settings.auto_update_interval_minutes}
+          onChange={(e) =>
+            setSettings({
+              ...settings,
+              auto_update_interval_minutes: Number(e.target.value),
+            })
+          }
+        >
+          <option value={30}>30 分钟</option>
+          <option value={60}>1 小时</option>
+          <option value={120}>2 小时</option>
+          <option value={240}>4 小时（默认）</option>
+          <option value={360}>6 小时</option>
+          <option value={480}>8 小时</option>
+          <option value={720}>12 小时</option>
+          <option value={1440}>24 小时</option>
+        </select>
+      </div>
+
       {IS_WINDOWS && (
         <>
           <div className="prefs-section-title">Everything 加速</div>

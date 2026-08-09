@@ -51,6 +51,13 @@ export interface AppSettings {
    *  （macOS 已有原生「关窗不退出」心智）。字段缺失该 BETA-48 同款风险：save() 全量
    *  覆写，接口漏字段会把用户已保存的值静默冲回 Rust default，必须透传。 */
   close_to_tray: boolean;
+  /** 2026-08-09：自动更新总开关，默认 true。关闭后台后台检查循环每轮 live-read
+   *  到 false 即跳过检查（不停循环），运行期切换无需重启。 */
+  auto_update_enabled: boolean;
+  /** 2026-08-09：自动更新轮询间隔（分钟），默认 240（4 小时）。允许范围
+   *  [30, 1440]（半小时 ~ 24 小时），后端 `resolve_auto_update_interval_minutes`
+   *  会 clamp 越界值。 */
+  auto_update_interval_minutes: number;
 }
 
 /**

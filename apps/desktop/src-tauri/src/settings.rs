@@ -68,6 +68,15 @@ pub struct AppSettings {
     /// 菜单「退出 Scout」才真正退出进程（见 `tray.rs`）。仅 Windows 有意义——macOS
     /// 已有原生「关窗不退出、Dock 图标常驻」心智，其他平台忽略本字段。
     pub close_to_tray: bool,
+    /// 2026-08-09：自动更新总开关（默认开）。关闭后 `update.rs` 的后台检查循环
+    /// 每轮 live-read 到 false 就跳过本轮检查（不是停止循环——用户运行期重新打开
+    /// 无需重启即生效，与 `auto_index_interval_minutes` 的 live-read 约定一致）。
+    pub auto_update_enabled: bool,
+    /// 2026-08-09：自动更新轮询间隔（分钟）。默认 240（4 小时）；UI 侧固定几档
+    /// 可选值，允许范围 [30, 1440]（半小时 ~ 24 小时）——读取时经
+    /// `resolve_auto_update_interval_minutes` clamp，防手改 settings.json 出界值
+    /// 把检查循环钉在不合理的频率上。
+    pub auto_update_interval_minutes: u32,
 }
 
 /// BETA-33 cycle 7-b：per-root 子路径排除项。
@@ -107,6 +116,8 @@ impl Default for AppSettings {
             mcp_service_token: None,
             search_match_all_conditions: true,
             close_to_tray: false,
+            auto_update_enabled: true,
+            auto_update_interval_minutes: DEFAULT_AUTO_UPDATE_INTERVAL_MINUTES,
         }
     }
 }
@@ -228,6 +239,10 @@ pub(crate) fn resolve_exclude_globs(raw: &[String]) -> Vec<String> {
 /// 语义相似度下限默认值（全仓单一默认源）。
 pub(crate) const DEFAULT_SIMILARITY_FLOOR: f32 = 0.30;
 pub(crate) const DEFAULT_AUTO_INDEX_INTERVAL_MINUTES: u32 = 30;
+/// 自动更新轮询间隔默认值（4 小时）与允许范围（半小时 ~ 24 小时）。
+pub(crate) const DEFAULT_AUTO_UPDATE_INTERVAL_MINUTES: u32 = 240;
+pub(crate) const MIN_AUTO_UPDATE_INTERVAL_MINUTES: u32 = 30;
+pub(crate) const MAX_AUTO_UPDATE_INTERVAL_MINUTES: u32 = 1440;
 /// 全局唤起快捷键默认值：跨平台统一为 `Ctrl+Space`（此前 macOS/Windows 各写死一份、
 /// 且不可改；用户可在「常规」设置里通过 `shortcut::update_global_shortcut` 自定义，
 /// 遇到与其他程序冲突时不必等发版改默认值，自己换一个组合即可）。
@@ -303,6 +318,37 @@ pub(crate) fn read_auto_index_interval_minutes(settings_path: &Option<std::path:
         .map_or(DEFAULT_AUTO_INDEX_INTERVAL_MINUTES, |v| {
             v.auto_index_interval_minutes
         })
+}
+
+/// 把自动更新轮询间隔 clamp 到 [30, 1440] 分钟（半小时 ~ 24 小时）——UI
+/// 侧固定几档可选值本就落在这个范围内，这里是防手改 settings.json 出界值。
+pub(crate) fn resolve_auto_update_interval_minutes(raw: u32) -> u32 {
+    raw.clamp(
+        MIN_AUTO_UPDATE_INTERVAL_MINUTES,
+        MAX_AUTO_UPDATE_INTERVAL_MINUTES,
+    )
+}
+
+/// 从 settings.json live-read 自动更新总开关。读取失败或旧配置缺字段 → 默认开启
+/// （安全侧：新装用户/老配置不因文件损坏静默失去更新提醒）。
+pub(crate) fn read_auto_update_enabled(settings_path: &Option<PathBuf>) -> bool {
+    settings_path
+        .as_ref()
+        .and_then(|p| fs::read_to_string(p).ok())
+        .and_then(|s| serde_json::from_str::<AppSettings>(&s).ok())
+        .map_or(true, |v| v.auto_update_enabled)
+}
+
+/// 从 settings.json live-read 自动更新轮询间隔（分钟），已 clamp 到允许范围。
+pub(crate) fn read_auto_update_interval_minutes(settings_path: &Option<PathBuf>) -> u32 {
+    let raw = settings_path
+        .as_ref()
+        .and_then(|p| fs::read_to_string(p).ok())
+        .and_then(|s| serde_json::from_str::<AppSettings>(&s).ok())
+        .map_or(DEFAULT_AUTO_UPDATE_INTERVAL_MINUTES, |v| {
+            v.auto_update_interval_minutes
+        });
+    resolve_auto_update_interval_minutes(raw)
 }
 
 /// 从 settings.json live-read 复合条件匹配模式（每次查询调，`search_impl`/预览高亮共用）。
@@ -700,6 +746,68 @@ mod tests {
             read_auto_index_interval_minutes(&Some(f)),
             DEFAULT_AUTO_INDEX_INTERVAL_MINUTES,
             "非法 JSON 值导致反序列化失败时回退默认"
+        );
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn auto_update_defaults_on_with_4h_interval_and_old_settings_parse_ok() {
+        assert!(
+            AppSettings::default().auto_update_enabled,
+            "默认自动更新开启"
+        );
+        assert_eq!(
+            AppSettings::default().auto_update_interval_minutes,
+            DEFAULT_AUTO_UPDATE_INTERVAL_MINUTES
+        );
+        // 旧配置缺这两个字段：默认开启 + 默认 4 小时间隔，不因新增字段解析失败。
+        let json = r#"{"global_shortcut":"Ctrl+Space"}"#;
+        let s: AppSettings = serde_json::from_str(json).unwrap();
+        assert!(s.auto_update_enabled);
+        assert_eq!(
+            s.auto_update_interval_minutes,
+            DEFAULT_AUTO_UPDATE_INTERVAL_MINUTES
+        );
+
+        assert!(read_auto_update_enabled(&None));
+        assert_eq!(
+            read_auto_update_interval_minutes(&None),
+            DEFAULT_AUTO_UPDATE_INTERVAL_MINUTES
+        );
+    }
+
+    #[test]
+    fn auto_update_interval_clamped_to_30_1440_range() {
+        assert_eq!(resolve_auto_update_interval_minutes(0), 30);
+        assert_eq!(resolve_auto_update_interval_minutes(5), 30);
+        assert_eq!(resolve_auto_update_interval_minutes(30), 30);
+        assert_eq!(resolve_auto_update_interval_minutes(240), 240);
+        assert_eq!(resolve_auto_update_interval_minutes(1440), 1440);
+        assert_eq!(resolve_auto_update_interval_minutes(10_000), 1440);
+
+        let dir = std::env::temp_dir().join(format!("scout-auto-update-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let f = dir.join("settings.json");
+        std::fs::write(
+            &f,
+            r#"{"auto_update_enabled":false,"auto_update_interval_minutes":5}"#,
+        )
+        .unwrap();
+        assert!(!read_auto_update_enabled(&Some(f.clone())));
+        assert_eq!(
+            read_auto_update_interval_minutes(&Some(f.clone())),
+            30,
+            "手改 settings.json 出界小值应 clamp 到下限"
+        );
+        std::fs::write(
+            &f,
+            r#"{"auto_update_enabled":true,"auto_update_interval_minutes":999999}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            read_auto_update_interval_minutes(&Some(f.clone())),
+            1440,
+            "出界大值应 clamp 到上限"
         );
         std::fs::remove_dir_all(&dir).ok();
     }
