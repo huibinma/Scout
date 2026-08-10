@@ -137,16 +137,20 @@ impl DocumentIndex {
     /// 打开（或创建）索引数据库并建表。
     pub fn open(db_path: &Path) -> Result<Self, IndexError> {
         let conn = Connection::open(db_path)?;
-        Self::from_conn(conn, true)
+        Self::from_conn(conn, true, Some(db_path))
     }
 
     /// 内存库（测试用）。
     pub fn open_in_memory() -> Result<Self, IndexError> {
         let conn = Connection::open_in_memory()?;
-        Self::from_conn(conn, false)
+        Self::from_conn(conn, false, None)
     }
 
-    fn from_conn(conn: Connection, file_backed: bool) -> Result<Self, IndexError> {
+    fn from_conn(
+        conn: Connection,
+        file_backed: bool,
+        db_path: Option<&Path>,
+    ) -> Result<Self, IndexError> {
         // reindex 写与 search 读可能并发（BETA-04），给锁等待留 5s 窗口。
         conn.busy_timeout(std::time::Duration::from_secs(5))?;
         if file_backed {
@@ -156,16 +160,26 @@ impl DocumentIndex {
         }
         // document_vectors 外键级联依赖此 PRAGMA（默认关）。
         conn.execute_batch("PRAGMA foreign_keys = ON;")?;
-        conn.execute_batch(SCHEMA)?;
-        // BETA-38：老库 documents 表无 content_hash 列 → ALTER ADD（列可空、无需 schema-bump）。
-        migrate_documents_content_hash(&conn)?;
-        // 2026-07-29：老库 index_failures 表无 modified_time 列 → ALTER ADD（同上套路）。
-        migrate_index_failures_modified_time(&conn)?;
-        // BETA-59：老库 documents_fts 只有 title/author/body 三列 → 加 entity 末列。
-        // **必须在任何 4 列 INSERT 之前跑**，否则升级用户首次 upsert 就会列数不匹配崩。
-        migrate_documents_fts_entity(&conn)?;
-        // BETA-32 C1b：老 db 第一次打开 → INSERT schema 版本；已有则 no-op。
-        ensure_schema_version(&conn)?;
+        // 同进程内该路径已验证过 schema → 跳过 DDL/迁移/版本 upsert，见
+        // `crate::db::SCHEMA_VERIFIED_PATHS` 文档（启动/搜索路径反复 open 同一大库时，
+        // 这块开销 + `ensure_schema_version` 隐含的写事务是可观的锁竞争来源）。
+        let already_verified =
+            db_path.is_some_and(|p| crate::db::schema_verified_before(p, "document"));
+        if !already_verified {
+            conn.execute_batch(SCHEMA)?;
+            // BETA-38：老库 documents 表无 content_hash 列 → ALTER ADD（列可空、无需 schema-bump）。
+            migrate_documents_content_hash(&conn)?;
+            // 2026-07-29：老库 index_failures 表无 modified_time 列 → ALTER ADD（同上套路）。
+            migrate_index_failures_modified_time(&conn)?;
+            // BETA-59：老库 documents_fts 只有 title/author/body 三列 → 加 entity 末列。
+            // **必须在任何 4 列 INSERT 之前跑**，否则升级用户首次 upsert 就会列数不匹配崩。
+            migrate_documents_fts_entity(&conn)?;
+            // BETA-32 C1b：老 db 第一次打开 → INSERT schema 版本；已有则 no-op。
+            ensure_schema_version(&conn)?;
+            if let Some(p) = db_path {
+                crate::db::mark_schema_verified(p, "document");
+            }
+        }
         Ok(Self { conn })
     }
 
@@ -287,7 +301,20 @@ impl DocumentIndex {
     ///
     /// **幂等**：清理后再调返 0（无脏向量可删）。
     /// **轻量**：典型 v0.8.3 真机数据 3433 向量、纯 join + 内存过滤 + 一次 DELETE、毫秒级。
+    ///
+    /// **2026-08-10 快速路径**：上面"轻量"是指数据量小时；`document_vectors` 行数随语义
+    /// 索引跑满全库增长后，这条无 `WHERE` 的三表 JOIN 本身会变成一次全表级扫描——即便
+    /// 结果确实是"幂等返回 0"，也得先扫一遍才能确认。启动时这个函数几乎每次都在"确认
+    /// 无事可做"，却仍付出全扫开销、和同一时刻的其他后台任务抢 IO。现在用
+    /// [`Self::vector_generation`]（`document_vectors` 每次增删改都会递增）做检查点：
+    /// 若自上次成功整理以来 generation 和清理口径（`keep_worthy_images`）都没变，直接
+    /// 跳过扫描返回 0；只有真的有新向量写入/清理口径切换过才重新扫一遍。
     pub fn purge_short_body_vectors(&self, keep_worthy_images: bool) -> Result<usize, IndexError> {
+        let current_gen = self.vector_generation()?;
+        if self.purge_checkpoint_matches(current_gen, keep_worthy_images)? {
+            return Ok(0);
+        }
+
         let mut stmt = self.conn.prepare(
             "SELECT v.doc_id, IFNULL(f.body, ''), d.doc_type \
              FROM document_vectors v \
@@ -318,6 +345,8 @@ impl DocumentIndex {
             .collect();
 
         if to_delete.is_empty() {
+            // 本轮确认无脏向量：记下检查点，下次同 generation + 同口径直接跳过扫描。
+            self.write_purge_checkpoint(current_gen, keep_worthy_images)?;
             return Ok(0);
         }
 
@@ -327,7 +356,54 @@ impl DocumentIndex {
         let count = tx.execute(&sql, rusqlite::params_from_iter(to_delete.iter()))?;
         bump_vector_generation(&tx)?;
         tx.commit()?;
+        // 用删除后的最新 generation 记检查点（下次调用若无新变更即可命中快速路径）。
+        let new_gen = self.vector_generation()?;
+        self.write_purge_checkpoint(new_gen, keep_worthy_images)?;
         Ok(count)
+    }
+
+    /// 检查点是否命中：`document_vectors` generation 与清理口径都与上次成功整理时一致。
+    fn purge_checkpoint_matches(
+        &self,
+        current_gen: u64,
+        keep_worthy_images: bool,
+    ) -> Result<bool, IndexError> {
+        let stored_gen: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT value FROM schema_meta WHERE key='vectors_purge_gen'",
+                [],
+                |r| r.get(0),
+            )
+            .optional()?;
+        let stored_mode: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT value FROM schema_meta WHERE key='vectors_purge_mode'",
+                [],
+                |r| r.get(0),
+            )
+            .optional()?;
+        let mode_str = if keep_worthy_images { "1" } else { "0" };
+        Ok(
+            stored_gen.as_deref() == Some(current_gen.to_string().as_str())
+                && stored_mode.as_deref() == Some(mode_str),
+        )
+    }
+
+    fn write_purge_checkpoint(&self, gen: u64, keep_worthy_images: bool) -> Result<(), IndexError> {
+        let mode_str = if keep_worthy_images { "1" } else { "0" };
+        self.conn.execute(
+            "INSERT INTO schema_meta(key, value) VALUES('vectors_purge_gen', ?1)
+             ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            rusqlite::params![gen.to_string()],
+        )?;
+        self.conn.execute(
+            "INSERT INTO schema_meta(key, value) VALUES('vectors_purge_mode', ?1)
+             ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            rusqlite::params![mode_str],
+        )?;
+        Ok(())
     }
 
     /// BETA-33 cycle 5：某 root 子树下的文档索引统计（总数 / 图片数 / 上次索引时间）。

@@ -460,6 +460,36 @@ async fn run_auto_index_loop(
                 warn!(elapsed_ms, error = %e, "自动增量索引任务 join 失败");
             }
         }
+
+        // 2026-08-10：FTS reindex tick 之后顺带检查 index.db 是否到期做一次整理——重建
+        // `music_fts`/`documents_fts` 两个 FTS5 影子表 + `VACUUM`，真正回收用户删除文件后
+        // `prune_deleted`/`purge_under_root` 留下的、`optimize_fts`/`VACUUM` 单独都回收不了
+        // 的死数据（见 `scout_indexer::compact_index_if_due` 文档）。**只挂在这个已经在
+        // 定期等待的 tick 上，不挂在应用启动那一轮**——启动阶段的 IO/连接窗口已经够挤，不
+        // 需要再叠一个独占的 VACUUM。到期判断本身很轻（一次 `schema_meta` 读），真正执行
+        // 时才有 VACUUM 的开销，函数内部按 `DEFAULT_COMPACT_INTERVAL_DAYS`（14 天）门控，
+        // 默认不会频繁触发。加一层"当前没有索引任务在跑"的守卫，避免和并发的手动 reindex
+        // 抢锁——即便撞上，`compact_index_if_due` 失败也只是跳过、下个 tick（30 分钟默认
+        // 间隔）会因为还没到期而快速判断跳过，14 天窗口内自然能等到一次空闲 tick 补上。
+        let is_indexing = status.lock().unwrap_or_else(|e| e.into_inner()).indexing;
+        if !is_indexing {
+            let compact_db = local_index_db_path();
+            match tauri::async_runtime::spawn_blocking(move || {
+                scout_indexer::compact_index_if_due(
+                    &compact_db,
+                    scout_indexer::DEFAULT_COMPACT_INTERVAL_DAYS,
+                )
+            })
+            .await
+            {
+                Ok(Ok(true)) => {
+                    info!("index.db 定期整理完成（重建 FTS 影子表 + VACUUM，回收删除文件遗留空间）")
+                }
+                Ok(Ok(false)) => tracing::debug!("index.db 定期整理：未到期或库不存在，跳过"),
+                Ok(Err(e)) => warn!(error = %e, "index.db 定期整理失败，留待下次 tick 重试"),
+                Err(e) => warn!(error = %e, "index.db 定期整理任务 join 失败"),
+            }
+        }
     }
 }
 
@@ -733,64 +763,8 @@ fn main() {
             // compute_index_totals 走 3 个 COUNT 查询、毫秒级；last_indexed 字段不在此回填
             // （无可信时间戳来源、仅在 reindex 完成后写）。先判 db 文件存在、避免 indexer::open 创建空库。
             //
-            // 2026-07-26：整块挪进 spawn_blocking，不再直接同步跑在 setup() 里。原因：
-            // purge_short_body_vectors（见下）是一条**无 WHERE 的全表 JOIN**——把
-            // document_vectors 每一行关联的完整正文都拉进内存再逐行判断，开销随向量表
-            // 增长线性变大（图片语义索引开着、OCR 库大的用户很容易攒到几万条向量）。
-            // Tauri 的 setup() 在主线程同步跑，不 return 窗口就出不来；库越大、启动就越卡。
-            // 挪到后台线程后窗口立即可见，总数回填与脏向量清理稍后异步生效——IndexingPane
-            // 本来就 2s 轮询 get_index_status，晚一两秒刷新可接受。
-            {
-                let init_db = local_index_db_path();
-                let purge_status = bg_status.clone();
-                let purge_settings_path = bg_settings_path.clone();
-                tauri::async_runtime::spawn_blocking(move || {
-                    if !init_db.exists() {
-                        return;
-                    }
-                    if let Some((music, doc, image)) = search::compute_index_totals(&init_db) {
-                        if music > 0 || doc > 0 || image > 0 {
-                            let mut s = purge_status.lock().unwrap_or_else(|e| e.into_inner());
-                            s.last_summary =
-                                Some(format!("音频 {music} / 文档 {doc} / 图片 {image}"));
-                            // cycle 9：结构化全库总数同步回填（与 last_summary 同源同步）。
-                            s.db_totals = Some((music, doc, image));
-                        }
-                    }
-
-                    // BETA-31-v3 cycle 3（v0.8.4）：一次性清理 document_vectors 中
-                    // 关联到 body 极短文档的旧脏向量。Why：BETA-15B-1 以来 embed_pending
-                    // 对 documents 表所有条目一视同仁、Windows OCR 跳过的图片 body 为空 →
-                    // 嵌入产出 "neutral" 高 cosine 向量、占满 ranker top-N、用户搜任何词
-                    // 都返缓存图片。本 cycle indexer 加 is_embed_worthy 守门防新污染、
-                    // 但旧脏向量必须显式 DELETE（vector_is_current 不重嵌、source_hash 没变）。
-                    // 幂等：再次启动时已清理过返 0、不重复删——但 SELECT+JOIN 本身的扫描开销
-                    // 不会因此变小，这正是本 cycle 把它挪出 setup() 主线程的原因。
-                    // BETA-39：keep_worthy_images 依「图片语义索引」opt-in 动态判——
-                    // 关（默认）清全部图片向量（现状 + 开过再关自动回收）；开只清不过 0.75 门槛的。
-                    let keep_worthy_images =
-                        settings::read_enable_image_semantics(&purge_settings_path);
-                    match scout_indexer::DocumentIndex::open(&init_db) {
-                        Ok(idx) => match idx.purge_short_body_vectors(keep_worthy_images) {
-                            Ok(0) => {
-                                info!("启动清理脏向量：0 条需删（已清理过或本来就干净）");
-                            }
-                            Ok(n) => {
-                                info!(
-                                    purged = n,
-                                    "启动清理脏向量：删除 N 条 body 极短文档关联的旧污染向量（BETA-31-v3 cycle 3 fix）"
-                                );
-                            }
-                            Err(e) => {
-                                warn!(error = %e, "启动清理脏向量失败、跳过（不阻塞启动）");
-                            }
-                        },
-                        Err(e) => {
-                            warn!(error = %e, "启动清理脏向量：DocumentIndex::open 失败、跳过");
-                        }
-                    }
-                });
-            }
+            // 2026-07-26：整块挪进 spawn_blocking，不再直接同步跑在 setup() 里——理由见下方
+            // 合并后的启动链注释（原因未变，只是执行位置从这里挪到了链的第一步）。
             app.manage(deps);
             // BETA-11D：注册用户词典 managed 状态，与 LayeredSynonymExpander 共享同一 Arc。
             let user_synonyms_path = user_synonyms::user_synonyms_path(&app.handle().clone())
@@ -833,10 +807,71 @@ fn main() {
                 auto_settings_path,
             ));
             // BETA-07：启动后台自动索引（非阻塞，UI 立即可用）；incremental 后续启动秒级。
+            //
+            // 2026-08-10：总数回填 + 脏向量清理、FTS reindex、语义嵌入这三步原先各自独立
+            // `spawn`/`spawn_blocking`，会在窗口刚显示的头几秒内并发抢同一个 index.db——
+            // 各自都要新开连接、可能触发 schema/迁移检查，purge 还带一次写事务，几件事叠在
+            // 一起时不光互相排队等 SQLite 写锁，还会把磁盘 IO 带宽一次性占满，放大成用户
+            // 感知到的"页面短时挂死"。改成一条链：先做总数回填 + 脏向量清理（读多写少，
+            // 借助 indexer 侧新加的 schema 验证缓存 + purge 检查点，多数启动这步几乎是
+            // 空转），**等它完全让出连接后**再开始 FTS reindex，reindex 完成后再接语义嵌入。
+            // 仍然整体在后台跑、不阻塞 setup()；只是把"并发抢跑"改成"排队执行"。
             tauri::async_runtime::spawn(async move {
+                let db = local_index_db_path();
+
+                // 第一步：总数回填（UI last_summary/db_totals）+ 清理脏向量。
+                let totals_db = db.clone();
+                let totals_status = bg_status.clone();
+                let totals_settings_path = bg_settings_path.clone();
+                let _ = tauri::async_runtime::spawn_blocking(move || {
+                    if !totals_db.exists() {
+                        return;
+                    }
+                    if let Some((music, doc, image)) = search::compute_index_totals(&totals_db) {
+                        if music > 0 || doc > 0 || image > 0 {
+                            let mut s = totals_status.lock().unwrap_or_else(|e| e.into_inner());
+                            s.last_summary =
+                                Some(format!("音频 {music} / 文档 {doc} / 图片 {image}"));
+                            // cycle 9：结构化全库总数同步回填（与 last_summary 同源同步）。
+                            s.db_totals = Some((music, doc, image));
+                        }
+                    }
+
+                    // BETA-31-v3 cycle 3（v0.8.4）：一次性清理 document_vectors 中
+                    // 关联到 body 极短文档的旧脏向量。Why：BETA-15B-1 以来 embed_pending
+                    // 对 documents 表所有条目一视同仁、Windows OCR 跳过的图片 body 为空 →
+                    // 嵌入产出 "neutral" 高 cosine 向量、占满 ranker top-N、用户搜任何词
+                    // 都返缓存图片。本 cycle indexer 加 is_embed_worthy 守门防新污染、
+                    // 但旧脏向量必须显式 DELETE（vector_is_current 不重嵌、source_hash 没变）。
+                    // BETA-39：keep_worthy_images 依「图片语义索引」opt-in 动态判——
+                    // 关（默认）清全部图片向量（现状 + 开过再关自动回收）；开只清不过 0.75 门槛的。
+                    let keep_worthy_images =
+                        settings::read_enable_image_semantics(&totals_settings_path);
+                    match scout_indexer::DocumentIndex::open(&totals_db) {
+                        Ok(idx) => match idx.purge_short_body_vectors(keep_worthy_images) {
+                            Ok(0) => {
+                                info!("启动清理脏向量：0 条需删（已清理过或本来就干净）");
+                            }
+                            Ok(n) => {
+                                info!(
+                                    purged = n,
+                                    "启动清理脏向量：删除 N 条 body 极短文档关联的旧污染向量（BETA-31-v3 cycle 3 fix）"
+                                );
+                            }
+                            Err(e) => {
+                                warn!(error = %e, "启动清理脏向量失败、跳过（不阻塞启动）");
+                            }
+                        },
+                        Err(e) => {
+                            warn!(error = %e, "启动清理脏向量：DocumentIndex::open 失败、跳过");
+                        }
+                    }
+                })
+                .await;
+
+                // 第二步：FTS reindex（总数回填/脏向量清理已让出连接，此时才开始写）。
                 info!("启动后台 FTS reindex（spawn_blocking）");
                 let reindex_start = std::time::Instant::now();
-                let db = local_index_db_path();
                 let fts_db = db.clone();
                 let fts_status = bg_status.clone();
                 let fts_settings_path = bg_settings_path.clone();
@@ -861,7 +896,7 @@ fn main() {
                             ),
                             None => info!(elapsed_ms, "后台 FTS reindex 跳过（已在索引中）"),
                         }
-                        // FTS 完成后接语义嵌入后台 worker（模型就绪才实跑）。
+                        // 第三步：FTS 完成后接语义嵌入后台 worker（模型就绪才实跑）。
                         search::spawn_semantic_index(bg_status, db, bg_embedding, bg_settings_path);
                     }
                     Ok(Err(msg)) => {

@@ -536,8 +536,22 @@ pub(crate) fn compute_index_totals(db_path: &std::path::Path) -> Option<(u64, u6
 /// 关键表行数（documents / 向量 / 提取失败留痕 / music）到日志，供事后诊断"这次是不是
 /// 撞上了旧库体量大/碎片化"这个方向。best-effort：db 不存在（首次索引前）或任一查询失败
 /// 都不阻塞正常索引流程，缺字段照记、不 panic。
+///
+/// **2026-08-10**：4 个 `COUNT(*)` 各自开一个连接查询，在大库上不是"诊断日志"这个用途
+/// 名字听起来那么轻——没有覆盖索引时 `COUNT(*)` 要扫表/扫最小索引，且这里在
+/// **每一轮**reindex（含启动那一轮，恰是资源最紧张的窗口）开始前都会付这笔全表扫描的
+/// 开销。默认 info 级别只记文件体量（纯 `stat`，几乎零成本）；完整行数下钻改到 debug
+/// 级别，`SCOUT_LOG=debug` 时才真正查——保留诊断能力，但不再是默认路径上的隐性负担。
 fn log_db_size_diagnostics(db_path: &std::path::Path) {
     let file_size_bytes = std::fs::metadata(db_path).ok().map(|m| m.len());
+    if !tracing::enabled!(tracing::Level::DEBUG) {
+        tracing::info!(
+            db_path = %db_path.display(),
+            ?file_size_bytes,
+            "本轮索引开始前 DB 体量诊断（仅文件体量；SCOUT_LOG=debug 可看完整行数下钻）"
+        );
+        return;
+    }
     let music_count = scout_indexer::MusicIndex::open(db_path)
         .ok()
         .and_then(|m| m.count().ok());
@@ -547,7 +561,7 @@ fn log_db_size_diagnostics(db_path: &std::path::Path) {
     let extraction_failure_count = docs
         .as_ref()
         .and_then(|d| d.extraction_failure_count().ok());
-    tracing::info!(
+    tracing::debug!(
         db_path = %db_path.display(),
         ?file_size_bytes,
         ?music_count,

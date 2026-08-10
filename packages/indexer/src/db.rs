@@ -12,8 +12,9 @@
 //! 字符查询改走 LIKE 子串匹配 metadata 列（music: artist/title/album/file_name；
 //! documents: title/author/file_name），让 2 字人名/常用词也能命中元数据（正文不扫）。
 
-use std::collections::HashMap;
-use std::path::Path;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
+use std::sync::{Mutex, OnceLock};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use rusqlite::types::ToSql;
@@ -23,6 +24,73 @@ use crate::model::{MusicEntry, MusicQuery};
 use crate::scan::IncrementalStore;
 use crate::version::ensure_schema_version;
 use crate::IndexError;
+
+/// 进程级缓存：记录本进程内已经完成过 schema 建表 + 迁移检查的 `(db 文件路径, 表族)`。
+///
+/// **Why**：`MusicIndex::open`/`DocumentIndex::open` 每次都新开一个 `Connection`——搜索、
+/// reindex、体量诊断、总数回填、脏向量清理等各自独立调用，`from_conn` 里固定要跑一遍
+/// `execute_batch(SCHEMA)`（6+ 张表 `CREATE TABLE IF NOT EXISTS`）+ 若干 `PRAGMA table_info`
+/// 迁移探测 + `schema_meta` 版本 upsert。对空库这些都是毫秒级，但对已建好表的大库，同一个
+/// db 文件在应用启动的头几秒内会被连续打开好几次，每次都重复这套检查；其中
+/// `ensure_schema_version` 的 `INSERT OR IGNORE` 本质是一次写事务，即便只是"搜索"这种读
+/// 路径也会顺带抢一次 WAL 写锁，和真正的写者（reindex/purge）产生不必要的锁竞争。
+///
+/// 首次打开某路径后记入本缓存，同进程内后续打开跳过 DDL/迁移/版本 upsert，只保留每连接
+/// 必需的 PRAGMA 设置（`busy_timeout`/`synchronous`/`foreign_keys` 是连接级状态，省不掉）。
+///
+/// **键必须带表族**：`MusicIndex`/`DocumentIndex` 共用同一个 `index.db` 文件，但各自的
+/// `SCHEMA` 常量建的是不同的表（`music`/`music_fts` vs `documents`/`documents_fts`/...）。
+/// 若只按路径缓存，`MusicIndex::open(path)` 先跑一遍会把 `path` 标记为"已验证"，紧接着
+/// `DocumentIndex::open(path)`（生产代码里 `compute_index_totals` 等多处就是这个顺序）
+/// 会被错误跳过、`documents` 表永远不会被创建——这个 bug 曾在单测里现形（先 `MusicIndex`
+/// 后 `DocumentIndex` 打开同一空库，第二个查询直接报"no such table: documents"）。
+/// 用 `(path, kind)` 二元组做键，`kind` 用 `"music"`/`"document"` 区分两条 schema。
+///
+/// **失效**：[`clear_index`] 会 `DROP` 全部业务表，之后必须重新建表——见该函数末尾对
+/// [`invalidate_schema_cache`] 的调用（一次性清掉该路径下两个表族的标记）；除此之外
+/// schema 不会在进程运行期间变化，缓存无需其他失效路径。只对文件库生效，内存库
+/// （测试用）每次都是全新连接、不进本缓存。
+static SCHEMA_VERIFIED_PATHS: OnceLock<Mutex<HashSet<(PathBuf, &'static str)>>> = OnceLock::new();
+
+fn schema_cache_set() -> &'static Mutex<HashSet<(PathBuf, &'static str)>> {
+    SCHEMA_VERIFIED_PATHS.get_or_init(|| Mutex::new(HashSet::new()))
+}
+
+/// 本次是否可跳过 schema 建表/迁移检查（`true` = 之前已验证过）。**只读**——不在这里记
+/// 缓存，调用方必须在 DDL/迁移**真正跑完**之后再调 [`mark_schema_verified`]。若在这里
+/// 顺带"顺手插入"，会在启动阶段多个线程并发首次 `open` 同一路径时出现竞态：线程 A 刚
+/// 插入标记、DDL 还没执行完，线程 B 就已经读到"已验证"直接跳过建表、对着还没建好的表
+/// 查询报错。两阶段（先查、DDL 完成后再标记）保证并发下最坏情况只是重复跑一次
+/// `CREATE TABLE IF NOT EXISTS`（幂等、SQLite 自身锁保证安全），不会有连接读到不存在的表。
+///
+/// `kind`：`"music"` 或 `"document"`，对应 [`MusicIndex`]/[`crate::DocumentIndex`] 各自
+/// 独立的表族——两者共用同一个 db 文件但 schema 不同，缓存键必须带上这个区分。
+pub(crate) fn schema_verified_before(db_path: &Path, kind: &'static str) -> bool {
+    schema_cache_set()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .contains(&(db_path.to_path_buf(), kind))
+}
+
+/// DDL/迁移/版本 upsert 全部跑完后调用，把 `(path, kind)` 记入"已验证"缓存。见
+/// [`schema_verified_before`] 关于两阶段设计和 `kind` 含义的说明。
+pub(crate) fn mark_schema_verified(db_path: &Path, kind: &'static str) {
+    schema_cache_set()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .insert((db_path.to_path_buf(), kind));
+}
+
+/// [`clear_index`]（DROP 全部表）后必须调用，强制下次 `open` 重新建表——否则会在已清空的
+/// 库上错误跳过 `CREATE TABLE IF NOT EXISTS`，后续查询直接报"表不存在"。一次性清掉该
+/// 路径下 `"music"`/`"document"` 两个表族的标记（`clear_index` 两族的表都会被 DROP）。
+pub(crate) fn invalidate_schema_cache(db_path: &Path) {
+    let mut set = schema_cache_set()
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
+    set.remove(&(db_path.to_path_buf(), "music"));
+    set.remove(&(db_path.to_path_buf(), "document"));
+}
 
 const SCHEMA: &str = "
 CREATE TABLE IF NOT EXISTS music (
@@ -78,12 +146,135 @@ pub fn clear_index(db_path: &Path) -> Result<(), IndexError> {
          DROP TABLE IF EXISTS documents;",
     )?;
     conn.execute_batch("VACUUM;")?;
+    // 业务表已被上面 DROP，process 级 schema 缓存若仍标记"已验证"会让下次 open 错误跳过
+    // 重建，必须失效。见 [`SCHEMA_VERIFIED_PATHS`] 文档。
+    invalidate_schema_cache(db_path);
+    Ok(())
+}
+
+/// [`compact_index_if_due`] 的默认最小压缩间隔（天）。`VACUUM` 独占且耗磁盘/时间，
+/// 不适合频繁跑；两周一次足够对付日常增量 reindex/删除文件积累的碎片。
+pub const DEFAULT_COMPACT_INTERVAL_DAYS: i64 = 14;
+
+/// 定期整理：重建 `music_fts`/`documents_fts` 两个 FTS5 影子表 + `VACUUM`，回收长期
+/// 反复增删（含用户删除文件后 `prune_deleted`/`purge_under_root` 触发的删除）积累下来、
+/// 但一直没被释放的磁盘空间。
+///
+/// **为什么 `optimize_fts` 不够**：`optimize_fts`（`INSERT INTO fts(fts) VALUES('optimize')`）
+/// 只合并 segment b-tree、减少查询要扫的段数，**不回收已删除内容占用的空间**——FTS5 的
+/// `DELETE` 只写墓碑标记，`VACUUM` 对这类 content 型 FTS5 表同样回收不掉（见 [`clear_index`]
+/// 顶部注释）。唯一能真正瘦身的办法是把仍存活的内容整体搬进一张新表、丢弃旧表——本函数
+/// 用的正是 [`migrate_documents_fts_entity`] 已验证过的"建新表 → `INSERT ... SELECT` →
+/// `DROP` 旧表 → `RENAME`"手法，这里不改列结构，纯为回收空间。
+///
+/// **只回收 FTS 影子表，不动 `documents`/`music`/`document_vectors` 等主表**——那些是普通
+/// rowid 表，`DELETE` 已经是真删除，`VACUUM` 本身就能收缩它们，不需要重建。
+///
+/// **调度**：本函数只做"是否到期"判断 + 执行，定时逻辑由调用方负责——生产代码里挂在
+/// `run_auto_index_loop` 的定期 tick 上，**刻意不**在应用刚启动那一轮跑，避免和启动阶段
+/// 已经拥挤的 IO/连接窗口叠加。到期判定存进 `schema_meta` 的 `last_compact_time`
+/// （Unix 秒），跨进程持久、重启不丢。
+///
+/// **代价**：`VACUUM` 需要与原文件相近的临时磁盘空间、执行期间独占写锁（其他连接的写
+/// 操作会等到 `busy_timeout` 超时）——调用方应确保没有并发 reindex 在跑（`IndexStatus`
+/// 守卫）。db 不存在 / 对应 FTS 表还没建过（全新库、从未 reindex）时安全跳过、不报错。
+///
+/// 返回 `Ok(true)` = 本次确实执行了压缩；`Ok(false)` = 未到期或库不存在，跳过。
+/// `min_interval_days` 可覆盖 [`DEFAULT_COMPACT_INTERVAL_DAYS`]（单测/手动触发传 0 强制执行）。
+pub fn compact_index_if_due(db_path: &Path, min_interval_days: i64) -> Result<bool, IndexError> {
+    if !db_path.exists() {
+        return Ok(false);
+    }
+    let conn = Connection::open(db_path)?;
+    conn.busy_timeout(std::time::Duration::from_secs(5))?;
+    configure_file_db_pragmas(&conn)?;
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS schema_meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);",
+    )?;
+
+    let now = unix_now();
+    let last_ts: i64 = conn
+        .query_row(
+            "SELECT value FROM schema_meta WHERE key='last_compact_time'",
+            [],
+            |r| r.get::<_, String>(0),
+        )
+        .optional()?
+        .and_then(|s| s.parse::<i64>().ok())
+        .unwrap_or(0);
+    if last_ts > 0 && now - last_ts < min_interval_days.saturating_mul(86_400) {
+        return Ok(false);
+    }
+
+    if table_exists(&conn, "documents_fts")? {
+        rebuild_fts_shadow_table(
+            &conn,
+            "documents_fts",
+            "CREATE VIRTUAL TABLE documents_fts_new USING fts5(title, author, body, entity, tokenize='trigram');",
+            "title, author, body, entity",
+        )?;
+    }
+    if table_exists(&conn, "music_fts")? {
+        rebuild_fts_shadow_table(
+            &conn,
+            "music_fts",
+            "CREATE VIRTUAL TABLE music_fts_new USING fts5(artist, title, album, file_name, tokenize='trigram');",
+            "artist, title, album, file_name",
+        )?;
+    }
+
+    conn.execute(
+        "INSERT INTO schema_meta(key, value) VALUES('last_compact_time', ?1)
+         ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+        params![now.to_string()],
+    )?;
+    // VACUUM 不可在事务内执行；上面每句 DDL/DML 都是各自 autocommit，这里单独跑。
+    conn.execute_batch("VACUUM;")?;
+    Ok(true)
+}
+
+fn table_exists(conn: &Connection, name: &str) -> Result<bool, IndexError> {
+    let n: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?1",
+        params![name],
+        |r| r.get(0),
+    )?;
+    Ok(n > 0)
+}
+
+/// `old_name` 影子表重建：建同构新表（多一个 `_new` 后缀）→ 按 rowid 对齐搬运存活内容 →
+/// `DROP` 旧表 → 改名顶替。`cols` 是不含 rowid 的列清单（如 `"title, author, body, entity"`），
+/// 新旧两表结构必须由调用方保证完全一致（否则搬运会因列数/类型不匹配失败）。
+fn rebuild_fts_shadow_table(
+    conn: &Connection,
+    old_name: &str,
+    create_new_sql: &str,
+    cols: &str,
+) -> Result<(), IndexError> {
+    conn.execute_batch(create_new_sql)?;
+    conn.execute_batch(&format!(
+        "INSERT INTO {old_name}_new(rowid, {cols}) SELECT rowid, {cols} FROM {old_name};"
+    ))?;
+    conn.execute_batch(&format!(
+        "DROP TABLE {old_name};
+         ALTER TABLE {old_name}_new RENAME TO {old_name};"
+    ))?;
     Ok(())
 }
 
 /// 音乐 metadata 索引（持有一个 SQLite 连接）。
 pub(crate) fn configure_file_db_pragmas(conn: &Connection) -> Result<(), IndexError> {
     conn.pragma_update(None, "journal_mode", "WAL")?;
+    // 大库冷启动性能补充（原先只设了 synchronous，对 1GB+ 级别的库偏保守）：
+    // - `mmap_size`：把 db 文件映射进地址空间，减少冷启动阶段的显式 read() 系统调用次数
+    //   （256MB——足够覆盖多数索引文件的活跃工作集，OS 按需换页、不会一次性吃满内存）。
+    // - `cache_size`：负值 = KB 为单位，-64000 约 64MB 页缓存（默认仅 -2000 约 2MB），
+    //   减少 FTS5 trigram 大索引反复归并 segment 时的重复磁盘读取。
+    // - `temp_store=MEMORY`：FTS5 排序/归并等临时数据走内存而非磁盘临时文件，减少额外 IO。
+    // 均为连接级设置（不持久化进 db 文件头），每次新连接都需重设，成本可忽略。
+    conn.pragma_update(None, "mmap_size", 268_435_456_i64)?;
+    conn.pragma_update(None, "cache_size", -64_000_i64)?;
+    conn.pragma_update(None, "temp_store", "MEMORY")?;
     configure_common_db_pragmas(conn)
 }
 
@@ -113,16 +304,20 @@ impl MusicIndex {
     /// 打开（或创建）索引数据库并建表。
     pub fn open(db_path: &Path) -> Result<Self, IndexError> {
         let conn = Connection::open(db_path)?;
-        Self::from_conn(conn, true)
+        Self::from_conn(conn, true, Some(db_path))
     }
 
     /// 内存库（测试用）。
     pub fn open_in_memory() -> Result<Self, IndexError> {
         let conn = Connection::open_in_memory()?;
-        Self::from_conn(conn, false)
+        Self::from_conn(conn, false, None)
     }
 
-    fn from_conn(conn: Connection, file_backed: bool) -> Result<Self, IndexError> {
+    fn from_conn(
+        conn: Connection,
+        file_backed: bool,
+        db_path: Option<&Path>,
+    ) -> Result<Self, IndexError> {
         // reindex 写与 search 读可能并发（BETA-04），给锁等待留 5s 窗口。
         conn.busy_timeout(std::time::Duration::from_secs(5))?;
         if file_backed {
@@ -130,10 +325,17 @@ impl MusicIndex {
         } else {
             configure_common_db_pragmas(&conn)?;
         }
-        conn.execute_batch(SCHEMA)?;
-        migrate_music_fts(&conn)?;
-        // BETA-32 C1b：老 db 第一次打开 → INSERT schema 版本；已有则 no-op。
-        ensure_schema_version(&conn)?;
+        // 同进程内该路径已验证过 schema → 跳过 DDL/迁移/版本 upsert，见 [`SCHEMA_VERIFIED_PATHS`]。
+        let already_verified = db_path.is_some_and(|p| schema_verified_before(p, "music"));
+        if !already_verified {
+            conn.execute_batch(SCHEMA)?;
+            migrate_music_fts(&conn)?;
+            // BETA-32 C1b：老 db 第一次打开 → INSERT schema 版本；已有则 no-op。
+            ensure_schema_version(&conn)?;
+            if let Some(p) = db_path {
+                mark_schema_verified(p, "music");
+            }
+        }
         Ok(Self { conn })
     }
 
@@ -648,6 +850,98 @@ mod tests {
             })
             .unwrap();
         assert_eq!(hits.len(), 1, "optimize 后查询仍正常命中");
+    }
+
+    /// `compact_index_if_due` 核心场景：删掉大半数据后强制压缩（`min_interval_days=0`），
+    /// 剩余音乐/文档行数不变、FTS 仍可正常命中——验证"建新表搬运存活内容 → 换名"这套
+    /// 手法没有丢数据、没有破坏 rowid 对齐；随后验证间隔未到期时跳过、传 0 可再次强制执行。
+    #[test]
+    fn compact_index_if_due_reclaims_space_and_respects_interval() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("index.db");
+
+        {
+            let music = MusicIndex::open(&path).unwrap();
+            for i in 0..20 {
+                music
+                    .upsert_entry(&entry(&format!("/m/song{i}.mp3"), "艺人", "标题", "MP3"))
+                    .unwrap();
+            }
+        }
+        {
+            let docs = crate::DocumentIndex::open(&path).unwrap();
+            let body = "压缩测试正文内容，重复填充撑大 FTS 索引体积。".repeat(20);
+            for i in 0..20 {
+                docs.upsert_document(
+                    &crate::model::DocumentEntry {
+                        path: format!("/d/doc{i}.txt"),
+                        file_name: format!("doc{i}.txt"),
+                        title: None,
+                        author: None,
+                        doc_type: "txt".to_string(),
+                        page_count: None,
+                        modified_time: 1000,
+                        content_hash: None,
+                    },
+                    &body,
+                )
+                .unwrap();
+            }
+        }
+
+        // 删掉大半内容，制造可回收的"墓碑"空间。
+        {
+            let music = MusicIndex::open(&path).unwrap();
+            for i in 0..15 {
+                music.delete_by_path(&format!("/m/song{i}.mp3")).unwrap();
+            }
+            let docs = crate::DocumentIndex::open(&path).unwrap();
+            for i in 0..15 {
+                docs.delete_by_path(&format!("/d/doc{i}.txt")).unwrap();
+            }
+        }
+
+        let ran = compact_index_if_due(&path, 0).unwrap();
+        assert!(ran, "首次调用（间隔 0）应执行压缩");
+
+        // 剩余内容行数不变、FTS 仍可命中——压缩只重建 FTS 影子表，不改变实际数据。
+        let music = MusicIndex::open(&path).unwrap();
+        assert_eq!(music.count().unwrap(), 5, "压缩不改变实际数据行数");
+        let docs = crate::DocumentIndex::open(&path).unwrap();
+        assert_eq!(docs.count().unwrap(), 5);
+        let hits = docs
+            .query(&crate::model::DocumentQuery {
+                fts_match: Some("\"压缩测试\"".to_string()),
+                ..Default::default()
+            })
+            .unwrap();
+        assert!(!hits.is_empty(), "压缩后正文仍可被 FTS 命中");
+
+        // 默认间隔（14 天）内重复调用应跳过。
+        assert!(
+            !compact_index_if_due(&path, DEFAULT_COMPACT_INTERVAL_DAYS).unwrap(),
+            "间隔内重复调用应跳过"
+        );
+        // min_interval_days=0 视为总是到期，可再次强制执行。
+        assert!(
+            compact_index_if_due(&path, 0).unwrap(),
+            "min_interval_days=0 应强制再次执行"
+        );
+    }
+
+    #[test]
+    fn compact_index_if_due_missing_db_returns_false_not_error() {
+        assert!(!compact_index_if_due(std::path::Path::new("/no/such/index.db"), 0).unwrap());
+    }
+
+    /// 边界：db 文件存在但从未被 `MusicIndex`/`DocumentIndex::open` 打开过（无任何业务表，
+    /// 只是个空 sqlite 文件）——`table_exists` 两个都判 false，函数应安全跳过重建、不报错。
+    #[test]
+    fn compact_index_if_due_fresh_db_without_fts_tables_is_safe() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("index.db");
+        Connection::open(&path).unwrap();
+        assert!(compact_index_if_due(&path, 0).unwrap());
     }
 
     #[test]

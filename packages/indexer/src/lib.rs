@@ -26,7 +26,9 @@ mod scan;
 pub mod vectors;
 pub mod version;
 
-pub use db::{clear_index, MusicIndex, MusicRootStats};
+pub use db::{
+    clear_index, compact_index_if_due, MusicIndex, MusicRootStats, DEFAULT_COMPACT_INTERVAL_DAYS,
+};
 pub use discovery::{
     default_audio_discovery, default_document_discovery, default_image_discovery, AudioDiscovery,
     DiscoveryError, PathDiscovery,
