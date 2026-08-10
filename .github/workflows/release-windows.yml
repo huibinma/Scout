@@ -15,7 +15,6 @@ jobs:
   build-windows:
     runs-on: windows-latest
     permissions:
-      actions: read # SignPath GitHub connector 校验构建来源并读取 workflow artifact
       contents: write # tauri-action 创建 Release 需要写权限
     steps:
       - name: Checkout
@@ -64,105 +63,35 @@ jobs:
       #   - BETA-25：llama-cpp-4 已关默认 dynamic-link 走静态链接，安装包不再依赖
       #     外部 llama DLL（修复此前 NSIS 缺 DLL 的隐患）。
       #   - BETA-15B-4 注：Windows semantic-recall（embedding）首次真机随本次发版验证（NSIS/DLL/embedding 加载）。
-      # 只构建、不直接上传 Release。Windows 安装包必须先作为 GitHub workflow artifact
-      # 提交给 SignPath；SignPath connector 会校验构建确由本 workflow 的 GitHub-hosted
-      # runner 产出。签名完成前不发布 unsigned 安装包，避免 Release 混入同名未签名资产。
-      - name: Build Tauri app
-        id: build-tauri
+      #
+      # SignPath 签名接入暂缓（GitHub secrets/variables 尚未配置，见 CODE_SIGNING.md /
+      # .signpath/artifact-configuration.xml）：本 step 暂时直接构建 + 发布 unsigned 安装包，
+      # 待 SignPath 侧配置补齐后再恢复「build → 上传 artifact → 提交签名 → 校验 → 发布」链路。
+      - name: Build Tauri app + create Release
         uses: tauri-apps/tauri-action@fce9c6108b31ea247710505d3aaaa893ee6768d4 # v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: apps/desktop # 含 src-tauri 与前端 package.json
-          args: --features model-fallback,semantic-recall -- --locked
+          tagName: ${{ github.event.inputs.tag || github.ref_name }}
+          releaseName: "Scout ${{ github.event.inputs.tag || github.ref_name }}"
+          # 占位模板：真实 changelog 按 CONVENTIONS §8 在发版后用
+          # `gh release edit <tag> --notes-file <file>` 补全（勿依赖此静态文案）。
+          releaseBody: |
+            Scout Windows 测试版（NSIS 安装包）。
 
-      - name: Verify SignPath configuration
-        shell: pwsh
-        env:
-          SIGNPATH_API_TOKEN: ${{ secrets.SIGNPATH_API_TOKEN }}
-          SIGNPATH_ORGANIZATION_ID: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          SIGNPATH_PROJECT_SLUG: ${{ vars.SIGNPATH_PROJECT_SLUG }}
-          SIGNPATH_SIGNING_POLICY_SLUG: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
-          SIGNPATH_ARTIFACT_CONFIGURATION_SLUG: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
-        run: |
-          $required = @{
-            SIGNPATH_API_TOKEN = $env:SIGNPATH_API_TOKEN
-            SIGNPATH_ORGANIZATION_ID = $env:SIGNPATH_ORGANIZATION_ID
-            SIGNPATH_PROJECT_SLUG = $env:SIGNPATH_PROJECT_SLUG
-            SIGNPATH_SIGNING_POLICY_SLUG = $env:SIGNPATH_SIGNING_POLICY_SLUG
-            SIGNPATH_ARTIFACT_CONFIGURATION_SLUG = $env:SIGNPATH_ARTIFACT_CONFIGURATION_SLUG
-          }
-          $missing = @($required.GetEnumerator() | Where-Object {
-            [string]::IsNullOrWhiteSpace([string]$_.Value)
-          } | ForEach-Object { $_.Key })
-          if ($missing.Count -gt 0) {
-            throw "SignPath 尚未配置，缺少 GitHub secret/variables: $($missing -join ', ')"
-          }
-
-      # SignPath 的 GitHub connector 只接受先上传到 GitHub 的 workflow artifact。
-      # upload-artifact 会生成 ZIP，因此 SignPath 端 artifact configuration 的根元素
-      # 必须是 <zip-file>；仓库内参考配置见 .signpath/artifact-configuration.xml。
-      - name: Upload unsigned installer for SignPath
-        id: upload-unsigned-installer
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: scout-windows-unsigned-${{ steps.build-tauri.outputs.appVersion }}
-          path: apps/desktop/src-tauri/target/release/bundle/nsis/*-setup.exe
-          if-no-files-found: error
-          retention-days: 7
-          compression-level: 0
-
-      # 免费代码签名由 SignPath.io 提供、证书由 SignPath Foundation 提供。
-      # OSS 订阅要求每次 Release 由 approver 人工批准；本 step 会等待批准并下载签名产物。
-      - name: Submit SignPath signing request
-        id: sign-installer
-        uses: signpath/github-action-submit-signing-request@b9d91eadd323de506c0c81cf0c7fe7438f3360fd # v2
-        with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
-          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
-          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
-          github-artifact-id: ${{ steps.upload-unsigned-installer.outputs.artifact-id }}
-          wait-for-completion: true
-          wait-for-completion-timeout-in-seconds: 3600
-          output-artifact-directory: signed-windows
-          parameters: |
-            version: ${{ toJSON(steps.build-tauri.outputs.appVersion) }}
-
-      - name: Verify signed installer exists
-        shell: pwsh
-        run: |
-          $installers = @(Get-ChildItem -Path signed-windows -Filter '*-setup.exe' -File -Recurse)
-          if ($installers.Count -ne 1) {
-            throw "期望 SignPath 返回 1 个 NSIS 安装包，实际为 $($installers.Count) 个"
-          }
-          Get-AuthenticodeSignature $installers[0].FullName | Format-List Status, StatusMessage, SignerCertificate
-          $signature = Get-AuthenticodeSignature $installers[0].FullName
-          if ($signature.Status -ne 'Valid') {
-            throw "SignPath 安装包签名无效：$($signature.Status) $($signature.StatusMessage)"
-          }
-
-      # macOS workflow 可能先创建同 tag Release；softprops/action-gh-release 对已有 Release
-      # 幂等追加 Windows 资产。真实 changelog 仍按 CONVENTIONS §8 发版后统一补全。
-      - name: Publish signed Windows installer
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
-        with:
-          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
-          name: "Scout ${{ github.event.inputs.tag || github.ref_name }}"
-          prerelease: true
-          generate_release_notes: true
-          fail_on_unmatched_files: true
-          files: signed-windows/**/*-setup.exe
-          body: |
-            Scout Windows 测试版（经 Authenticode 签名的 NSIS 安装包）。
-
-            - 由 GitHub Actions 在 `windows-latest` 上自动构建。
-            - Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/).
-            - [Code signing policy](https://github.com/huibinma/Scout/blob/main/CODE_SIGNING.md) / [安装指南](https://github.com/huibinma/Scout/blob/main/docs/install.md)。
+            - 由 GitHub Actions 在 windows-latest 上自动构建。
+            - SignPath 免费 OSS 签名接入中（GitHub secrets/variables 待补齐），本次安装包暂未签名，
+              首次运行 Windows SmartScreen 可能提示，选择「更多信息 → 仍要运行」即可。签名恢复后另行说明。
+            - 放行步骤 / SHA256 校验 / 升级卸载说明：见 [安装指南](https://github.com/huibinma/Scout/blob/main/docs/install.md)。
 
             **模型文件（均可选，首选应用内「快速入门」一键下载；也可手动放置到 `%APPDATA%\Scout\models\`）：**
-            - `embeddinggemma-300m-q8_0.gguf` —— 语义召回 embedding 模型。
-            - `qwen3-0.6b-q4_k_m.gguf` —— 复杂查询的生成模型 fallback。
+            - `embeddinggemma-300m-q8_0.gguf` —— 语义召回 embedding 模型（启用「按意思找到」/ 跨语言）。缺失则语义召回降级纯关键词（FTS）。
+            - `qwen3-0.6b-q4_k_m.gguf` —— 生成模型 fallback（复杂查询 AI 解析）。缺失则降级 parser-only。
 
-            两者均不放置也可正常使用（纯关键词搜索）。详细 changelog 发版后补全。
+            两者均不放置也可正常使用（纯关键词搜索）。「选项 → 常规 / 语义召回」可查看各模型状态。
+
+            （详细 changelog 发版后补全）
+          releaseDraft: false
+          prerelease: true
+          args: --features model-fallback,semantic-recall -- --locked
