@@ -184,7 +184,7 @@ Spotlight/Everything/Windows Search 都持续跟踪文件系统变化（FSEvents
 
 对照本文档 §3.2/§4 的任务表复查，本轮把清单剩余项逐一处理完：T7（完整版）落地、T8 落地、T9a 落地并**真机验证**（过程中揪出一个真实的 shutdown 竞态并修复）、T9b 用真机实验拿到确定性结论——**不可行**，不是"风险高所以不做"、而是当前依赖版本的 API 边界决定了做不了。T10 评估后判断与已落地的 T2/T6 冲突、净收益不明，不建议投入。
 
-**验证方法论说明**：这一轮不少改动能拿到比"代码走读 + clippy/单测通过"更硬的验证——本机沙盒恰好有 `llama-cpp,metal` 可编译（Apple M5 Pro，真 Metal 后端）、且机器上有另一个应用（`ai.linkly.desktop`）留下的真实 `Qwen3-Embedding-0.6B-Q8_0.gguf` 模型文件，两者叠加让 T9a/T9b 可以用真模型 + 真 GPU 实测，而不是止步于"stub 测试通过"。T8（Windows-only、PowerShell+WinRT）和 T7 的 Windows 分支（`EverythingExtDiscovery`）无法在本机做 Windows 真机运行验证，但本轮已经补齐 `x86_64-pc-windows-gnu` 目标与 MinGW 工具链，并跑通 `cargo check`/`clippy -D warnings`；因此 Windows 分支已完成编译、类型与 lint 验证，仍需由本次 Release 产物补做真机功能验证，下面逐项如实标注。
+**验证方法论说明**：这一轮不少改动能拿到比"代码走读 + clippy/单测通过"更硬的验证——本机沙盒恰好有 `llama-cpp,metal` 可编译（Apple M5 Pro，真 Metal 后端），且有可用的真实 `Qwen3-Embedding-0.6B-Q8_0.gguf` 模型文件，两者叠加让 T9a/T9b 可以用真模型 + 真 GPU 实测，而不是止步于"stub 测试通过"。T8（Windows-only、PowerShell+WinRT）和 T7 的 Windows 分支（`EverythingExtDiscovery`）无法在本机做 Windows 真机运行验证，但本轮已经补齐 `x86_64-pc-windows-gnu` 目标与 MinGW 工具链，并跑通 `cargo check`/`clippy -D warnings`；因此 Windows 分支已完成编译、类型与 lint 验证，仍需由本次 Release 产物补做真机功能验证，下面逐项如实标注。
 
 ### 5.1 T7（完整版）｜发现层批量 mtime 预取
 

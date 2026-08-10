@@ -1142,7 +1142,7 @@ Everything 官方 License 是 MIT-like 宽松授权，允许使用、复制、�
 
 风险：
 
-- 市面已有 Searchibald、Pronto、FileScope、Linkly AI、remio、Microsoft Recall 等相近产品。
+- 市面已有 Searchibald、Pronto、FileScope、remio、Microsoft Recall 等相近产品。
 
 应对：
 

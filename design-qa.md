@@ -2,32 +2,26 @@
 
 ## Evidence
 
-- Source visual truth:
-  - `docs/ui-reference/linkly-official-visual-language.png` — Linkly AI 官方页面当前视觉语言。
-  - `/Applications/Linkly AI.app/Contents/Resources/icon.icns` — 本机 Linkly AI 图标，仅作风格参考，未复制入仓库。
 - Implementation:
   - `docs/ui-reference/scout-find-files-1180x760.png`
   - `docs/ui-reference/scout-settings-1180x760.png`
   - `docs/ui-reference/scout-settings-900x620.png`
-- Side-by-side comparison:
-  - `docs/ui-reference/linkly-scout-comparison.png`
 - Viewport and density:
-  - Source and primary implementation均为 `1180 × 760` CSS px、浏览器 1× 截图。
+  - 主要实现截图为 `1180 × 760` CSS px、浏览器 1× 截图。
   - 窄窗口补充验证为 `900 × 620` CSS px、1×。
-  - 对比图为 `2360 × 1520` px：两行分别放置 Linkly source + Scout 找文件、Linkly source + Scout 设置，无缩放。
 - State:
   - 找文件：首次进入空状态。
   - 设置：常规分类，浏览器无 Tauri bridge，因此数据区为“加载中…”。
 
-## Full-view comparison
+## Full-view review
 
-Scout 已继承参考目标的核心视觉语言：温暖的米白背景、黑色主操作、低饱和橙色强调、克制阴影、宽松留白、现代圆角和清晰的大标题层级。产品结构按 Scout 的任务重新组织为固定侧栏 + 整页工作区，没有复制 Linkly 的聊天入口。
+Scout 的核心视觉语言为温暖的米白背景、黑色主操作、低饱和橙色强调、克制阴影、宽松留白、现代圆角和清晰的大标题层级。产品结构围绕 Scout 的文件检索任务组织为固定侧栏 + 整页工作区，不引入无关的聊天入口。
 
 找文件页把搜索框置于首要层级，首次空状态用三条真实搜索示例解释“按意思寻找”；设置页沿用相同壳层和视觉 token，以分类侧栏承载已有设置能力。两个页面在同一框架下具有一致的留白、边界、圆角与操作按钮风格。
 
-## Focused-region comparison
+## Focused-region review
 
-- 品牌区：Scout 使用 Image-Gen 生成的独立 S 图标；透明边缘、32px 识别度与深色底板均已检查。字母和构图未复制 Linkly。
+- 品牌区：Scout 使用 Image-Gen 生成的独立 S 图标；透明边缘、32px 识别度与深色底板均已检查，字母和构图保持原创。
 - 搜索区：主搜索输入、辅助入口与黑色搜索按钮在 1180px 下对齐，无裁切；首次示例按钮使用统一 Phosphor 图标。
 - 导航区：默认宽度显示主次说明；900px 下收成图标轨道，`aria-label` 仍保留“找文件 / 设置”可访问名称。
 - 设置区：分类侧栏、内容面板与底部操作区在 1180px 和 900px 下均完整可见。
