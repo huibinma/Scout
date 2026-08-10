@@ -41,7 +41,10 @@
 | futures-util | 0.3.32 | Stream 扩展工具与测试消费 | crates.io | MIT OR Apache-2.0 | 否 | 是 | `default-features = false` |
 | futures-executor | 0.3.32 | 测试用 `block_on`（替代各 crate 手写 `noop_waker` 轮询副本） | crates.io | MIT OR Apache-2.0 | 否 | 否 | 仅 `[dev-dependencies]`，不进生产分发 |
 | tokio | 1.52.3 | CLI 当前线程 runtime；后续 backend async runtime 基础 | crates.io | MIT | 否 | 是 | 仅启用 `rt`，避免 lockfile 新增依赖；BETA-31 桌面 backend 加 `fs / io-util / rt-multi-thread` features 供模型 GUI 下载 stream 用 |
-| reqwest | 0.12 | HTTP 客户端（stream + rustls-tls 后端） | crates.io | MIT OR Apache-2.0 | 否 | 是 | BETA-31 模型 GUI 一键下载；`default-features = false` + `rustls-tls` 关 default-tls、避免 openssl 平台依赖；与 BETA-26 spike-retrieval / training 侧 HTTP 解耦 |
+| reqwest | 0.12 | HTTP 客户端（stream + default-tls 后端） | crates.io | MIT OR Apache-2.0 | 否 | 是 | BETA-31 模型 GUI 一键下载 + BETA-74 自动更新（GitHub Releases API + 安装包下载）共用；2026-08-10 由 `rustls-tls` 改 `default-tls`（见下方 native-tls 行）；与 BETA-26 spike-retrieval / training 侧 HTTP 解耦 |
+| native-tls | 0.2.18 | reqwest TLS 后端，读操作系统证书 store | crates.io | MIT OR Apache-2.0 | 否 | 是 | 2026-08-10 替换 rustls-tls：真机反馈自动更新检查报连接层失败——rustls 只信任自带 webpki-roots、不读系统证书 store，企业网络/HTTPS 检测型杀毒软件把自定义根证书装进系统信任库后天然验证失败；macOS 走 security-framework（Security.framework）、Windows 走 schannel，均系统自带 API，不链 OpenSSL（`openssl-sys` 只在 Cargo.lock 里为 Linux target 保留条目，本项目不做 Linux 桌面分发、实际不编译） |
+| hyper-tls | 0.6.0 | reqwest 经 native-tls 的 hyper 连接器胶水层 | crates.io | MIT | 否 | 是 | native-tls 传递依赖 |
+| tokio-native-tls | 0.3.1 | native-tls 的 tokio 异步封装 | crates.io | MIT | 否 | 是 | native-tls 传递依赖 |
 | sha2 | 0.10 | 计算 fixture 源文件 sha256（BETA-08 数据集元信息锚定） | crates.io | MIT OR Apache-2.0 | 否 | 否 | 仅 `build_lora_dataset` binary 训练数据生成时使用，不进生产分发 |
 | lofty | 0.24.0 | 音频标签提取（artist/title/album/duration/format/bitrate） | crates.io | MIT OR Apache-2.0 | 否 | 是 | BETA-01 音乐 metadata 索引 |
 | lofty_attr | 0.12.0 | lofty 派生宏（proc-macro） | crates.io | MIT OR Apache-2.0 | 否 | 是 | lofty 间接依赖 |

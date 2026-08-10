@@ -102,6 +102,23 @@ fn pick_asset(release: &GhRelease) -> Option<&GhAsset> {
         .find(|a| a.name.ends_with(ASSET_SUFFIX))
 }
 
+/// reqwest::Error 的 `{}` Display 只给顶层描述（如 "error sending request for
+/// url (...)")，真正原因（DNS 失败 / TLS 证书不受信 / 连接被拒 / 超时）藏在
+/// `source()` 链里、不会自动展开。2026-08-10 真机反馈报错只有顶层这一行、
+/// 排查完全无从下手；这里手动串联整条链，格式如
+/// "请求失败: error sending request for url (...) · 原因: invalid peer
+/// certificate: UnknownIssuer"，下次再出问题能直接定位到根因类别。
+fn describe_reqwest_error(e: &reqwest::Error) -> String {
+    let mut msg = e.to_string();
+    let mut source = std::error::Error::source(e);
+    while let Some(err) = source {
+        msg.push_str(" · 原因: ");
+        msg.push_str(&err.to_string());
+        source = err.source();
+    }
+    msg
+}
+
 fn build_client() -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
         .connect_timeout(Duration::from_secs(15))
@@ -120,16 +137,23 @@ async fn fetch_latest_release(client: &reqwest::Client) -> Result<Option<GhRelea
         .header("Accept", "application/vnd.github+json")
         .send()
         .await
-        .map_err(|e| format!("GitHub Releases API 请求失败: {e}"))?;
+        .map_err(|e| {
+            format!(
+                "GitHub Releases API 请求失败: {}",
+                describe_reqwest_error(&e)
+            )
+        })?;
 
     if !resp.status().is_success() {
         return Err(format!("GitHub Releases API HTTP {}", resp.status()));
     }
 
-    let body = resp
-        .text()
-        .await
-        .map_err(|e| format!("读取 GitHub Releases 响应失败: {e}"))?;
+    let body = resp.text().await.map_err(|e| {
+        format!(
+            "读取 GitHub Releases 响应失败: {}",
+            describe_reqwest_error(&e)
+        )
+    })?;
     let releases: Vec<GhRelease> =
         serde_json::from_str(&body).map_err(|e| format!("解析 GitHub Releases 响应失败: {e}"))?;
 
@@ -236,7 +260,7 @@ async fn download_asset(
         .header("User-Agent", USER_AGENT)
         .send()
         .await
-        .map_err(|e| format!("下载安装包失败: {e}"))?;
+        .map_err(|e| format!("下载安装包失败: {}", describe_reqwest_error(&e)))?;
 
     if !resp.status().is_success() {
         return Err(format!("下载安装包 HTTP {}", resp.status()));
@@ -252,7 +276,7 @@ async fn download_asset(
     let mut next_emit: u64 = 0;
 
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| format!("下载数据块失败: {e}"))?;
+        let chunk = chunk.map_err(|e| format!("下载数据块失败: {}", describe_reqwest_error(&e)))?;
         file.write_all(&chunk)
             .await
             .map_err(|e| format!("写入安装包失败: {e}"))?;

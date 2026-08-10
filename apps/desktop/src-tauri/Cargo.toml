@@ -1,6 +1,6 @@
 [package]
 name = "scout-desktop"
-version = "0.9.52"
+version = "0.9.53"
 description = "Scout Desktop App"
 authors = ["Scout Project"]
 edition = "2021"
@@ -59,9 +59,18 @@ secrecy = "0.10"
 # BETA-53：随机 bearer token（OS CSPRNG，32 字节 → 64 hex 字符）。
 getrandom = "0.2"
 
-# BETA-31：模型下载 GUI（reqwest stream + futures-util StreamExt）。
-# default-features=false 关 default-tls 避免 openssl 平台依赖、用 pure-rust rustls。
-reqwest = { version = "0.12", default-features = false, features = ["stream", "rustls-tls"] }
+# BETA-31：模型下载 GUI（reqwest stream + futures-util StreamExt）。BETA-74 自动更新
+# （update.rs）复用同一份依赖声明。
+# 2026-08-10：TLS 后端由 rustls-tls 改为 default-tls（native-tls）——真机反馈自动更新
+# 检查报 "error sending request"（连接/TLS 层失败，非 HTTP 4xx/5xx，`resp.status()`
+# 都没走到）。rustls 只信任自带的 webpki-roots（Mozilla 根证书列表），不读操作系统
+# 证书store；企业网络/部分安全软件（如 HTTPS 检测型杀毒软件）常把自签根证书装进
+# 系统信任库、期望应用走系统证书链验证，rustls 天然验证失败。原注释"避免 openssl
+# 平台依赖"这条顾虑对本项目实际发行的 macOS/Windows 不成立——native-tls 在 macOS
+# 走 Security.framework、Windows 走 Schannel，均为系统自带 API，不链 OpenSSL（只有
+# Linux 才需要 openssl-sys，而本项目明确不做 Linux 桌面分发，见 PROJECT.md）。
+# default-tls 读系统证书 store，与用户浏览器/系统信任链一致，是桌面客户端标准实践。
+reqwest = { version = "0.12", default-features = false, features = ["stream", "default-tls"] }
 futures-util = "0.3"
 # Track A 搜索并发化：spawn_blocking 线程内用 futures_executor::block_on 驱动各后端
 # search_expanded 流（后端为同步阻塞体、无 tokio reactor 需求，故用 runtime 无关的
