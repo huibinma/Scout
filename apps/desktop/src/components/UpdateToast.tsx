@@ -1,12 +1,24 @@
 import { DownloadSimple, Info, Warning, X } from "@phosphor-icons/react";
-import { useAutoUpdate } from "../hooks/useAutoUpdate";
+import { UseAutoUpdate } from "../hooks/useAutoUpdate";
 import { formatBytes } from "./preferences/shared";
 
-// 自动更新提醒：后端每 8 小时轮询 GitHub Releases，发现新版本经 update://available
-// event 通知（见 update.rs）。窗口左下角常驻 toast，不打断当前操作；点「更新」后台
+// 自动更新提醒：后端每 4 小时（默认，设置里可调）轮询 GitHub Releases，发现新版本经
+// update://available event 通知，前端挂载时也会主动即时查一次兜底（见 update.rs /
+// useAutoUpdate.ts 顶部注释）。窗口左下角常驻 toast，不打断当前操作；点「更新」后台
 // 下载 + 静默安装，装完进程自行重启，不需要额外的"完成"UI 态。
-export function UpdateToast() {
-  const { status, info, progress, error, install, dismiss } = useAutoUpdate();
+//
+// **状态来自 props、不在本组件内部调 useAutoUpdate()**：「关于 Scout」弹窗的手动
+// 检查按钮也要驱动同一份更新状态（命中新版本时两处应该是同一个 toast，而不是各自
+// 独立的两份状态），所以由 App.tsx 统一持有单个 hook 实例、经 props 分发。
+export function UpdateToast({
+  state,
+}: {
+  state: Pick<
+    UseAutoUpdate,
+    "status" | "info" | "progress" | "error" | "install" | "dismiss"
+  >;
+}) {
+  const { status, info, progress, error, install, dismiss } = state;
 
   if (status === "idle" || !info) return null;
 

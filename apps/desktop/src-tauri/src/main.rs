@@ -909,9 +909,11 @@ fn main() {
                     }
                 }
             });
-            // 自动更新：每 8 小时轮询 GitHub Releases，发现新版本经 `update://available`
-            // event 通知前端左下角提醒（见 update.rs 顶部注释：轻量自研，不接
-            // tauri-plugin-updater，不需要签名密钥/改动 release workflow）。
+            // 自动更新：默认每 4 小时轮询 GitHub Releases（设置 → 常规可调 30 分钟~24
+            // 小时/关闭），发现新版本经 `update://available` event 通知前端左下角提醒；
+            // 前端挂载时也会主动即时查一次兜底，避免后台首检的 30 秒延迟 + 事件丢失窗口
+            // 让真机测试"看起来没反应"（2026-08-10 真机反馈修复，见 update.rs 顶部注释：
+            // 轻量自研，不接 tauri-plugin-updater，不需要签名密钥/改动 release workflow）。
             tauri::async_runtime::spawn(update::run_update_check_loop(
                 app.handle().clone(),
                 settings::settings_file_path(&app.handle().clone()),
@@ -986,6 +988,7 @@ fn main() {
             mcp_service::stop_mcp_service,
             mcp_service::mcp_service_status,
             mcp_service::reset_mcp_token,
+            update::check_for_updates,
             update::install_update,
         ])
         .run(tauri::generate_context!())

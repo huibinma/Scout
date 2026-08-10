@@ -13,6 +13,7 @@ import ShortcutBanner from "./components/ShortcutBanner";
 import StatusIndicator from "./components/StatusIndicator";
 import UpdateToast from "./components/UpdateToast";
 import { Category } from "./components/preferences/shared";
+import { useAutoUpdate } from "./hooks/useAutoUpdate";
 import { useShouldShowOnboarding } from "./hooks/useShouldShowOnboarding";
 import { emitMenuAction, onMenuAction } from "./lib/menu-events";
 import OnboardingMac from "./pages/OnboardingMac";
@@ -24,6 +25,9 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const onboarding = useShouldShowOnboarding();
+  // 单一 hook 实例：左下角 toast 与「关于 Scout」的手动检查按钮共享同一份更新状态
+  // （命中新版本时两处联动，而不是各自独立检查出不一致的结果）。
+  const autoUpdate = useAutoUpdate();
   const [settingsCategory, setSettingsCategory] =
     useState<Category>("general");
   const [showAbout, setShowAbout] = useState(false);
@@ -219,8 +223,10 @@ function App() {
         </Routes>
       </section>
 
-      {showAbout && <AboutDialog onClose={() => setShowAbout(false)} />}
-      <UpdateToast />
+      {showAbout && (
+        <AboutDialog onClose={() => setShowAbout(false)} autoUpdate={autoUpdate} />
+      )}
+      <UpdateToast state={autoUpdate} />
     </div>
   );
 }

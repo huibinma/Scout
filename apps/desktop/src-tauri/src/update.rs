@@ -160,6 +160,21 @@ async fn check_for_newer_release(client: &reqwest::Client) -> Result<Option<Upda
     Ok(evaluate_release(&release, env!("CARGO_PKG_VERSION")))
 }
 
+/// 手动触发一次检查——「关于 Scout」的「检查更新」按钮、以及前端启动时的即时检查
+/// 共用。**这是修 2026-08-10 真机反馈"自动更新没反应"的关键**：后台轮询用
+/// `app.emit` 广播 `update://available`，是纯 fire-and-forget，若前端此刻还没
+/// `listen()` 注册完（首次启动 webview JS 运行时初始化有几十到几百 ms 的窗口，
+/// 慢机器/首次冷启动可能更久）事件就直接丢了、不会重发；丢过一次后要等一整个
+/// 轮询周期（默认 4 小时）才会再提醒一次，真机测试"打开等一会儿"的时间窗口内
+/// 几乎必然看不到任何反应。本命令是直接的 request/response，调用方稳拿到结果，
+/// 不存在事件丢失窗口——前端在挂载时额外主动调一次本命令兜底（不再只靠后台
+/// 30 秒后的 emit），配合手动按钮，两条路径都不受这个竞态影响。
+#[tauri::command]
+pub async fn check_for_updates() -> Result<Option<UpdateInfo>, String> {
+    let client = build_client()?;
+    check_for_newer_release(&client).await
+}
+
 /// 常驻后台任务：启动 30 秒后首检，随后按「设置 → 常规」配置的间隔轮询（默认 4
 /// 小时，范围 [30, 1440] 分钟）。开关 / 间隔每轮 tick 前都 live-read settings.json，
 /// 用户运行期改设置无需重启即生效（与 `auto_index_interval_minutes` 的既有约定一致）。

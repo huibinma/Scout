@@ -212,6 +212,57 @@ body {
   text-decoration: underline;
 }
 
+.about-update {
+  margin: 0 0 1.1rem 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
+}
+
+.about-update-row {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.about-update-btn {
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-md);
+  border: 1px solid #1c1917;
+  background: #1c1917;
+  color: #fff;
+  cursor: pointer;
+  font-size: var(--text-sm);
+  font-family: inherit;
+}
+
+.about-update-btn:hover {
+  background: #292524;
+}
+
+.about-update-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.about-update-message {
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.about-update-error {
+  color: var(--status-err-fg);
+}
+
+.about-update-found {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.6rem;
+  font-size: var(--text-sm);
+  color: var(--fg);
+}
+
 .about-actions {
   display: flex;
   justify-content: flex-end;
