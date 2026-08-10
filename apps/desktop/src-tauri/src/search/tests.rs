@@ -531,16 +531,18 @@ async fn search_impl_success_emits_call_then_result() {
 }
 
 // chain 接入后语义变化：
-// - open_err（pre-stream 失败，零结果）：chain 返回 total=0 → on_tool_result(0) + UI Error。
-//   旧：on_error("Timeout") + UI Error；新：on_tool_result(0) + UI Error。
+// - open_err（pre-stream 失败，零结果）：chain 返回 total=0 → on_tool_result(0) + UI Complete(0)。
+//   0 命中不是错误（见「找文件没命中/Everything 未启用不应报错」用户反馈）：无论零结果
+//   是真无匹配还是某候选后端失败，UI 都应落空态而非错误态。last_error 仅落诊断日志。
+//   旧：on_error("Timeout") + UI Error；新：on_tool_result(0) + UI Complete(0)。
 // - mid_stream_err（1 条 ok 后 Io）：chain 保留已收到的部分结果（total=1）→
 //   on_tool_result(1) + UI Complete(1)。这是 fallback chain 的设计新语义：
 //   有部分结果时不因 stream 中途崩而丢弃，视为成功（等待 fallback 或直接 Complete）。
 //   旧：on_error("Io") + UI Error；新：on_tool_result(1) + UI Complete。
 
 #[tokio::test]
-async fn search_impl_open_err_emits_call_then_result_zero_and_error() {
-    // open_err（pre-stream Timeout）：chain 零结果 → on_tool_result(0) + UI Error
+async fn search_impl_open_err_emits_call_then_result_zero_and_complete() {
+    // open_err（pre-stream Timeout）：chain 零结果 → on_tool_result(0) + UI Complete(0)，非 Error
     let registry = build_test_registry(
         FakeOpenErrBackend,
         vec![SupportedIntent::FileSearch, SupportedIntent::MediaSearch],
@@ -570,8 +572,12 @@ async fn search_impl_open_err_emits_call_then_result_zero_and_error() {
 
     let events = captured.lock().unwrap();
     assert!(
-        events.iter().any(|e| e.contains("\"error\"")),
-        "captured channel 应包含 SearchEvent::Error, 实得: {events:?}"
+        events.iter().any(|e| e.contains("\"complete\"")),
+        "captured channel 应包含 SearchEvent::Complete, 实得: {events:?}"
+    );
+    assert!(
+        !events.iter().any(|e| e.contains("\"error\"")),
+        "0 命中不应发 SearchEvent::Error, 实得: {events:?}"
     );
 }
 
@@ -3024,13 +3030,14 @@ async fn search_impl_semantic_no_model_degrades_to_fts_results() {
 }
 
 /// BETA-33 cycle 9：**FTS 臂零结果 + 语义臂查询期报错**（路由后模型加载竞态失败）时，
-/// 全链错误信息应是「未找到结果」空态——而非把语义臂的「embedding 模型不可用」冒充
-/// 全链错误（其余臂已正常查完、语义能力真实状态另有 EmbedStatus 呈现）。
+/// 全链应以 Complete(0) 空态收尾——而非把语义臂的「embedding 模型不可用」冒充全链错误
+/// 甚至冒充为 UI Error（其余臂已正常查完、语义能力真实状态另有 EmbedStatus 呈现；
+/// 0 命中本身也不是错误，见「找文件没命中不应报错」用户反馈）。
 /// 注：路由期探测（`TextEmbedder::is_ready()`=false → 语义臂整体退出 fan-out）由
 /// embedding_model / semantic-index 单测覆盖；此处 ErrEmbedder 未覆写 is_ready（恒 true），
 /// 专门驱动「路由进了臂、embed 才失败」的竞态残余路径。
 #[tokio::test]
-async fn search_impl_semantic_error_with_zero_fts_reports_not_found() {
+async fn search_impl_semantic_error_with_zero_fts_reports_empty_complete() {
     use scout_indexer::DocumentIndex;
 
     // 真实 db + 一条候选向量：让语义臂查询走到 embed() 的 Err 分支（同上一测）。
@@ -3085,12 +3092,15 @@ async fn search_impl_semantic_error_with_zero_fts_reports_not_found() {
         .expect("语义臂报错不应把错误外泄为 invoke 失败");
 
     let events = captured.lock().unwrap();
-    // 零结果空态：报「未找到结果」，绝不把语义臂 embed 错误冒充全链错误。
+    // 零结果空态：应以 Complete(0) 收尾，绝不把语义臂 embed 错误冒充全链错误，
+    // 也绝不把 0 命中本身报成 SearchEvent::Error。
     assert!(
-        events
-            .iter()
-            .any(|e| e.contains("\"error\"") && e.contains("未找到结果")),
-        "FTS 零结果 + 语义臂报错应报「未找到结果」空态, 实得: {events:?}"
+        events.iter().any(|e| e.contains("\"complete\"")),
+        "FTS 零结果 + 语义臂报错应以 Complete(0) 空态收尾, 实得: {events:?}"
+    );
+    assert!(
+        !events.iter().any(|e| e.contains("\"error\"")),
+        "0 命中不应发 SearchEvent::Error, 实得: {events:?}"
     );
     assert!(
         !events.iter().any(|e| e.contains("embedding")),

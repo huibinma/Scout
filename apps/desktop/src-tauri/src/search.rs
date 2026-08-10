@@ -747,10 +747,16 @@ async fn run_resolved_search(
     });
 
     if outcome.total == 0 {
-        let _ = on_event.send(SearchEvent::Error {
-            message: outcome
-                .last_error
-                .unwrap_or_else(|| "未找到结果".to_owned()),
+        // 0 命中不是错误：可能是真无匹配，也可能是链上某个可选后端（如 Everything
+        // 未启动）不可用而被跳过——两者对用户都应呈现为「没有命中结果」的空态
+        // （前端按 total==0 走既有空态 UI），而非错误态。last_error 仅落诊断日志。
+        if let Some(err) = &outcome.last_error {
+            tracing::debug!(last_error = %err, "fallback chain 零命中（含可选后端不可用）");
+        }
+        let elapsed_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+        let _ = on_event.send(SearchEvent::Complete {
+            total: 0,
+            elapsed_ms,
         });
         return Ok(());
     }

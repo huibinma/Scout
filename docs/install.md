@@ -1,15 +1,21 @@
 # Scout 安装指南
 
-> Scout 目前是**私有仓库**，Releases 仅协作者账号可见/下载。**不购买代码签名证书、不注册 Apple Developer**——因此安装包未签名，系统会弹「未知发布者」类提示。本文告诉你每一步怎么过、以及如何校验你下载的文件确实来自官方 Release。
+> Scout 是公开的 MIT 开源项目。Windows 正在申请 SignPath Foundation 免费开源代码签名；申请获批并完成流水线切换后的新 Release 将带 Authenticode 签名，旧 Release 仍可能未签名。macOS 暂未加入 Apple Developer Program，仍未签名、未公证。
 
 ## Windows
 
 ### 下载安装
 
-1. 用已获邀请的协作者账号登录 GitHub，到 [Releases](https://github.com/huibinma/Scout/releases) 下载最新的 `Scout_x.y.z_x64-setup.exe`（NSIS 安装包）。
-2. 运行时若弹出 **SmartScreen「Windows 已保护你的电脑」**：点「**更多信息**」→「**仍要运行**」。
-   - 为什么会弹：安装包未做代码签名（见顶部说明），SmartScreen 对无签名/低信誉文件一律提示，与是否安全无关。
+1. 打开公开的 [Releases](https://github.com/huibinma/Scout/releases) 页面，下载最新的 `Scout_x.y.z_x64-setup.exe`（NSIS 安装包）。
+2. 右键安装包 →「属性」→「数字签名」，或在 PowerShell 中执行：
+   ```powershell
+   Get-AuthenticodeSignature .\Scout_x.y.z_x64-setup.exe | Format-List Status,SignerCertificate
+   ```
+   - SignPath 流水线切换后的 Release：预期 `Status` 为 `Valid`，证书发布者显示 SignPath Foundation。
+   - 旧的未签名 Release：SmartScreen 仍可能显示「Windows 已保护你的电脑」，可点「更多信息 → 仍要运行」，并务必先核对 SHA256。
 3. 按向导完成安装。
+
+Scout 的签名范围、团队角色、隐私边界和发布流程见 [Code signing policy](../CODE_SIGNING.md)。Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by [SignPath Foundation](https://signpath.org/)。
 
 ### 校验下载（建议）
 

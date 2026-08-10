@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SignPath 管理后台 artifact configuration 的版本化参考文件。
+  actions/upload-artifact 会把 NSIS 安装包封装为 ZIP，因此根元素为 zip-file。
+  SignPath OSS 政策要求所有签名 PE 文件限制 product name / version 元数据。
+-->
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <parameters>
+    <parameter name="version" required="true" />
+  </parameters>
+  <zip-file>
+    <pe-file
+      path="Scout_${version}_x64-setup.exe"
+      product-name="Scout"
+      product-version="${version}"
+      file-version="${version}"
+    >
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>

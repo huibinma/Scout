@@ -291,24 +291,17 @@ pub(crate) async fn run_fanout_search(
     });
 
     if outcome.total == 0 {
-        // BETA-33 cycle 9：语义臂错误不冒充全链错误——报错优先取非语义臂错误；仅语义臂
-        // 出错（如路由后模型加载竞态失败）时按「未找到结果」空态呈现：其余臂已正常查完、
-        // 语义能力的真实状态在顶栏 / 设置页 EmbedStatus 另有如实展示。
-        let semantic_ids: Vec<&str> = backends
-            .iter()
-            .filter(|t| {
-                t.capability().backend_kind
-                    == Some(scout_search_backend::BackendKind::SemanticIndex)
-            })
-            .map(|t| t.id())
-            .collect();
-        let message = outcome
-            .errors
-            .iter()
-            .find(|(id, _)| !semantic_ids.contains(&id.as_str()))
-            .map(|(_, m)| m.clone())
-            .unwrap_or_else(|| "未找到结果".to_owned());
-        let _ = on_event.send(SearchEvent::Error { message });
+        // 0 命中一律呈现为空态而非错误态：无论是真无匹配、可选后端（如 Everything）
+        // 未启用，还是某条臂查询中途失败，用户看到的都应是「没有命中结果」。各臂
+        // 错误仅落诊断日志；语义能力的真实状态在顶栏 / 设置页 EmbedStatus 另有如实展示。
+        for (id, err) in &outcome.errors {
+            tracing::debug!(tool = %id, error = %err, "fanout 零命中：某臂查询失败");
+        }
+        let elapsed_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+        let _ = on_event.send(SearchEvent::Complete {
+            total: 0,
+            elapsed_ms,
+        });
         return Ok(());
     }
 
@@ -525,9 +518,9 @@ pub(crate) async fn run_balanced_multitype_search(
     });
 
     if total == 0 {
-        let _ = on_event.send(SearchEvent::Error {
-            message: "未找到结果".to_owned(),
-        });
+        // 0 命中是空态，不是错误态（与其它两条搜索路径口径一致）。
+        let elapsed_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
+        let _ = on_event.send(SearchEvent::Complete { total: 0, elapsed_ms });
         return Ok(());
     }
 
