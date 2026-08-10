@@ -520,7 +520,10 @@ pub(crate) async fn run_balanced_multitype_search(
     if total == 0 {
         // 0 命中是空态，不是错误态（与其它两条搜索路径口径一致）。
         let elapsed_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX);
-        let _ = on_event.send(SearchEvent::Complete { total: 0, elapsed_ms });
+        let _ = on_event.send(SearchEvent::Complete {
+            total: 0,
+            elapsed_ms,
+        });
         return Ok(());
     }
 
