@@ -119,8 +119,9 @@ const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 #[cfg(target_os = "windows")]
 fn platform_open(path: &Path) -> io::Result<()> {
     use std::os::windows::process::CommandExt;
+    let target = scout_search_backend::user_facing_path(path);
     std::process::Command::new("cmd")
-        .args(["/C", "start", "", &path.to_string_lossy()])
+        .args(["/C", "start", "", &target])
         .creation_flags(CREATE_NO_WINDOW)
         .status()?;
     Ok(())
@@ -129,11 +130,29 @@ fn platform_open(path: &Path) -> io::Result<()> {
 #[cfg(target_os = "windows")]
 fn platform_locate(path: &Path) -> io::Result<()> {
     use std::os::windows::process::CommandExt;
-    std::process::Command::new("explorer")
-        .arg(format!("/select,{}", path.display()))
+
+    let [select_switch, target] = windows_explorer_select_args(path);
+    std::process::Command::new("explorer.exe")
+        // Explorer 使用自己的命令行解析器：不接受 `\\?\` 前缀；若再把
+        // `/select,` 与带空格路径拼成一个普通参数，Rust 会给整个参数加引号，
+        // Explorer 也可能误判。这里先恢复用户路径，再把 switch 与路径分开传递。
+        .raw_arg(select_switch)
+        .arg(target)
         .creation_flags(CREATE_NO_WINDOW)
         .status()?;
     Ok(())
+}
+
+/// Windows Explorer 的 `/select, <path>` 必须把 switch 与目标路径分开传递。
+///
+/// 目标路径先走统一的用户边界规范化，去掉 Explorer 不接受的 `\\?\` 前缀。
+#[cfg(any(target_os = "windows", test))]
+fn windows_explorer_select_args(path: &Path) -> [std::ffi::OsString; 2] {
+    let target = scout_search_backend::user_facing_path(path);
+    [
+        std::ffi::OsString::from("/select,"),
+        std::ffi::OsString::from(target),
+    ]
 }
 
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
@@ -155,6 +174,35 @@ fn platform_locate(_path: &Path) -> io::Result<()> {
 fn is_cross_device(err: &io::Error) -> bool {
     // Linux EXDEV = 18, macOS EXDEV = 18, Windows: 不直接区分
     err.raw_os_error() == Some(18)
+}
+
+#[cfg(test)]
+mod platform_tests {
+    use super::windows_explorer_select_args;
+    use std::ffi::OsString;
+    use std::path::Path;
+
+    #[test]
+    fn windows_explorer_select_keeps_switch_and_spaced_path_separate() {
+        let path = Path::new(r"C:\Users\测试用户\My Documents\报告 终稿.pdf");
+        let args = windows_explorer_select_args(path);
+
+        assert_eq!(args[0], OsString::from("/select,"));
+        assert_eq!(args[1], path.as_os_str());
+    }
+
+    #[test]
+    fn windows_explorer_select_removes_verbatim_prefix() {
+        let args = windows_explorer_select_args(Path::new(
+            r"\\?\C:\Users\测试用户\My Documents\报告 终稿.pdf",
+        ));
+
+        assert_eq!(args[0], OsString::from("/select,"));
+        assert_eq!(
+            args[1],
+            OsString::from(r"C:\Users\测试用户\My Documents\报告 终稿.pdf")
+        );
+    }
 }
 
 // ============================================================

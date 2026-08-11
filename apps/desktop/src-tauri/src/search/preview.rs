@@ -210,10 +210,9 @@ fn fts_for_query(query: &str, deps: &SearchDeps) -> Option<String> {
 /// 候选查询路径：原值 + 去除 Windows 扩展长度前缀（`\\?\` / `\\?\UNC\`）的形式。
 fn lookup_candidates(path: &str) -> Vec<String> {
     let mut out = vec![path.to_string()];
-    if let Some(rest) = path.strip_prefix(r"\\?\UNC\") {
-        out.push(format!(r"\\{rest}"));
-    } else if let Some(rest) = path.strip_prefix(r"\\?\") {
-        out.push(rest.to_string());
+    let user_facing = scout_search_backend::strip_windows_verbatim_prefix(path);
+    if user_facing != path {
+        out.push(user_facing.into_owned());
     }
     out
 }

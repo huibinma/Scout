@@ -12,6 +12,7 @@ workspace = true
 [dependencies]
 thiserror = "2.0"
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
 # Llama.cpp backend (requires cmake)
 # BETA-25：default-features=false 去掉 llama-cpp-4 默认的 `dynamic-link`（病根：产出
@@ -27,7 +28,9 @@ candle-nn = { version = "0.10.2", optional = true }
 [features]
 default = ["stub"]
 stub = []
-llama-cpp = ["llama-cpp-4", "llama-cpp-4/mtmd"]
+# 只启用 Scout 实际使用的文本生成 / embedding API。`mtmd` 是多模态工具链，Scout 没有
+# 调它；把它编入 Windows release 只会扩大 C++/MSVC CRT 面积和潜在原生崩溃面。
+llama-cpp = ["llama-cpp-4"]
 candle = ["candle-core", "candle-transformers", "candle-nn"]
 metal = ["llama-cpp-4?/metal", "candle-core?/metal", "candle-transformers?/metal"]
 cuda = ["llama-cpp-4?/cuda", "candle-core?/cuda", "candle-transformers?/cuda"]

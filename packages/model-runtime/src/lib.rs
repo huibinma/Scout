@@ -97,7 +97,7 @@ pub(crate) fn first_json_object_complete(s: &str) -> bool {
 }
 
 /// 模型加载参数
-#[derive(Debug, Clone, Copy, Default)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize)]
 pub struct ModelLoadParams {
     /// GPU 层数 (Metal/CUDA)
     pub gpu_layers: u32,
@@ -198,6 +198,8 @@ pub mod daemon;
 pub mod llama;
 #[cfg(feature = "llama-cpp")]
 mod pooling;
+#[cfg(all(feature = "llama-cpp", windows))]
+mod process;
 pub mod stub;
 #[cfg(test)]
 mod tests;
@@ -207,22 +209,44 @@ pub use candle_loader::CandleLoader;
 pub use daemon::{DaemonStatus, ModelDaemon, SharedModelDaemon};
 #[cfg(feature = "llama-cpp")]
 pub use llama::LlamaLoader;
+#[cfg(all(feature = "llama-cpp", windows))]
+use process::ProcessLlamaLoader;
 pub use stub::StubLoader;
 
 /// 根据 feature 选择默认加载器
 #[must_use]
 pub fn get_default_loader() -> Box<dyn ModelLoader> {
-    #[cfg(feature = "llama-cpp")]
+    // Windows 上 llama.cpp 的 C++ abort / SEH 异常不能被 Rust `catch_unwind` 捕获。
+    // production loader 因此常驻在当前 exe 的 helper 子进程里：helper 崩溃只令本次模型
+    // 请求失败，桌面主进程继续回落关键词/parser。非 Windows 继续沿用进程内 loader。
+    #[cfg(all(feature = "llama-cpp", windows))]
     {
-        if let Ok(loader) = LlamaLoader::new() {
-            return Box::new(loader);
+        Box::new(ProcessLlamaLoader::new())
+    }
+
+    #[cfg(not(all(feature = "llama-cpp", windows)))]
+    {
+        #[cfg(feature = "llama-cpp")]
+        {
+            if let Ok(loader) = LlamaLoader::new() {
+                return Box::new(loader);
+            }
         }
-    }
 
-    #[cfg(feature = "candle")]
-    {
-        return Box::new(CandleLoader::new());
-    }
+        #[cfg(feature = "candle")]
+        {
+            return Box::new(CandleLoader::new());
+        }
 
-    Box::new(StubLoader)
+        Box::new(StubLoader)
+    }
+}
+
+/// 二进制入口应在初始化 Tauri/Tokio/CLI 之前调用。
+///
+/// 普通启动是一次参数比较后立即返回；Windows llama helper 模式会在本函数内处理父进程
+/// 的 JSON-lines 请求并退出，绝不进入桌面 UI / single-instance / daemon CLI 初始化。
+pub fn run_model_worker_if_requested() {
+    #[cfg(all(feature = "llama-cpp", windows))]
+    process::run_if_requested();
 }

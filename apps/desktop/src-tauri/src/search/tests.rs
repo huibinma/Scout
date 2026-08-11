@@ -491,6 +491,28 @@ const QUERY_FOR_FILE_SEARCH: &str = "find pdf";
 /// "找最近的" 稳定解析为 Clarify(AmbiguousTime)，router 返回 ClarifyNotRoutable。
 const QUERY_CLARIFY: &str = "找最近的";
 
+#[test]
+fn result_to_json_hides_windows_verbatim_prefix_from_ui() {
+    let result = SearchResult {
+        id: "windows-verbatim-path".into(),
+        path: PathBuf::from(r"\\?\C:\Users\测试用户\My Documents\报告 终稿.pdf"),
+        name: "报告 终稿.pdf".into(),
+        source: BackendKind::NativeIndex,
+        match_type: MatchType::Content,
+        score: None,
+        metadata: SearchResultMetadata::default(),
+    };
+
+    let json = result_to_json(&result, vec!["native_index".into()], None);
+
+    assert_eq!(json.path, r"C:\Users\测试用户\My Documents\报告 终稿.pdf");
+    // 内部结果仍保留 canonical path，去重 / result id 口径不被展示层改写。
+    assert_eq!(
+        result.path,
+        PathBuf::from(r"\\?\C:\Users\测试用户\My Documents\报告 终稿.pdf")
+    );
+}
+
 #[tokio::test]
 async fn search_impl_success_emits_call_then_result() {
     let registry = build_test_registry(

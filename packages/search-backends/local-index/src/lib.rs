@@ -955,6 +955,7 @@ pub(crate) fn build_image_query(media: &MediaSearch) -> Option<DocumentQuery> {
 
 pub(crate) fn music_entry_to_result(e: MusicEntry) -> SearchResult {
     let path = canonical(Path::new(&e.path));
+    let size_bytes = scout_search_backend::file_size_bytes(&path);
     SearchResult {
         id: result_id(&path),
         name: e.file_name,
@@ -964,6 +965,7 @@ pub(crate) fn music_entry_to_result(e: MusicEntry) -> SearchResult {
         score: None,
         metadata: SearchResultMetadata {
             modified_time: unix_to_utc(e.modified_time),
+            size_bytes,
             artist: e.artist,
             title: e.title,
             album: e.album,
@@ -976,6 +978,7 @@ pub(crate) fn music_entry_to_result(e: MusicEntry) -> SearchResult {
 pub(crate) fn doc_hit_to_result(hit: DocumentHit) -> SearchResult {
     let e = hit.entry;
     let path = canonical(Path::new(&e.path));
+    let size_bytes = scout_search_backend::file_size_bytes(&path);
     SearchResult {
         id: result_id(&path),
         name: e.file_name,
@@ -985,6 +988,7 @@ pub(crate) fn doc_hit_to_result(hit: DocumentHit) -> SearchResult {
         score: None,
         metadata: SearchResultMetadata {
             modified_time: unix_to_utc(e.modified_time),
+            size_bytes,
             title: e.title,
             ..Default::default()
         },
@@ -1164,6 +1168,17 @@ mod tests {
     }
 
     #[test]
+    fn music_entry_existing_file_maps_size() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("song.mp3");
+        std::fs::write(&path, b"synthetic-audio-bytes").unwrap();
+
+        let r = music_entry_to_result(music_entry(&path.to_string_lossy(), "周华健"));
+
+        assert_eq!(r.metadata.size_bytes, Some(21));
+    }
+
+    #[test]
     fn doc_query_none_without_keyword() {
         let SearchIntent::FileSearch(fs) = file_search(None) else {
             unreachable!()
@@ -1275,6 +1290,11 @@ mod tests {
         assert_eq!(ok[0].source, BackendKind::NativeIndex);
         assert_eq!(ok[0].match_type, MatchType::Content);
         assert!(ok[0].path.ends_with("a.txt"));
+        assert_eq!(
+            ok[0].metadata.size_bytes,
+            Some(std::fs::metadata(docs.join("a.txt")).unwrap().len()),
+            "内容命中也必须返回文件基本大小属性"
+        );
     }
 
     // ===== BETA-03：图片 OCR 检索路由 =====
@@ -1329,6 +1349,11 @@ mod tests {
         assert_eq!(hits.len(), 1, "doc_types 框定只返图片");
         assert!(hits[0].path.ends_with("shot.png"));
         assert_eq!(hits[0].source, BackendKind::NativeIndex);
+        assert_eq!(
+            hits[0].metadata.size_bytes,
+            Some(std::fs::metadata(imgs.join("shot.png")).unwrap().len()),
+            "OCR 内容命中也必须返回文件大小"
+        );
 
         // 无 keyword → 空（交系统后端）。
         assert!(backend.search_results(&media_image()).unwrap().is_empty());

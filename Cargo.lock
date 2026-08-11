@@ -5296,7 +5296,7 @@ dependencies = [
 
 [[package]]
 name = "scout-desktop"
-version = "0.9.53"
+version = "0.9.54"
 dependencies = [
  "chrono",
  "dirs 5.0.1",
@@ -5436,6 +5436,7 @@ dependencies = [
  "candle-transformers",
  "llama-cpp-4",
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 

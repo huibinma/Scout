@@ -416,6 +416,7 @@ fn filter_rank_topk(mut scored: Vec<(f32, String)>, floor: f32, k: usize) -> Vec
 /// `score` = cosine（升至 f64），`match_type=Semantic`、`source=SemanticIndex`。
 fn vector_hit_to_result(path: &str, score: f32) -> SearchResult {
     let path = canonical(Path::new(path));
+    let size_bytes = scout_search_backend::file_size_bytes(&path);
     let name = path
         .file_name()
         .map(|n| n.to_string_lossy().into_owned())
@@ -427,7 +428,10 @@ fn vector_hit_to_result(path: &str, score: f32) -> SearchResult {
         source: BackendKind::SemanticIndex,
         match_type: MatchType::Semantic,
         score: Some(f64::from(score)),
-        metadata: SearchResultMetadata::default(),
+        metadata: SearchResultMetadata {
+            size_bytes,
+            ..Default::default()
+        },
     }
 }
 
@@ -515,6 +519,11 @@ mod tests {
         assert_eq!(results[1].name, "dog.txt");
         assert_eq!(results[0].source, BackendKind::SemanticIndex);
         assert_eq!(results[0].match_type, MatchType::Semantic);
+        assert_eq!(
+            results[0].metadata.size_bytes,
+            Some(std::fs::metadata(dir.path().join("cat.txt")).unwrap().len()),
+            "语义命中也必须返回文件基本大小属性"
+        );
         // cat 与查询同轴 → cosine ≈ 1；dog 正交 → ≈ 0。
         assert!(results[0].score.unwrap() > results[1].score.unwrap());
     }

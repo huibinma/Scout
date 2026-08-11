@@ -794,7 +794,9 @@ fn result_to_json(
 ) -> SearchResultJson {
     SearchResultJson {
         id: result.id.clone(),
-        path: result.path.to_string_lossy().into_owned(),
+        // Windows `canonicalize` 会产生 `\\?\C:\...`；内部继续保留该 canonical path
+        // 做跨后端去重，只在 IPC 用户边界恢复为普通 `C:\...` 展示与文件操作路径。
+        path: scout_search_backend::user_facing_path(&result.path),
         name: result.name.clone(),
         source: format!("{:?}", result.source).to_lowercase(),
         sources,

@@ -15,6 +15,7 @@
 //!
 //! 见 `tests/cases.rs` —— 反序列化 [schema §7](../../../../docs/search-intent-schema.md) 全部 47 条用例。
 
+use std::borrow::Cow;
 use std::error::Error;
 use std::fmt;
 use std::future::Future;
@@ -496,6 +497,87 @@ pub fn result_id_for_path(path: &std::path::Path) -> String {
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
     path.hash(&mut hasher);
     format!("{:016x}", hasher.finish())
+}
+
+/// 读取搜索结果文件的基础大小属性。
+///
+/// 只查询文件系统 metadata，不读取文件正文；路径不存在、不可访问或指向目录时返回
+/// `None`。本地全文 / OCR / 语义后端统一用它补齐 [`SearchResultMetadata::size_bytes`]。
+#[must_use]
+pub fn file_size_bytes(path: &std::path::Path) -> Option<u64> {
+    std::fs::metadata(path)
+        .ok()
+        .filter(std::fs::Metadata::is_file)
+        .map(|metadata| metadata.len())
+}
+
+/// 去除 Windows `canonicalize` 产生的扩展长度路径前缀。
+///
+/// 内部检索、去重仍应保留 canonical path；只有序列化给用户、或交给 Explorer
+/// 等系统 shell 时才使用本函数，避免把实现细节 `\\?\` 暴露到界面：
+///
+/// - `\\?\C:\dir\file` → `C:\dir\file`
+/// - `\\?\UNC\server\share\file` → `\\server\share\file`
+///
+/// 普通 Windows 路径、POSIX 路径及 `\\.\` 设备路径保持不变。
+#[must_use]
+pub fn strip_windows_verbatim_prefix(path: &str) -> Cow<'_, str> {
+    if let Some(rest) = path.strip_prefix(r"\\?\UNC\") {
+        Cow::Owned(format!(r"\\{rest}"))
+    } else if let Some(rest) = path.strip_prefix(r"\\?\") {
+        Cow::Borrowed(rest)
+    } else {
+        Cow::Borrowed(path)
+    }
+}
+
+/// 把内部 canonical path 转成适合展示或传给系统 shell 的路径字符串。
+#[must_use]
+pub fn user_facing_path(path: &std::path::Path) -> String {
+    let path = path.to_string_lossy();
+    strip_windows_verbatim_prefix(&path).into_owned()
+}
+
+#[cfg(test)]
+mod user_facing_path_tests {
+    use super::{strip_windows_verbatim_prefix, user_facing_path};
+    use std::path::Path;
+
+    #[test]
+    fn strips_windows_drive_verbatim_prefix() {
+        assert_eq!(
+            strip_windows_verbatim_prefix(r"\\?\C:\Users\测试\报告.pdf"),
+            r"C:\Users\测试\报告.pdf"
+        );
+    }
+
+    #[test]
+    fn converts_windows_verbatim_unc_to_regular_unc() {
+        assert_eq!(
+            strip_windows_verbatim_prefix(r"\\?\UNC\server\share\报告.pdf"),
+            r"\\server\share\报告.pdf"
+        );
+    }
+
+    #[test]
+    fn leaves_regular_and_device_paths_unchanged() {
+        for path in [
+            r"C:\Users\测试\报告.pdf",
+            r"\\server\share\报告.pdf",
+            r"\\.\PhysicalDrive0",
+            "/Users/test/report.pdf",
+        ] {
+            assert_eq!(strip_windows_verbatim_prefix(path), path);
+        }
+    }
+
+    #[test]
+    fn user_facing_path_applies_prefix_cleanup() {
+        assert_eq!(
+            user_facing_path(Path::new(r"\\?\C:\My Documents\报告 终稿.pdf")),
+            r"C:\My Documents\报告 终稿.pdf"
+        );
+    }
 }
 
 /// `FileType` → 该类型的扩展名集合（小写、无点）。后端把 `file_type` 展开为扩展名过滤时用，

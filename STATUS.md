@@ -7,26 +7,25 @@
 ## 📍 速览
 
 - **阶段**：B（Beta）进行中；P ✅ / M 代码层 ✅，M→B 正式切换仍待 [ROADMAP §8](./ROADMAP.md) 长周期项；总体 parser-only evals 已达 99.4%（994/6/0、fail=0）。
-- **版本**：**v0.9.50 已发布**（CI / Release macOS / Release Windows 三个 workflow 全绿，DMG + NSIS 资产已上传、changelog 已补全）。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
+- **版本**：**v0.9.54 待本次发布**（代码与版本已收口，提交后推 `main` + `v0.9.54` tag 启动 CI / macOS DMG / Windows NSIS）。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
 - **定位**：开源免费（MIT）本地语义检索底座——**面向 agent 的本地文件搜索工具**（经 MCP 接入 Claude Code / Codex 等），同时提供桌面应用供人直接使用；不做分析层，分析经 MCP daemon + 外部 LLM 组合。口号 **Deep Local Search**。以 [PROJECT.md](./PROJECT.md) 为准。
-- **当前 task**：**BETA-74 桌面自动更新已完成并发布**——详见下方「当前 Task」节。
-- **下一步 top-3**：① 自动更新「发现新版本」端到端真机回归（需下一个真实版本发布后测）；② 真机验证积压（BETA-64~74）；③ 获取设计伙伴/首个真实部署。
+- **当前 task**：**BETA-75 v0.9.54 Windows/“找文件”四项缺陷收口并发布**——详见下方「当前 Task」节。
+- **下一步 top-3**：① 跟踪 v0.9.54 三条 workflow 与双平台资产；② Windows 真机复测四项缺陷；③ 用 v0.9.53→v0.9.54 验证自动更新全链路。
 - **阻塞**：Class A 仅剩双平台 evals 真机；Class B 已清零。
 
 ## 当前 Task
 
-**2026-08-09（最新）— BETA-74：桌面自动更新（提前实现 V10-04），发布 v0.9.50**
+**2026-08-11（最新）— BETA-75：v0.9.54 Windows/“找文件”真机缺陷收口**
 
-轻量自研（不接 `tauri-plugin-updater`，理由与 `$UpdateMode` 数据保留机制见 [ROADMAP BETA-74](./ROADMAP.md)）：默认每 4 小时轮询 GitHub Releases，发现新版本左下角提醒，点「更新」后台下载对应平台安装包静默安装（保留配置/索引/模型/MCP token），装完自动重启；「常规」设置新增开关 + 检查间隔（默认 4 小时，可调 30 分钟~24 小时）。bump v0.9.50，push + tag，CI/Release macOS/Release Windows 三个 workflow 全绿，`gh release edit` 已补真实 changelog。**插曲**：release 进行中用户要求"disable 掉签名 action"，排查发现 SignPath 集成从未提交/推送（仅 working tree 一份未 commit 的 diff），实际跑在 CI 上的 workflow 本就是未签名版本，无需改动，已说明并保持原状。
+修复“在文件夹中显示”打开错误目录、UI/MCP 暴露 `\\?\` 路径前缀、内容/OCR/语义命中缺文件大小，以及其它 Windows 机器出现的 `MSVCP140.dll` AppCrash。前三项统一收口路径与 metadata；崩溃项把 Windows llama.cpp load/generate/embed 移入常驻 helper 子进程，同时发布构建改静态 MSVC CRT、移除未用 `mtmd`、新增 PE 导入闸门。版本 bump v0.9.54；完整实现与验证见 [ROADMAP BETA-75](./ROADMAP.md)。
 
 ## 下一步
 
-1. **自动更新端到端真机回归**：需下一个真实版本发布后，用旧版本装包实测「发现新版本 → 下载 → 安装 → 保留数据 → 自动重启」全链路（macOS + Windows）。
-2. **SignPath 代码签名工作流**：仍是**未提交**的本地改动（`.github/workflows/release-windows.yml` diff + `CODE_SIGNING.md` + `.signpath/` + `README.md`/`PROJECT.md`/`docs/install.md` 部分改动）——2026-08-09 用户确认证书申请暂搁置，下一会话**不要**主动完成/提交它，等用户明确重新推进。
-3. **真机验证积压（BETA-64~74）**：新设置页结构、数据目录统一迁移、`optimize_fts` 大库提速、多条件检索过滤、Windows 关闭到托盘、发现层枚举、快捷键/模型本地导入/gguf 多后端发现、快捷键可自定义与托盘联动、桌面自动更新——均需 Windows/macOS 真机走查，清单见各 ROADMAP BETA 卡片。
-4. **`SCOUT_ENABLE_EMBED` 默认禁用是否重新评估**：语义索引在生产默认配置下完全不工作，是否值得专门验证修复能否覆盖 v0.8.5 那次原始崩溃场景（需要真机 + 小范围受控测试，不能直接改默认值）。
-5. **embeddinggemma-300m 的 cosine_threshold 正式评审**：按 bge-m3 同款流程确定校准值后回填 `CALIBRATED_COSINE_THRESHOLDS`。
-6. **设计伙伴 / 首个真实部署获取**：律所卷宗、内部审计或离职归档任一场景。
+1. **v0.9.54 发布与真机回归**：确认 CI、DMG、NSIS、Release changelog；Windows 上逐项复测 BETA-75，重点确认模型 helper 原生崩溃时 UI 主进程仍存活。
+2. **自动更新端到端真机回归**：用 v0.9.53 装包实测发现 v0.9.54 → 下载 → 安装 → 保留数据 → 自动重启（macOS + Windows）。
+3. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
+4. **`SCOUT_ENABLE_EMBED` 默认禁用是否重新评估**：先用 v0.9.54 helper 隔离做小范围 Windows 受控验证，不直接改默认值。
+5. **embeddinggemma-300m cosine threshold 正式评审**；随后继续设计伙伴 / 首个真实部署获取。
 
 **流程备忘**：桌面发版 = bump `apps/desktop/src-tauri/tauri.conf.json` + `apps/desktop/src-tauri/Cargo.toml` + `Cargo.lock` → 推 `main` → 推 `v*` tag → Release 产物完成后补真实 changelog。Windows 编带 llama 的 scoutd 使用 `scripts\build-scoutd-llama.bat`。**本机 Rust 工具链路径订正（2026-07-30）**：`~/.cargo/bin` 实际不存在，`cargo`/`rustc` 在 `~/.rustup/toolchains/stable-aarch64-apple-darwin/bin`——非交互式 Bash 工具的 PATH 不含该目录（`.zshrc` 的 PATH 设置对该场景不生效），需要每次显式 `export PATH="$HOME/.rustup/toolchains/stable-aarch64-apple-darwin/bin:$PATH"` 后才能跑 `cargo`/`scripts/ci.sh`。
 
@@ -34,12 +33,16 @@
 
 - **Class A（外部条件，阻塞出场评测、不阻塞代码）**：BETA-09(a)/MVP-26/28 双平台 evals——需 Windows 真机 + 完整 Spotlight 索引 macOS。
 - **Class B（产品决策）**：已全部清零。
-- **发布操作项**：无；GitHub CLI keyring 登录与 SSH push 均已验证。
-- **SignPath 集成暂缓**：2026-08-09 用户确认证书申请暂搁置，working tree 里的未提交改动保持原状，不要在未经用户确认时提交/推进。
+- **发布操作项**：本次提交后推 `main` + `v0.9.54`，跟踪三条 workflow 并补 Release changelog。
+- **SignPath 集成暂缓**：2026-08-09 用户确认证书申请暂搁置；本次只做静态 CRT/PE 导入验证，不恢复代码签名流程。
 
 ## 会话日志
 
 > 摘要 ≤5 条；更早历史见 `git log`。
+
+### 2026-08-11 — Codex — BETA-75：v0.9.54 Windows/“找文件”四项缺陷收口
+
+**承接**：用户连续反馈结果清单“在文件夹中显示”定位错误、`\\?\` 路径前缀、内容匹配缺文件大小，以及其它 Windows 机器操作时 `MSVCP140.dll` 闪退，并要求完整提交、启动 CI/Release。**关键决策**：前三项在 common/path metadata 层统一修；闪退没有 crash dump，按 faulting module + release `/MD` 配置 + 仓库既有 llama native crash 证据锁定最高概率路径，同时做根因缓解（静态 CRT、去 `mtmd`）和故障隔离（常驻 helper），避免仅靠安装 VC++ Runtime 掩盖。**产出**：详见 [ROADMAP BETA-75](./ROADMAP.md)，版本升 v0.9.54。**验证**：workspace fmt/clippy/build 通过；沙箱外 desktop 210/210；Windows GNU desktop feature check + model-runtime clippy 通过；llama tests 31 pass/3 ignored；synonym recall 100%/FP 0%；tsc/vite 通过。workspace 仅 `scoutd` 3 个既有正文读取 e2e 失败，串行复现、与本轮模块无关且远端 CI 不运行该 binary e2e。**未尽事宜**：Windows MSVC/NSIS 与真实 AppCrash 路径须由 v0.9.54 CI/真机确认；无 dump 前根因结论保持“高概率”而非绝对定论。
 
 ### 2026-08-09 — Claude Code (Sonnet 5) — BETA-74：桌面自动更新（提前实现 V10-04），发布 v0.9.50
 
@@ -52,4 +55,3 @@
 ### 2026-08-08 — Claude Code (Sonnet 5) — BETA-72：易用性四项（快捷键 / 模型本地导入 / 路径检测提示 / gguf 多后端发现）
 
 **承接**：用户提四项易用性问题：Everything 未装安装提示 + 快捷键防冲突；模型下载支持指定本地文件 + 统一"嵌入模型"措辞；"扫描本机 gguf"扩展多后端 + 路径覆盖"检测"给具体信息。**关键决策**：走读发现 winget 安装提示（`EverythingCheckStep.tsx`/`EverythingPane.tsx`）已在 BETA-71 前完整实现，报"已存在"而非重做，只改了确有缺口的快捷键默认值；模型本地导入复用已有 `import_local_model` 命令接原生文件选择器，不新建流程；gguf 多后端发现给 `windows-search`/`spotlight` 各加一个 `find_files_by_extension`，镜像 everything crate 已跑通的同名写法；`probe_model_file` 加 `kind` 参数复用 `resolve_target_paths`（单一信源），避免探测口径与加载口径 drift。**产出**：见 [ROADMAP BETA-72](./ROADMAP.md) 完整清单。**验证**：`scripts/ci.sh` 全套 + `--target x86_64-pc-windows-gnu` 交叉编译验证 Windows 专属分支 + `tsc`/`vite build` 全绿；`scoutd` e2e 3 个失败复现既有本机沙盒问题（本轮未触及该模块）。**未尽事宜**：均未做真机验证，需下一轮确认。
-

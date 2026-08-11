@@ -566,6 +566,10 @@ async fn reindex_root(
 }
 
 fn main() {
+    // Windows llama.cpp 原生故障隔离 helper 必须早于 Tauri/single-instance/tracing 初始化。
+    // 普通启动只做一次参数比较；helper 模式在子进程内常驻模型并直接退出本入口。
+    scout_model_runtime::run_model_worker_if_requested();
+
     // PDF 文本层解析故障隔离 helper 必须早于 Tauri/single-instance/tracing 初始化。
     // 普通启动是一次参数比较后立即返回；helper 模式在这里完成单文件解析并退出。
     scout_indexer::run_pdf_extract_worker_if_requested();

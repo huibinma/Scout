@@ -48,6 +48,9 @@ use crate::cli::Cli;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Windows llama.cpp 原生故障隔离 helper；必须在 clap 解析前截获内部参数。
+    scout_model_runtime::run_model_worker_if_requested();
+
     // 与桌面端共用 PDF 提取子进程隔离协议；必须在 clap 解析前截获内部 helper 参数。
     scout_indexer::run_pdf_extract_worker_if_requested();
 
