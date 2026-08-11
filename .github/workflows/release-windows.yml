@@ -71,10 +71,13 @@ jobs:
         uses: tauri-apps/tauri-action@fce9c6108b31ea247710505d3aaaa893ee6768d4 # v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # llama.cpp 是 C++ 静态库；Rust 与 C++ 两侧统一用静态 MSVC CRT（/MT），避免
-          # 安装机上的 MSVCP140.dll 版本/修复级别成为 Scout 的运行时变量。
+          # llama.cpp 是 C++ 静态库；Rust、llama.cpp 与 Tauri 最终链接三侧统一用静态
+          # MSVC CRT（/MT），避免安装机上的 MSVCP140.dll 版本/修复级别成为运行时变量。
           RUSTFLAGS: -C target-feature=+crt-static
           LLAMA_STATIC_CRT: "1"
+          # tauri-build 会据此屏蔽动态 msvcrt/vcruntime 默认库，并显式选择静态 CRT；
+          # 仅设置 RUSTFLAGS 无法覆盖 WebView2LoaderStatic.lib 参与的最终链接。
+          STATIC_VCRUNTIME: "true"
         with:
           projectPath: apps/desktop # 含 src-tauri 与前端 package.json
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
