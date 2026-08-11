@@ -7,21 +7,21 @@
 ## 📍 速览
 
 - **阶段**：B（Beta）进行中；P ✅ / M 代码层 ✅，M→B 正式切换仍待 [ROADMAP §8](./ROADMAP.md) 长周期项；总体 parser-only evals 已达 99.4%（994/6/0、fail=0）。
-- **版本**：**v0.9.54 待本次发布**（代码与版本已收口，提交后推 `main` + `v0.9.54` tag 启动 CI / macOS DMG / Windows NSIS）。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
+- **版本**：**v0.9.54 已发布**（CI、macOS DMG、Windows NSIS 均通过；Windows PE 闸门确认最终 EXE 不导入 `MSVCP*` / `VCRUNTIME*`）。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
 - **定位**：开源免费（MIT）本地语义检索底座——**面向 agent 的本地文件搜索工具**（经 MCP 接入 Claude Code / Codex 等），同时提供桌面应用供人直接使用；不做分析层，分析经 MCP daemon + 外部 LLM 组合。口号 **Deep Local Search**。以 [PROJECT.md](./PROJECT.md) 为准。
 - **当前 task**：**BETA-75 v0.9.54 Windows/“找文件”四项缺陷收口并发布**——详见下方「当前 Task」节。
-- **下一步 top-3**：① 跟踪 v0.9.54 三条 workflow 与双平台资产；② Windows 真机复测四项缺陷；③ 用 v0.9.53→v0.9.54 验证自动更新全链路。
+- **下一步 top-3**：① Windows 真机复测 BETA-75 四项缺陷；② 用 v0.9.53→v0.9.54 验证自动更新全链路；③ 继续 BETA-64~75 真机验证积压。
 - **阻塞**：Class A 仅剩双平台 evals 真机；Class B 已清零。
 
 ## 当前 Task
 
 **2026-08-11（最新）— BETA-75：v0.9.54 Windows/“找文件”真机缺陷收口**
 
-修复“在文件夹中显示”打开错误目录、UI/MCP 暴露 `\\?\` 路径前缀、内容/OCR/语义命中缺文件大小，以及其它 Windows 机器出现的 `MSVCP140.dll` AppCrash。前三项统一收口路径与 metadata；崩溃项把 Windows llama.cpp load/generate/embed 移入常驻 helper 子进程，同时发布构建改静态 MSVC CRT、移除未用 `mtmd`、新增 PE 导入闸门。版本 bump v0.9.54；完整实现与验证见 [ROADMAP BETA-75](./ROADMAP.md)。
+修复“在文件夹中显示”打开错误目录、UI/MCP 暴露 `\\?\` 路径前缀、内容/OCR/语义命中缺文件大小，以及其它 Windows 机器出现的 `MSVCP140.dll` AppCrash。前三项统一收口路径与 metadata；崩溃项把 Windows llama.cpp load/generate/embed 移入常驻 helper 子进程，同时发布构建改静态 MSVC CRT、移除未用 `mtmd`、新增 PE 导入闸门。v0.9.54 已发布；完整实现与验证见 [ROADMAP BETA-75](./ROADMAP.md)。
 
 ## 下一步
 
-1. **v0.9.54 发布与真机回归**：确认 CI、DMG、NSIS、Release changelog；Windows 上逐项复测 BETA-75，重点确认模型 helper 原生崩溃时 UI 主进程仍存活。
+1. **v0.9.54 真机回归**：Release、DMG、NSIS、changelog 与 Windows PE 闸门均已收口；Windows 上逐项复测 BETA-75，重点确认模型 helper 原生崩溃时 UI 主进程仍存活。
 2. **自动更新端到端真机回归**：用 v0.9.53 装包实测发现 v0.9.54 → 下载 → 安装 → 保留数据 → 自动重启（macOS + Windows）。
 3. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
 4. **`SCOUT_ENABLE_EMBED` 默认禁用是否重新评估**：先用 v0.9.54 helper 隔离做小范围 Windows 受控验证，不直接改默认值。
@@ -33,7 +33,7 @@
 
 - **Class A（外部条件，阻塞出场评测、不阻塞代码）**：BETA-09(a)/MVP-26/28 双平台 evals——需 Windows 真机 + 完整 Spotlight 索引 macOS。
 - **Class B（产品决策）**：已全部清零。
-- **发布操作项**：本次提交后推 `main` + `v0.9.54`，跟踪三条 workflow 并补 Release changelog。
+- **发布操作项**：v0.9.54 已完成；CI、Release macOS、Release Windows 全绿，双平台资产与 changelog 已核验。
 - **SignPath 集成暂缓**：2026-08-09 用户确认证书申请暂搁置；本次只做静态 CRT/PE 导入验证，不恢复代码签名流程。
 
 ## 会话日志
@@ -42,7 +42,7 @@
 
 ### 2026-08-11 — Codex — BETA-75：v0.9.54 Windows/“找文件”四项缺陷收口
 
-**承接**：用户连续反馈结果清单“在文件夹中显示”定位错误、`\\?\` 路径前缀、内容匹配缺文件大小，以及其它 Windows 机器操作时 `MSVCP140.dll` 闪退，并要求完整提交、启动 CI/Release。**关键决策**：前三项在 common/path metadata 层统一修；闪退没有 crash dump，按 faulting module + release `/MD` 配置 + 仓库既有 llama native crash 证据锁定最高概率路径，同时做根因缓解（静态 CRT、去 `mtmd`）和故障隔离（常驻 helper），避免仅靠安装 VC++ Runtime 掩盖。**产出**：详见 [ROADMAP BETA-75](./ROADMAP.md)，版本升 v0.9.54。**验证**：workspace fmt/clippy/build 通过；沙箱外 desktop 210/210；Windows GNU desktop feature check + model-runtime clippy 通过；llama tests 31 pass/3 ignored；synonym recall 100%/FP 0%；tsc/vite 通过。workspace 仅 `scoutd` 3 个既有正文读取 e2e 失败，串行复现、与本轮模块无关且远端 CI 不运行该 binary e2e。**未尽事宜**：Windows MSVC/NSIS 与真实 AppCrash 路径须由 v0.9.54 CI/真机确认；无 dump 前根因结论保持“高概率”而非绝对定论。
+**承接**：用户连续反馈结果清单“在文件夹中显示”定位错误、`\\?\` 路径前缀、内容匹配缺文件大小，以及其它 Windows 机器操作时 `MSVCP140.dll` 闪退，并要求完整提交、启动 CI/Release。**关键决策**：前三项在 common/path metadata 层统一修；闪退没有 crash dump，按 faulting module + release `/MD` 配置 + 仓库既有 llama native crash 证据锁定最高概率路径，同时做根因缓解（静态 CRT、去 `mtmd`）和故障隔离（常驻 helper），避免仅靠安装 VC++ Runtime 掩盖。**产出**：详见 [ROADMAP BETA-75](./ROADMAP.md)，v0.9.54 已发布，macOS/Windows 三项资产齐全，真实 changelog 已补全。**验证**：workspace fmt/clippy/build 通过；沙箱外 desktop 210/210；Windows GNU desktop feature check + model-runtime clippy 通过；llama tests 31 pass/3 ignored；synonym recall 100%/FP 0%；tsc/vite 通过；GitHub CI、Release macOS、Release Windows 全绿，`dumpbin /DEPENDENTS` 确认最终 EXE 不导入 `MSVCP*` / `VCRUNTIME*`。workspace 仅 `scoutd` 3 个既有正文读取 e2e 失败，串行复现、与本轮模块无关且远端 CI 不运行该 binary e2e。**未尽事宜**：仍需原问题 Windows 真机复测四项缺陷；无 dump 前根因结论保持“高概率”而非绝对定论。
 
 ### 2026-08-09 — Claude Code (Sonnet 5) — BETA-74：桌面自动更新（提前实现 V10-04），发布 v0.9.50
 
