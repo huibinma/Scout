@@ -48,8 +48,10 @@ jobs:
         run: cargo metadata --locked --format-version 1 > /dev/null
 
       # llama-cpp-sys-4 v0.3.2 的 build.rs 虽调用 config.static_crt(true)，随后却显式
-      # 覆盖 CMAKE_C/CXX_FLAGS_RELEASE，令 cmake crate 无法追加 /MT。这里对锁定版本做
-      # fail-closed 补丁；源码或版本升级后若预期片段不再唯一匹配，立即失败而非静默漂移。
+      # 覆盖 CMAKE_C/CXX_FLAGS_RELEASE，令 cmake crate 无法可靠追加 /MT；CMake 的
+      # MSVC_RUNTIME_LIBRARY 默认值还可能后置选择 /MD。这里对锁定版本做 fail-closed
+      # 补丁，同时从 flags 与 target runtime 属性两层锁定 /MT；源码或版本升级后若
+      # 预期片段不再唯一匹配，立即失败而非静默漂移。
       - name: Patch llama.cpp MSVC static CRT flags
         shell: pwsh
         run: |
@@ -82,6 +84,9 @@ jobs:
           $replacement = @'
                   config.define("CMAKE_C_FLAGS_RELEASE", if target.contains("windows-msvc") && static_crt { "-O3 -DNDEBUG /MT" } else { "-O3 -DNDEBUG" });
                   config.define("CMAKE_CXX_FLAGS_RELEASE", if target.contains("windows-msvc") && static_crt { "-O3 -DNDEBUG /MT" } else { "-O3 -DNDEBUG" });
+                  if target.contains("windows-msvc") && static_crt {
+                      config.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreaded");
+                  }
           '@
           $matches = [regex]::Matches($source, $pattern)
           if ($matches.Count -ne 1) {
