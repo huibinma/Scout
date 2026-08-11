@@ -105,7 +105,9 @@ jobs:
       - name: Verify no dynamic MSVC runtime imports
         shell: pwsh
         run: |
-          $exe = Resolve-Path "apps/desktop/src-tauri/target/release/scout-desktop.exe"
+          # Scout 使用根 workspace 的共享 target 目录；tauri-action 的 projectPath
+          # 不会把 Cargo target 移到 apps/desktop/src-tauri/target。
+          $exe = Resolve-Path "target/release/scout-desktop.exe"
           $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
           $vs = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
           $dumpbin = Get-ChildItem "$vs\VC\Tools\MSVC\*\bin\Hostx64\x64\dumpbin.exe" |
