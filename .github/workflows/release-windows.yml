@@ -53,6 +53,25 @@ jobs:
       - name: Patch llama.cpp MSVC static CRT flags
         shell: pwsh
         run: |
+          cargo fetch --locked --target x86_64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) {
+            throw "cargo fetch Windows 依赖失败"
+          }
+          $archives = @(Get-Item "$env:CARGO_HOME\registry\cache\*\llama-cpp-sys-4-0.3.2.crate" -ErrorAction SilentlyContinue)
+          if ($archives.Count -ne 1) {
+            throw "预期唯一的 llama-cpp-sys-4 v0.3.2 crate archive，实际找到 $($archives.Count) 个"
+          }
+          $registryId = $archives[0].Directory.Name
+          $sourceRoot = Join-Path "$env:CARGO_HOME\registry\src" $registryId
+          $crateRoot = Join-Path $sourceRoot "llama-cpp-sys-4-0.3.2"
+          if (-not (Test-Path $crateRoot)) {
+            New-Item -ItemType Directory -Force $sourceRoot | Out-Null
+            tar -xzf $archives[0].FullName -C $sourceRoot
+            if ($LASTEXITCODE -ne 0) {
+              throw "解包 llama-cpp-sys-4 v0.3.2 失败"
+            }
+            [IO.File]::WriteAllText((Join-Path $crateRoot ".cargo-ok"), '{"v":1}', [Text.UTF8Encoding]::new($false))
+          }
           $buildFiles = @(Get-Item "$env:CARGO_HOME\registry\src\*\llama-cpp-sys-4-0.3.2\build.rs" -ErrorAction SilentlyContinue)
           if ($buildFiles.Count -ne 1) {
             throw "预期唯一的 llama-cpp-sys-4 v0.3.2 build.rs，实际找到 $($buildFiles.Count) 个"
