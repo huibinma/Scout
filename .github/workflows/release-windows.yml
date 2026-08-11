@@ -73,7 +73,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # llama.cpp 是 C++ 静态库；Rust、llama.cpp 与 Tauri 最终链接三侧统一用静态
           # MSVC CRT（/MT），避免安装机上的 MSVCP140.dll 版本/修复级别成为运行时变量。
-          RUSTFLAGS: -C target-feature=+crt-static
+          # `crt-static` 统一 Rust CRT；WebView2LoaderStatic 等预编译 C++ 对象仍可能
+          # 请求动态 msvcprt，因此最终链接显式屏蔽它并改选静态 libcpmt。
+          RUSTFLAGS: >-
+            -C target-feature=+crt-static
+            -C link-arg=/NODEFAULTLIB:msvcprt.lib
+            -C link-arg=/DEFAULTLIB:libcpmt.lib
           LLAMA_STATIC_CRT: "1"
           # tauri-build 会据此屏蔽动态 msvcrt/vcruntime 默认库，并显式选择静态 CRT；
           # 仅设置 RUSTFLAGS 无法覆盖 WebView2LoaderStatic.lib 参与的最终链接。
@@ -122,5 +127,8 @@ jobs:
           $imports = (& $dumpbin.FullName /DEPENDENTS $exe) | Out-String
           $imports
           if ($imports -match '(?i)\b(?:MSVCP|VCRUNTIME)\d+[^\s]*\.dll\b') {
+            # 失败时同时打印具体导入符号，便于定位是哪组静态对象把动态 C++ CRT
+            # 带回最终 EXE；成功路径不增加日志噪声。
+            (& $dumpbin.FullName /IMPORTS:MSVCP140.dll $exe) | Out-String | Write-Host
             throw "Scout Desktop 仍导入动态 MSVC C/C++ runtime"
           }
