@@ -1,6 +1,6 @@
 {
   "productName": "Scout",
-  "version": "0.9.57",
+  "version": "0.9.58",
   "identifier": "ai.scout.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",

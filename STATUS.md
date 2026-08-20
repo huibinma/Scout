@@ -7,23 +7,25 @@
 ## 📍 速览
 
 - **阶段**：B（Beta）进行中；P ✅ / M 代码层 ✅，M→B 正式切换仍待 [ROADMAP §8](./ROADMAP.md) 长周期项；总体 parser-only evals 已达 99.4%（994/6/0、fail=0）。
-- **版本**：**v0.9.56 装机验证发现服务未注册的真 bug，v0.9.57 修复中**——真机装完 v0.9.56 后 `services.msc` 找不到 `Scoutd` 服务；根因是 `nsis/hooks.nsh` 的 `NSIS_HOOK_POSTINSTALL` 里 `scoutd.exe` 路径写成 `$INSTDIR\resources\scoutd.exe`，但 Tauri NSIS 打包实际把 `bundle.resources` 平铺到 `$INSTDIR` 根（没有 `resources` 子目录），`nsExec::ExecToLog` 找不到文件静默失败（返回码本就没检查，装机看起来一切正常）——已改成 `$INSTDIR\scoutd.exe` 并 bump 到 v0.9.57，commit/tag/CI/Release 见下方「当前 Task」。v0.9.56 遗留问题：Release Windows 首次失败——`tauri-action` `args` 里内联 JSON 传 `--config` 的转义在 GitHub Actions YAML 纯量传递下被打散成非法路径，改成 CI 里写临时文件、`--config` 传文件路径修复；Windows 安装包 7.94MB→14.56MB 新增体积即为打包进去的 llama-cpp 版 `scoutd.exe`，已用构建日志核实、非异常。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
+- **版本**：**v0.9.57 已发布**（BETA-78 服务化拆分 + 装机 bug 修复）；BETA-79 全面评审对照 Everything 已完成，发现并修复 native-index 一处真实路径重建 bug，即将随下一版本发布，见下方「当前 Task」。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
 - **定位**：开源免费（MIT）本地语义检索底座——**面向 agent 的本地文件搜索工具**（经 MCP 接入 Claude Code / Codex 等），同时提供桌面应用供人直接使用；不做分析层，分析经 MCP daemon + 外部 LLM 组合。口号 **Deep Local Search**。以 [PROJECT.md](./PROJECT.md) 为准。
-- **当前 task**：**BETA-78 服务化拆分 → v0.9.57 装机 bug 修复**——用户真机装了 v0.9.56，`services.msc` 里找不到 `Scoutd` 服务；定位到 `hooks.nsh` 里 `scoutd.exe` 路径拼错（多了个不存在的 `resources\` 前缀），已修复+bump v0.9.57，等真机重新装包验证。详见下方「当前 Task」节。
-- **下一步 top-3**：① 用户真机重装 v0.9.57，确认 `services.msc` 里 `Scoutd` 服务已注册且 Running、桌面能连上；② 桌面本地 reindex 循环 / `mcp_service.rs` / 设置页 roots 编辑迁移到调用 scoutd（BETA-78 明确延后的后续任务）；③ 继续 BETA-64~75 真机验证积压。
-- **阻塞**：无；Class A 仅剩双平台 evals 真机 + BETA-78 真机装机验证。
+- **当前 task**：**BETA-79：全面评审 native-index/scoutd 重构对照 Everything，修复发现的 bug + 发版**——详见下方「当前 Task」节。
+- **下一步 top-3**：① 用户真机验证 v0.9.57 服务注册是否成功（`services.msc` 能看到 `Scoutd` Running）；② connection.json 明文 token 的 ACL 加固（需按装机用户 SID 精确授权，需真机多用户环境验证，本会话条件不具备）；③ 继续 BETA-64~75 真机验证积压。
+- **阻塞**：无；Class A 仅剩双平台 evals 真机 + BETA-78/79 真机装机验证。
 
 ## 当前 Task
 
-**2026-08-20（最新，Claude Code）— BETA-78：Scout 拆分为后台 Windows Service（scoutd）+ 前端瘦客户端桌面，已完成**
+**2026-08-20（最新，Claude Code）— BETA-79：全面评审 native-index/scoutd 重构，对照 Everything 逐项核对 + 修复发现的 bug + 发版**
 
-用户经 `/goal` 下达："因为读取NTFS MFT依赖管理员权限，因此需要将Scout重构为一个后台service和一个前端desktop……安装时自动安装、配置好后台的service，并自动启动；scout desktop启动后，可以自动连接到后台service"。选择"本次一次性打通端到端"。详细改动内容/文件清单见 [ROADMAP BETA-78](./ROADMAP.md)。**核心结论**：代码层完整（`scoutd` Windows Service 个人模式 + `scout-server` 三个新端点 + 桌面 `RemoteSearchBackend`），workspace 335 个测试全绿，手动起真实 scoutd 前台实例 + `curl` 验证了 `/health`/`/admin/status`/`/search`/`/search/quick`/`/backend/search` 五端点端到端正确；但当前会话**无管理员权限、无法交互式弹 UAC**，`--install-service`/真实 Windows Service 注册/真实 NSIS 安装包这条链路**未经真机验证**，如实记录，下一轮需要真机走查。同时刻意保留桌面本地 reindex 循环未删（避免预览/OCR 片段功能出现"搜到但预览不到"的新 bug），`mcp_service.rs`/设置页 roots 编辑/reindex 命令均未迁移到调用 scoutd——这些是明确的后续任务。
+用户经 `/goal` 下达："全面评审这次重构的架构和代码实现，对照'everything'的公开功能和关键技术实现做逐项比对，以确保Scout实现了对everything的全面替换；修复、优化评审过程中发现的bug"。用 WebSearch/WebFetch 核实 voidtools 官方文档后逐项核对：核心索引机制（MFT+USN Journal）、ReFS 不支持（Everything 自身同样不支持，非缺口）均确认对等；原以为的最大缺口"权限隔离架构"核对后发现 BETA-78 已经解决（`scoutd` LocalSystem service + 桌面非管理员经 token 连接，对齐 Everything Service 模式）；查询语法（通配符/正则/布尔 NOT）差异判定为设计取舍（`SearchIntent` 是跨 4 个 backend 共用的后端无关抽象，非 es.exe DSL 克隆）非 bug。**修复的真实 bug**：[index.rs](../packages/search-backends/native-index/src/index.rs) 的 `MemIndex::full_path` 祖先链断裂时会静默拼出一个看似合法实则完全错误的路径（如误报成卷根下的错误位置），而非返回"未找到"——已修复为断链一律 `None`，新增回归测试。详见 [ROADMAP BETA-79](./ROADMAP.md)。
 
 ## 下一步
 
-1. **管理员权限真机验收 BETA-78**：下载真实 v0.9.56 安装包，管理员权限下安装，确认 NSIS post-install 钩子真实调通（`bootstrap-personal-config` + `install-service` 静默跑完不报错）、`services.msc` 里 `Scoutd` 服务已注册且 Running、桌面启动后「关于/设置」能看到已连接后台服务、原生文件名索引（MFT）真实可用；卸载时确认 pre/post-uninstall 钩子正确停止+删除服务注册。
-2. **BETA-78 后续任务**（桌面侧尚未做但已在 ROADMAP 记录）：本地 reindex 循环 / `mcp_service.rs` / 设置页 roots 编辑迁移到调用 scoutd 的 `/admin/reindex`/`/admin/personal/roots`；desktop 原生窗口下的搜索 UI 人工点击复测（本环境仅浏览器自动化，测不到 Tauri 原生 IPC）。
-3. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
+1. **v0.9.57 真机验证**：用户确认 `services.msc` 里 `Scoutd` 服务已注册且 Running、桌面能连上（承接自 BETA-78，尚未有用户反馈）。
+2. **connection.json ACL 加固**（BETA-79 评审发现，未修）：明文 admin token 当前继承 `%ProgramData%` 默认 ACL，本机任意标准用户可读；正确修法需按装机时的交互用户 SID 精确授权（简单粗暴的"仅 SYSTEM+Administrators"方案会因 UAC token 过滤反而连桌面客户端自己都读不到，已验证过不可行），需要真实多用户/提权环境验证。
+3. **USN tail 线程健壮性**（BETA-79 评审发现，未修）：遇任意错误永久停止且无日志，索引会静默停留在旧快照；需要错误分类（journal 失效 vs 瞬时 I/O）+ 可观测性。
+4. **BETA-78 后续任务**：本地 reindex 循环 / `mcp_service.rs` / 设置页 roots 编辑迁移到调用 scoutd；desktop 原生窗口人工点击复测。
+5. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
 
 **流程备忘**：桌面发版 = bump `apps/desktop/src-tauri/tauri.conf.json` + `apps/desktop/src-tauri/Cargo.toml` + `Cargo.lock` → 推 `main` → 推 `v*` tag → Release 产物完成后补真实 changelog。**Windows-only 代码的 cfg 分支不会被本机 Windows clippy 看到**——`#[cfg(not(windows))]` 分支的 lint 问题只有 Linux CI 编译到该分支时才会现形。Windows 编带 llama 的 scoutd 用 `scripts\build-scoutd-llama.bat`（本机开发态）；CI release-windows.yml 现在也会编一份带 llama-cpp 的 scoutd.exe 打进桌面安装包（BETA-78）。**本机 Rust/Node 工具链路径（2026-08-20，Windows 实机）**：`cargo`/`rustc` 在 `%USERPROFILE%\.cargo\bin`、`node`/`npm` 在 `%ProgramFiles%\nodejs`、`gh` 在 `C:\Program Files\GitHub CLI`，均不在默认 PATH，需显式补全后才能跑 `cargo`/`npm`/`npx`/`gh`。
 
@@ -36,6 +38,10 @@
 ## 会话日志
 
 > 摘要 ≤5 条；更早历史见 `git log`。
+
+### 2026-08-20 — Claude Code (Sonnet 5) — BETA-79：全面评审 native-index/scoutd 重构对照 Everything
+
+**承接**：用户经 `/goal` 下达全面评审要求，对照 Everything 公开功能/关键技术实现逐项核对 BETA-76~78 是否构成完整替换。**方法**：WebSearch/WebFetch 核实 voidtools 官方 FAQ/searching 文档（而非仅凭训练知识），逐项比对现有代码。**结论**：核心索引机制（MFT 批量枚举+USN Journal tail）与 ReFS 不支持均确认对等（Everything 自身也不支持 ReFS）；评审开始时判断的"最大缺口"——桌面进程本身需要管理员权限——核对后发现 BETA-78 已解决（scoutd LocalSystem service + 桌面非管理员经 token 连接，对齐 Everything Service 免 UAC 模式）；查询语法（通配符/正则/布尔 NOT）判定为跨 backend 抽象的设计取舍，非缺口。**修复的真实 bug**：`MemIndex::full_path`（`packages/search-backends/native-index/src/index.rs`）祖先链断裂时静默拼出看似合法实则错误的路径（如误报到卷根），而非返回"未找到"——修复为断链一律 `None`，新增回归测试，环状防御性熔断分支保持不变（不破坏既有测试契约）。**评审中发现但审慎未修的两项**：connection.json 明文 token 的 ACL 加固（验证过"仅 SYSTEM+Administrators"方案会因 UAC token 过滤反而打断桌面客户端自己的读取，需按装机用户 SID 精确授权，需真机多用户环境验证）；USN tail 线程遇任意错误永久停止且无日志（需错误分类+可观测性）——均判断为"记录待跟进优于无法验证的仓促修复"，非疏漏。**验证**：workspace `cargo check/clippy -D warnings/test/fmt --check` 全绿（native-index 30 单测）。
 
 ### 2026-08-20 — Claude Code (Sonnet 5) — v0.9.57：修复 v0.9.56 装机后 Scoutd 服务未注册
 
@@ -51,6 +57,3 @@
 
 **承接**：用户经 `/goal` 下达"完整commit一次，并完成一轮CI和Release，并对release结果在本地进行完整验收、对验收发现的bug进行修改"。流程：bump 版本到 v0.9.55 → 本地全量校验 → push main + tag → CI 首次失败（Linux runner 编译 `scout-native-index` 触发 clippy 死代码/未用 import——`#[cfg(windows)]` 生产路径代码本机 Windows clippy 永远看不到）→ 修复后 CI/Release macOS/Release Windows 三个 workflow 全绿 → 本地下载真实 Release 安装包验证：4 个 backend 全部注册成功，原生索引非管理员会话优雅降级，无异常日志 → 补真实 changelog。**本轮验收范围边界**：无原生桌面自动化工具、非管理员会话无法弹 UAC，管理员权限下的真实 MFT 全盘枚举/USN 实时监控行为、桌面 GUI 快速查找下拉的真机点击交互，本轮未做端到端验证。
 
-### 2026-08-20 — Claude Code (Sonnet 5) — BETA-77：找文件双模式检索 + 启动期原生索引预热
-
-**承接**：紧接 BETA-76，用户经 `/goal` 下达第二轮重构：① 找文件搜索框"快速查找"（输入即出，类 Everything）+"深度检索"（回车触发，元数据+语义全量）双模式；② desktop 启动时元数据索引常驻内存极速启动，语义索引后台准备不卡启动。**关键决策**：`quick_search` 不走 NL intent 解析/policy/同义词扩展的完整管线，直接从 `ToolRegistry` 按 id 取已注册 `SearchableTool` 构造最小 intent 直调 `SearchBackend::search()`。**产出**：`search/quick.rs`（quick_search_impl + 粗排）；`SearchView.tsx` 防抖下拉；`main.rs` 原生索引后台预热。**验证**：workspace 全绿；浏览器预览注入 Tauri IPC stub 做了真实点击验证，抓到并修复一个真实竞态 bug（回车提交后重新聚焦触发防抖把刚关的下拉又弹回来）。

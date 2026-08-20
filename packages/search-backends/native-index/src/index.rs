@@ -66,16 +66,28 @@ impl MemIndex {
         self.records.is_empty()
     }
 
-    /// 沿 `parent_frn` 链回溯重建完整路径。断链（父记录缺失，如 USN 流里父目录
-    /// 记录尚未到达）时退化为"从已知的最上层片段开始"的部分路径，而非返回
-    /// `None`——调用方通常宁可拿到一个可能不完整但可用的路径，也不要整条结果消失。
+    /// 沿 `parent_frn` 链回溯重建完整路径。**只在真正走到卷根时才返回
+    /// `Some`**——断链（祖先记录缺失，如父目录已被移出索引但子记录的删除事件
+    /// 尚未/未曾到达）必须返回 `None`，而不能把"已收集到的片段"直接拼到卷根下：
+    /// 那会把 `C:\Users\Alice\secret\report.docx` 静默错报成 `C:\report.docx`
+    /// 这样一个看起来合法、实际指向完全不同（甚至不存在）位置的路径——调用方
+    /// （搜索结果 / "在文件夹中显示" / 结果端 `fs::metadata` 过滤）无法分辨这是
+    /// 真实路径还是断链伪影，宁可该文件从结果里消失，也不能给出错误位置。
+    ///
+    /// 唯一的例外是 [`MAX_PATH_DEPTH`] 熔断（防御性状态：真实 NTFS 数据不会成环，
+    /// 只在被破坏/伪造数据下触发）——继续按原策略返回熔断前收集到的部分路径，
+    /// 优先"不 panic/不死循环"，与该分支已有测试的既定契约保持一致。
     #[must_use]
     pub fn full_path(&self, frn: u64, drive_letter: char) -> Option<PathBuf> {
         let mut segments = Vec::new();
         let mut current = frn;
         let mut depth = 0;
 
-        while let Some(record) = self.records.get(&current) {
+        loop {
+            let Some(record) = self.records.get(&current) else {
+                // 断链：祖先记录缺失，已收集片段不可信，不能冒充完整路径。
+                return None;
+            };
             segments.push(record.name.clone());
             if current == ROOT_FRN || record.parent_frn == current {
                 break;
@@ -282,6 +294,23 @@ mod tests {
     fn full_path_missing_frn_returns_none() {
         let idx = sample_index();
         assert!(idx.full_path(999, 'C').is_none());
+    }
+
+    #[test]
+    fn full_path_broken_ancestor_chain_returns_none_not_wrong_path() {
+        // frn 20 的 parent_frn 指向一个索引里不存在的记录（例如：目录已从索引
+        // 移除，但该目录下文件的删除事件尚未/未曾送达）。修复前会静默把
+        // "报告2024.docx" 拼到卷根下、伪造出 C:\报告2024.docx 这样一个看似合法
+        // 实则完全错误的路径；现在必须返回 None，而不是一个会误导调用方
+        // （搜索结果/"在文件夹中显示"）的假路径。
+        let mut idx = MemIndex::new();
+        idx.upsert(FileRecord {
+            frn: 20,
+            parent_frn: 9999, // 不存在于索引中
+            name: "报告2024.docx".into(),
+            is_directory: false,
+        });
+        assert!(idx.full_path(20, 'C').is_none());
     }
 
     #[test]
