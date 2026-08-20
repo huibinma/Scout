@@ -1,14 +1,15 @@
 import { AppSettings } from "../../hooks/useAppSettings";
-import { EverythingPane } from "./EverythingPane";
+import { NativeIndexPane } from "./NativeIndexPane";
 import { ShortcutRecorder } from "./ShortcutRecorder";
 import { IS_WINDOWS } from "./shared";
 import { WindowsPane } from "./WindowsPane";
 
 /**
  * 「常规」面板：全局唤起快捷键 + 多条件检索匹配方式，Windows 平台下追加
- * Everything 加速 / Windows 搜索集成两个子分区。
+ * 内置原生索引加速 / Windows 搜索集成两个子分区。
  *
- * 2026-07-29：原独立的「Everything」「Windows」两个 tab 收进本面板——两者都是
+ * 2026-07-29：原独立的「Everything」「Windows」两个 tab 收进本面板（重构后前者改为
+ * 内置原生索引）——两者都是
  * "日常怎么用"的系统集成开关，跟常规设置同类，没必要各占一个顶级 tab、让分类树
  * 平白多两项（且只有 Windows 用户能看到，Mac 用户点开全是空 tab 的既往体验也一并
  * 消除）。BETA-47 生成模型 fallback / 模型路径覆盖仍在「语义召回 → 模型管理」。
@@ -131,8 +132,8 @@ export function GeneralPane({
 
       {IS_WINDOWS && (
         <>
-          <div className="prefs-section-title">Everything 加速</div>
-          <EverythingPane settings={settings} setSettings={setSettings} />
+          <div className="prefs-section-title">内置原生索引加速</div>
+          <NativeIndexPane settings={settings} setSettings={setSettings} />
 
           <div className="prefs-section-title">Windows 搜索集成</div>
           <WindowsPane />

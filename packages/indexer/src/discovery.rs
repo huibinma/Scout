@@ -1,13 +1,15 @@
-//! 全盘音频路径发现层（BETA-01A）。
+//! 全盘路径发现层（BETA-01A；重构：Windows 侧移除对外部 Everything 的依赖）。
 //!
-//! 复用系统索引快速枚举**全盘**音频路径（仅路径，不读内容），交 [`MusicIndex::index_paths`]
-//! （`crate::MusicIndex`）提取入库。Windows 用 Everything `es.exe`、macOS 用 Spotlight `mdfind`。
-//! 发现层是**可选加速**——工具不可用时 `discover_audio` 返 [`DiscoveryError::Unavailable`]，
-//! 调用方回退目录扫描（守 PROJECT「不强制依赖 Everything」）。
+//! 复用快速全盘枚举（仅路径，不读内容），交 [`MusicIndex::index_paths`]
+//! （`crate::MusicIndex`）提取入库。Windows 用内置 [`scout_native_index`]
+//! （MFT 枚举 + USN Journal，见该 crate 文档）、macOS 用 Spotlight `mdfind`。
+//! 发现层是**可选加速**——工具/权限不可用时 `discover_audio` 返
+//! [`DiscoveryError::Unavailable`]，调用方回退目录扫描（守 PROJECT「不强制依赖
+//! 外部全盘索引工具」）。
 
 use std::path::PathBuf;
 
-#[cfg(any(windows, target_os = "macos"))]
+#[cfg(target_os = "macos")]
 use std::process::Command;
 
 /// 发现层错误。
@@ -33,13 +35,13 @@ pub trait AudioDiscovery: std::fmt::Debug + Send + Sync {
     fn discover_audio(&self) -> Result<Vec<PathBuf>, DiscoveryError>;
 }
 
-/// 平台默认发现器（Windows Everything / macOS Spotlight）；不支持的平台返回 `None`。
-/// 注：返回 `Some` 不代表工具已安装——实际可用性在 [`AudioDiscovery::discover_audio`] 判定。
+/// 平台默认发现器（Windows 内置原生索引 / macOS Spotlight）；不支持的平台返回 `None`。
+/// 注：返回 `Some` 不代表实际可用——实际可用性在 [`AudioDiscovery::discover_audio`] 判定。
 #[must_use]
 pub fn default_audio_discovery() -> Option<Box<dyn AudioDiscovery>> {
     #[cfg(windows)]
     {
-        Some(Box::new(EverythingDiscovery))
+        Some(Box::new(NativeIndexAudioDiscovery))
     }
     #[cfg(target_os = "macos")]
     {
@@ -65,9 +67,8 @@ pub trait PathDiscovery: std::fmt::Debug + Send + Sync {
 pub fn default_document_discovery() -> Option<Box<dyn PathDiscovery>> {
     #[cfg(windows)]
     {
-        Some(Box::new(EverythingExtDiscovery::new(
+        Some(Box::new(NativeIndexExtDiscovery::new(
             crate::scan::DOC_EXTS,
-            "doc",
         )))
     }
     #[cfg(target_os = "macos")]
@@ -89,9 +90,8 @@ pub fn default_document_discovery() -> Option<Box<dyn PathDiscovery>> {
 pub fn default_image_discovery() -> Option<Box<dyn PathDiscovery>> {
     #[cfg(windows)]
     {
-        Some(Box::new(EverythingExtDiscovery::new(
+        Some(Box::new(NativeIndexExtDiscovery::new(
             crate::scan::IMAGE_EXTS,
-            "image",
         )))
     }
     #[cfg(target_os = "macos")]
@@ -108,13 +108,13 @@ pub fn default_image_discovery() -> Option<Box<dyn PathDiscovery>> {
 
 /// 把发现工具的输出文本解析为路径列表：去 BOM、按行、trim、滤空。纯函数。
 ///
-/// 调用点在 `#[cfg(windows)]` EverythingDiscovery + `#[cfg(target_os = "macos")]`
-/// SpotlightDiscovery + 同模块 `#[cfg(test)]` 单测三处；Linux build 时 lib target
-/// 下两个 cfg 块都不编译，函数变 dead。`cargo clippy ... -D warnings` 在 ubuntu runner
-/// 上会把 rustc 的 `dead_code` warn 升 error（[CI workflow ci.yml](../../.github/workflows/ci.yml)
-/// 在 ubuntu-22.04 上首跑发现）。这里显式 `allow(dead_code)` 在非 windows/macos 平台
-/// 上容忍——函数在所有平台仍编译以供 test 用，且 Mac/Win 真实调用点行为不变。
-#[cfg_attr(not(any(windows, target_os = "macos")), allow(dead_code))]
+/// 重构后（Windows 侧改走内置原生索引、不再文本导出）调用点只剩
+/// `#[cfg(target_os = "macos")]` SpotlightDiscovery + 同模块 `#[cfg(test)]` 单测两处；
+/// Windows / Linux build 时 lib target 里函数变 dead。`cargo clippy ... -D warnings`
+/// 在非 macOS runner 上会把 rustc 的 `dead_code` warn 升 error
+/// （[CI workflow ci.yml](../../.github/workflows/ci.yml)）。这里显式 `allow(dead_code)`
+/// 在非 macOS 平台上容忍——函数在所有平台仍编译以供 test 用，且 macOS 真实调用点行为不变。
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
 pub(crate) fn parse_paths_lines(text: &str) -> Vec<PathBuf> {
     text.lines()
         .map(|line| line.trim_start_matches('\u{feff}').trim())
@@ -123,107 +123,71 @@ pub(crate) fn parse_paths_lines(text: &str) -> Vec<PathBuf> {
         .collect()
 }
 
-/// 音频扩展名查询（Everything `ext:` 语法）。
+/// 音频扩展名集合（原 Everything `ext:` 查询串的枚举形式，供
+/// [`scout_native_index::search_by_extensions`] 复用）。
 #[cfg(windows)]
-const AUDIO_EXT_QUERY: &str = "ext:mp3;flac;m4a;aac;ogg;opus;wav;wma;aiff;aif;ape";
+const AUDIO_EXTS: &[&str] = &[
+    "mp3", "flac", "m4a", "aac", "ogg", "opus", "wav", "wma", "aiff", "aif", "ape",
+];
 
-/// Windows：Everything CLI（`es.exe`）全盘枚举。
+/// 全盘发现单次查询的结果上限。原 Everything 集成无显式上限（`es.exe` 全量导出）；
+/// 内置索引服务同样是内存扫描，但给一个宽裕上限（远超真实个人/企业设备文件量的
+/// 合理量级）防御极端场景下的无界内存占用。
+#[cfg(windows)]
+const DISCOVERY_LIMIT: usize = 2_000_000;
+
+/// Windows：内置原生索引（MFT 枚举 + USN Journal）全盘枚举。
+/// 替代原 Everything `es.exe` 集成——见 [`scout_native_index`] crate 文档。
 #[cfg(windows)]
 #[derive(Debug)]
-pub struct EverythingDiscovery;
+pub struct NativeIndexAudioDiscovery;
 
 #[cfg(windows)]
-impl AudioDiscovery for EverythingDiscovery {
+impl AudioDiscovery for NativeIndexAudioDiscovery {
     fn discover_audio(&self) -> Result<Vec<PathBuf>, DiscoveryError> {
-        // 经 -export-txt -utf8-bom 导出（规避中文 Windows GBK stdout 破坏 CJK 路径）。
-        let export = std::env::temp_dir().join("scout_audio_discovery.txt");
-        let ran = es_candidates()
-            .into_iter()
-            .any(|es| run_es_export(&es, AUDIO_EXT_QUERY, &export));
-        if !ran {
+        if !scout_native_index::native_index_available() {
             return Err(DiscoveryError::Unavailable {
-                detail: "es.exe（Everything CLI）不可用".to_owned(),
+                detail: "内置原生索引不可用（非 NTFS 卷，或进程无管理员权限）".to_owned(),
             });
         }
-        let bytes = std::fs::read(&export).map_err(|e| DiscoveryError::Failed {
-            detail: format!("读导出文件失败: {e}"),
-        })?;
-        let text =
-            String::from_utf8_lossy(bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(&bytes));
-        Ok(parse_paths_lines(&text))
+        Ok(scout_native_index::search_by_extensions(
+            AUDIO_EXTS,
+            DISCOVERY_LIMIT,
+        ))
     }
 }
 
-/// BETA-64 T5：按任意扩展名集合的 Everything CLI 全盘枚举（文档/图片发现层共用）。
-/// 逻辑与 [`EverythingDiscovery`] 逐字节同构，仅查询串与导出文件名参数化。
+/// BETA-64 T5（重构后改用内置原生索引）：按任意扩展名集合的全盘枚举
+/// （文档/图片发现层共用）。逻辑与 [`NativeIndexAudioDiscovery`] 同构，仅扩展名集合
+/// 参数化。
 #[cfg(windows)]
 #[derive(Debug)]
-struct EverythingExtDiscovery {
-    ext_query: String,
-    /// 导出临时文件名区分标签（避免与音频发现 / 并发的另一发现器互相覆盖导出文件）。
-    export_tag: &'static str,
+struct NativeIndexExtDiscovery {
+    extensions: Vec<&'static str>,
 }
 
 #[cfg(windows)]
-impl EverythingExtDiscovery {
-    fn new(exts: &[&str], export_tag: &'static str) -> Self {
+impl NativeIndexExtDiscovery {
+    fn new(exts: &[&'static str]) -> Self {
         Self {
-            ext_query: format!("ext:{}", exts.join(";")),
-            export_tag,
+            extensions: exts.to_vec(),
         }
     }
 }
 
 #[cfg(windows)]
-impl PathDiscovery for EverythingExtDiscovery {
+impl PathDiscovery for NativeIndexExtDiscovery {
     fn discover(&self) -> Result<Vec<PathBuf>, DiscoveryError> {
-        let export = std::env::temp_dir().join(format!("scout_{}_discovery.txt", self.export_tag));
-        let ran = es_candidates()
-            .into_iter()
-            .any(|es| run_es_export(&es, &self.ext_query, &export));
-        if !ran {
+        if !scout_native_index::native_index_available() {
             return Err(DiscoveryError::Unavailable {
-                detail: "es.exe（Everything CLI）不可用".to_owned(),
+                detail: "内置原生索引不可用（非 NTFS 卷，或进程无管理员权限）".to_owned(),
             });
         }
-        let bytes = std::fs::read(&export).map_err(|e| DiscoveryError::Failed {
-            detail: format!("读导出文件失败: {e}"),
-        })?;
-        let text =
-            String::from_utf8_lossy(bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(&bytes));
-        Ok(parse_paths_lines(&text))
+        Ok(scout_native_index::search_by_extensions(
+            &self.extensions,
+            DISCOVERY_LIMIT,
+        ))
     }
-}
-
-/// 候选 es.exe：PATH（`es.exe`）+ winget 安装路径（经 `LOCALAPPDATA`）。
-#[cfg(windows)]
-fn es_candidates() -> Vec<String> {
-    let mut v = vec!["es.exe".to_owned()];
-    if let Some(local) = std::env::var_os("LOCALAPPDATA") {
-        let p = std::path::Path::new(&local)
-            .join("Microsoft")
-            .join("WinGet")
-            .join("Packages")
-            .join("voidtools.Everything.Cli_Microsoft.Winget.Source_8wekyb3d8bbwe")
-            .join("es.exe");
-        v.push(p.to_string_lossy().into_owned());
-    }
-    v
-}
-
-/// 调 es.exe 导出全盘匹配路径（`query` 为 es.exe 查询串，如 `ext:mp3;flac;...`）；
-/// spawn 成功且退出码 0 返 true。`CREATE_NO_WINDOW`：索引枚举时 spawn es.exe 不闪现
-/// 控制台黑框（与 everything 搜索路径一致）。BETA-64 T5：`query` 参数化以供文档/图片
-/// 发现层复用（此前硬编码 `AUDIO_EXT_QUERY`，仅供音频发现调用）。
-#[cfg(windows)]
-fn run_es_export(es: &str, query: &str, export: &std::path::Path) -> bool {
-    use std::os::windows::process::CommandExt;
-    const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-    Command::new(es)
-        .args([query, "-export-txt", &export.to_string_lossy(), "-utf8-bom"])
-        .creation_flags(CREATE_NO_WINDOW)
-        .status()
-        .is_ok_and(|s| s.success())
 }
 
 /// macOS：Spotlight（`mdfind`）全盘枚举。
@@ -326,8 +290,8 @@ mod tests {
     }
 
     /// BETA-64 T5：文档/图片发现器构造与探测均不 panic（Windows/macOS 返回 `Some`，
-    /// 其余平台 `None`；真机枚举行为由 CI Windows/macOS release 构建 + 明日真机验证覆盖，
-    /// 本仓库沙盒无法起真 mdfind/es.exe 环境）。
+    /// 其余平台 `None`；真机枚举行为由 CI Windows/macOS release 构建 + 真机验证覆盖，
+    /// 本仓库沙盒无法起真 mdfind / 无管理员权限打开 NTFS 卷句柄）。
     #[test]
     fn default_document_and_image_discovery_do_not_panic() {
         let doc = default_document_discovery();

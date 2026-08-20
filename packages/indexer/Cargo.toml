@@ -36,3 +36,7 @@ tempfile = "3"
 # BETA-37 邮件格式提取：eml MIME 解析（encoded-word / multipart / 传输编码）。
 # full_encoding 开 encoding_rs：企业归档邮件常见 GBK/GB18030/Big5 等历史 charset。
 mail-parser = { version = "0.11", features = ["full_encoding"] }
+# 重构：全盘路径发现层不再 spawn 外部 Everything（es.exe），改用内置的
+# MFT 枚举 + USN Journal 原生索引服务（Windows 专属能力，其余平台该 crate
+# 的查询函数恒返回空/不可用，见其 crate 文档）。
+scout-native-index = { path = "../search-backends/native-index" }

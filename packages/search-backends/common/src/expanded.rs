@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 ///   旧行为那样静默放宽到 OR（用户反馈"返回大量不符合要求的结果"正是该静默放宽所致）。
 /// - `Any`：组间 OR，任一条件命中即可——用于用户主动要广召回时手动切换。
 ///
-/// 四个检索后端（local-index / windows-search / everything / spotlight）统一读取此字段，
+/// 各检索后端（local-index / windows-search / native-index / spotlight）统一读取此字段，
 /// 保证同一次全局配置下所有后端的复合条件语义一致。
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "snake_case")]

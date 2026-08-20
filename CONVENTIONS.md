@@ -99,7 +99,7 @@
 - **TypeScript**：`prettier` + `eslint`；严格 `tsconfig`（`strict: true`）。
 - **Python**（仅训练侧）：`ruff` + `black`；`pyproject.toml` 管理依赖。
 - **跨平台**：禁止硬编码 `/` 或 `\` 路径分隔符；用平台 API（`std::path::PathBuf`、Node `path`、Python `pathlib`）。
-- **平台特定代码**：集中在 `packages/search-backends/{spotlight,windows-search,everything}` 和 `platform/{macos,windows}`，不要散落到通用代码里。
+- **平台特定代码**：集中在 `packages/search-backends/{spotlight,windows-search,native-index}` 和 `platform/{macos,windows}`，不要散落到通用代码里。
 
 ## 7. 安全与隐私（贯穿所有代码）
 

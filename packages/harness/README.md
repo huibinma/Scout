@@ -28,7 +28,7 @@ Agent Harness 工程底座。crate 名 `scout-harness`。
 ### M1 第 3 批
 
 - **`ResultStream` / `StreamSink`（MVP-07）** —— 同步 `Iterator<Item = ResultEvent>` 搜索结果流；可把 v0.1 backend 的完整 `Vec<SearchResult>` 包装为 `Started -> Result* -> Finished`，并支持事件间取消。
-- **`FallbackChain`（MVP-10）** —— 基于 `CapabilityDiscovery` + `ToolRegistry` 生成确定性候选链；系统索引优先，Everything 次之，NativeIndex 最后，失败时保留完整错误链。
+- **`FallbackChain`（MVP-10）** —— 基于 `CapabilityDiscovery` + `ToolRegistry` 生成确定性候选链；系统索引优先，内置原生索引（`NativeFileIndex`，替代原 Everything 集成）次之，`NativeIndex`/`SemanticIndex` 最后，失败时保留完整错误链。
 
 ### M1 第 4 批
 

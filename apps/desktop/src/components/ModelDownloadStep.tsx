@@ -1,7 +1,7 @@
 // BETA-31 / BETA-33 cycle 3 v4：模型下载共用组件（embedding + generation）。
 // 用于 Onboarding Step 2、PreferencesDialog NotFound 行下方（旧 SettingsPage 已随 cycle 9 删除）。
 // 2026-07-06（cycle 9 真机反馈）：下载 UI 前先做本地发现——默认路径已有 → 直接就绪；
-// 否则经 Everything 精确文件名全盘发现候选，「使用此文件」复制进默认目录（免重下 ~700MB）。
+// 否则经内置原生索引精确文件名全盘发现候选，「使用此文件」复制进默认目录（免重下 ~700MB）。
 import React, { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import {
@@ -20,7 +20,7 @@ interface DiscoverResult {
   present: boolean;
   expected_path: string;
   candidates: LocalModelCandidate[];
-  everything_available: boolean;
+  native_index_available: boolean;
 }
 
 export interface ModelDownloadStepProps {
@@ -79,7 +79,7 @@ export const ModelDownloadStep: React.FC<ModelDownloadStepProps> = ({
   const { status, progress, error, start, cancel } = useModelDownload(kind);
   const copy = copyFor(kind);
 
-  // 本地发现：mount 时查默认路径 + Everything 候选。失败静默降级为原下载 UI。
+  // 本地发现：mount 时查默认路径 + 内置原生索引候选。失败静默降级为原下载 UI。
   const [discover, setDiscover] = useState<DiscoverResult | null>(null);
   const [importing, setImporting] = useState<string | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
@@ -127,7 +127,7 @@ export const ModelDownloadStep: React.FC<ModelDownloadStepProps> = ({
     }
   };
 
-  // 手动指定本地已下载的模型文件：不依赖 Everything 自动发现（macOS 上恒不可用，
+  // 手动指定本地已下载的模型文件：不依赖内置原生索引自动发现（macOS 上恒不可用，
   // Windows 上也可能没装/没扫到）。走同一条 import_local_model 命令与 importFrom，
   // 后端仍按 acceptable_source_names 精确文件名校验（防误选其它模型触发 abort，
   // 见 model_download.rs 注释），选错文件名会走既有 importError 提示。
@@ -179,7 +179,7 @@ export const ModelDownloadStep: React.FC<ModelDownloadStepProps> = ({
 
       {status === 'idle' && !discover?.present && (
         <div>
-          {/* 本地发现候选：Everything 按精确文件名找到的同款模型，复制即用免重下。 */}
+          {/* 本地发现候选：内置原生索引按精确文件名找到的同款模型，复制即用免重下。 */}
           {discover && discover.candidates.length > 0 && (
             <div
               style={{
@@ -228,9 +228,9 @@ export const ModelDownloadStep: React.FC<ModelDownloadStepProps> = ({
               ))}
             </div>
           )}
-          {discover && !discover.everything_available && !compact && (
+          {discover && !discover.native_index_available && !compact && (
             <p style={{ fontSize: '12px', color: 'var(--subtle)', margin: '0 0 10px' }}>
-              未检测到 Everything（es.exe），无法自动发现本机已有模型——可在下方手动选择文件。
+              内置原生索引不可用，无法自动发现本机已有模型——可在下方手动选择文件。
             </p>
           )}
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>

@@ -28,7 +28,7 @@ export function WindowsPane() {
 
   useEffect(() => {
     void check();
-    // 2026-07-30：3s→15s——纯 UI 状态刷新节奏，与 EverythingPane 同步拉长，
+    // 2026-07-30：3s→15s——纯 UI 状态刷新节奏，与 NativeIndexPane 同步拉长，
     // 不影响实际搜索时的可用性判断（各后端在查询时独立探测）。
     const t = setInterval(() => void check(), 15000);
     return () => clearInterval(t);
@@ -55,7 +55,7 @@ export function WindowsPane() {
           </p>
         ) : status === "NotIndexed" ? (
           <p className="prefs-status status-text-warn">
-            ⚠ Windows 搜索服务未运行——Scout 仍可用本地索引 / Everything
+            ⚠ Windows 搜索服务未运行——Scout 仍可用本地索引 / 内置原生索引
             搜索，但系统搜索臂不可用。可在「服务」中启动 Windows Search（服务名
             WSearch）。
           </p>

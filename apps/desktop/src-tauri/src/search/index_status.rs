@@ -354,10 +354,11 @@ pub(crate) fn perform_reindex_for_roots(
         Some(o) => o.into_iter().filter(|p| p.exists()).collect(),
         None => settings_roots,
     };
-    // BETA-47：Everything 集成开关 live-read——关闭时音频轮跳过 es.exe 全盘发现、
-    // 回退目录扫描。仅 Windows 受设置控制（macOS 发现器是 Spotlight、与该开关无关）。
-    let use_audio_discovery =
-        cfg!(not(target_os = "windows")) || crate::settings::read_enable_everything(&settings_path);
+    // 内置原生文件索引开关 live-read（原 BETA-47 Everything 集成开关）——关闭时
+    // 全盘发现轮跳过原生索引扫描、回退目录扫描。仅 Windows 受设置控制（macOS
+    // 发现器是 Spotlight、与该开关无关）。
+    let use_audio_discovery = cfg!(not(target_os = "windows"))
+        || crate::settings::read_enable_native_file_index(&settings_path);
     let result = {
         let backend = scout_local_index_backend::LocalIndexBackend::new(&db_path);
         let bridge = StatusProgressBridge::new(Arc::clone(status));

@@ -1,14 +1,15 @@
 //! 原型（spike）：全盘音频发现 → 提取 → 入库 → 跨目录搜索。
 //!
 //! 流程：
-//!   1. 发现：spawn `es.exe`（Everything CLI）按扩展名枚举**所有盘**的音频路径，
-//!      经 `-export-txt -utf8-bom` 导出（规避中文 Windows GBK stdout 破坏 CJK 路径）。
+//!   1. 发现：[`scout_indexer::default_audio_discovery`]（Windows 内置 MFT/USN 原生索引、
+//!      macOS Spotlight）按扩展名枚举全盘音频路径。
 //!   2. 提取：对每条路径用 `scout_indexer::extract_metadata`（lofty）读标签。
 //!   3. 入库：写进临时文件的 `MusicIndex`（真 SQLite + FTS5）。
 //!   4. 诊断：统计耗时 / 标签覆盖率 / 失败样本（探明 OneDrive 占位符是否是坑）。
 //!   5. 搜索：跑一条真实 FTS 查询，证明跨目录命中。
 //!
-//! 运行：`cargo run -p scout-indexer --example discover_audio [es.exe路径]`
+//! 运行：`cargo run -p scout-indexer --example discover_audio`
+//! （Windows 需以管理员权限运行终端——内置原生索引打开 NTFS 卷句柄的 Win32 硬性要求）
 
 // 诊断型 demo binary：println/expect/cast 是其本职，统一允许。
 #![allow(
@@ -22,27 +23,26 @@
 
 use std::collections::HashSet;
 use std::path::PathBuf;
-use std::process::Command;
 use std::time::Instant;
 
-use scout_indexer::{extract_metadata, MusicIndex, MusicQuery, NoopProgress};
-
-const AUDIO_QUERY: &str = "ext:mp3;flac;m4a;aac;ogg;opus;wav;wma;aiff;aif;ape";
-const ES_FALLBACK: &str = r"C:\Users\alice\AppData\Local\Microsoft\WinGet\Packages\voidtools.Everything.Cli_Microsoft.Winget.Source_8wekyb3d8bbwe\es.exe";
+use scout_indexer::{
+    default_audio_discovery, extract_metadata, MusicIndex, MusicQuery, NoopProgress,
+};
 
 fn main() {
-    let es = std::env::args()
-        .nth(1)
-        .unwrap_or_else(|| "es.exe".to_string());
-
     // ---------- 1. 发现 ----------
-    let export = std::env::temp_dir().join("scout_audio_discovery.txt");
-    println!("【发现】调用 Everything 枚举全盘音频…");
+    println!("【发现】枚举全盘音频…");
     let t0 = Instant::now();
-    let paths = discover(&es, &export).or_else(|| discover(ES_FALLBACK, &export));
-    let Some(paths) = paths else {
-        eprintln!("无法调用 es.exe（Everything CLI）。请确认已安装并在 PATH 中。");
+    let Some(discovery) = default_audio_discovery() else {
+        eprintln!("当前平台无默认发现器。");
         std::process::exit(1);
+    };
+    let paths = match discovery.discover_audio() {
+        Ok(paths) => paths,
+        Err(err) => {
+            eprintln!("发现失败/不可用：{err}（Windows 请以管理员权限运行）。");
+            std::process::exit(1);
+        }
     };
     println!(
         "【发现】{} 条音频路径，耗时 {:?}",
@@ -149,30 +149,4 @@ fn main() {
 
     let _ = std::fs::remove_file(&db);
     println!("\n完成。");
-}
-
-/// 调用 es.exe 导出全盘音频路径。失败返回 None。
-fn discover(es: &str, export: &PathBuf) -> Option<Vec<PathBuf>> {
-    let status = Command::new(es)
-        .args([
-            AUDIO_QUERY,
-            "-export-txt",
-            &export.to_string_lossy(),
-            "-utf8-bom",
-        ])
-        .status()
-        .ok()?;
-    if !status.success() {
-        return None;
-    }
-    let bytes = std::fs::read(export).ok()?;
-    // 去 UTF-8 BOM。
-    let text = String::from_utf8_lossy(bytes.strip_prefix(&[0xEF, 0xBB, 0xBF]).unwrap_or(&bytes));
-    Some(
-        text.lines()
-            .map(str::trim)
-            .filter(|l| !l.is_empty())
-            .map(PathBuf::from)
-            .collect(),
-    )
 }

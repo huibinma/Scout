@@ -122,9 +122,9 @@ if let Some(disc) = default_audio_discovery() {
 }
 ```
 
-- **`AudioDiscovery`**：Windows `EverythingDiscovery`（es.exe `ext:` `-export-txt -utf8-bom`）/
-  macOS `SpotlightDiscovery`（`mdfind public.audio`）。工具不可用返 `DiscoveryError::Unavailable`
-  → 调用方回退目录扫描（守「不强制依赖 Everything」）。
+- **`AudioDiscovery`**：Windows `NativeIndexAudioDiscovery`（内置 MFT 枚举 + USN Journal，
+  `scout-native-index`）/ macOS `SpotlightDiscovery`（`mdfind public.audio`）。工具/权限不可用
+  返 `DiscoveryError::Unavailable` → 调用方回退目录扫描（守「不强制依赖外部全盘索引工具」）。
 - **`MusicIndex::index_paths(&[PathBuf])`**：顺序预检 → **rayon 并行** lofty 提取 → 顺序 upsert
   （rusqlite `Connection: !Sync`）。
 - **占位符跳过**：Windows 查 `FILE_ATTRIBUTE_OFFLINE`/`RECALL_ON_DATA_ACCESS`（只读属性、无 unsafe）

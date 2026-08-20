@@ -65,7 +65,7 @@ export const WindowsSearchCheckStep: React.FC = () => {
           lineHeight: 1.5,
         }}
       >
-        ⚠ Windows 搜索服务未运行——Scout 仍可用本地索引 / Everything
+        ⚠ Windows 搜索服务未运行——Scout 仍可用本地索引 / 内置原生索引
         搜索，但系统搜索臂不可用。建议在「服务」中启动 Windows Search
         （服务名 WSearch）后再做本步。
       </div>

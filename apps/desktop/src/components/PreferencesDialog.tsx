@@ -37,7 +37,7 @@ import {
 // 左侧分类导航 + 右侧表单 + 底部取消 / 应用 / 确定。
 // 组件名因历史兼容保留 PreferencesDialog，实际 UI 已是 /settings 整页工作区。
 // 2026-07-29：分类精简为 常规 / 索引 / 语义召回 / 术语与同义词 / 本机 MCP 服务 五 tab
-// ——Everything / Windows 系统集成下沉进「常规」子分区（见 GeneralPane），
+// ——内置原生索引 / Windows 系统集成下沉进「常规」子分区（见 GeneralPane），
 // 「隐私与记录」并入「索引」（见 IndexingPane）。
 
 interface Props {
@@ -354,7 +354,7 @@ export default function PreferencesDialog({
   const indexStatusLine = useMemo(() => {
     if (!indexStatus) return "状态加载中…";
     if (indexStatus.indexing) {
-      // cycle 7-a：先显示 phase chip（帮 Everything 全盘发现"卡在 0·0"的场景解释状态）、
+      // cycle 7-a：先显示 phase chip（帮全盘发现"卡在 0·0"的场景解释状态）、
       // 再显示当前目录（文件父目录、非配置 root）+ 累计进度。
       const parts: string[] = [];
       if (indexStatus.current_phase) {

@@ -12,6 +12,6 @@
 ## 计划内容
 
 - macOS：用临时目录构造样本文件 → 跑 SpotlightBackend（注意 Spotlight 索引延迟，需 `mdimport` 强制索引或等待）
-- Windows：临时目录 → SystemIndex / Everything（同样索引延迟问题）
+- Windows：临时目录 → SystemIndex / 内置原生索引（USN Journal 近实时，但仍有短暂延迟）
 - 跨平台一致性测试：同一份 SearchIntent 在不同后端上结果差异
 - 安全测试：Prompt Injection、权限分级、Tool registry 边界

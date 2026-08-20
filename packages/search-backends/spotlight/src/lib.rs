@@ -1010,14 +1010,14 @@ pub fn escape_glob_pattern(value: &str) -> String {
 
 /// 是否有可用的 `mdfind`（本机装了 Spotlight，绝大多数 macOS 机器默认自带）。
 /// 供设置页「扫描本机 gguf」等不经 [`SearchBackend`] trait 面的场景做前置判断，
-/// 同款用途参考 everything crate 的 `es_cli_available`。
+/// 同款用途参考 `scout-native-index` crate 的 `native_index_available`。
 #[must_use]
 pub fn mdfind_available() -> bool {
     executable_exists(&PathBuf::from("mdfind"))
 }
 
 /// 按**扩展名**全盘查找文件（设置页「自动发现本机 gguf 模型」用，2026-08 加、
-/// 与 everything crate 的 `find_files_by_extension` 同一用途、跨后端对齐 UX）。
+/// 与 `scout-native-index` crate 的 `find_files_by_extension` 同一用途、跨后端对齐 UX）。
 /// `ext` 传裸扩展名（如 `gguf`，不含点）。Spotlight 默认索引整个卷（不同于 Windows
 /// Search 只覆盖系统索引范围），一般不装额外软件即可扫到任意位置的文件。
 /// mdfind 不可用 / 执行失败 → 返回空（调用方按"未发现"降级，不报错）。

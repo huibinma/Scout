@@ -87,7 +87,7 @@ cargo run -p scout-evals --bin synonym_recall -- --json
 cargo test -p scout-evals          # 含 recall 单测 + 集成门槛测试
 cargo test -p scout-intent-parser  # parser
 cargo test -p scout-harness        # harness（含同义词 expander）
-cargo test -p scout-search-backend-everything   # Everything 后端
+cargo test -p scout-native-index    # 内置原生索引（MFT 枚举 + USN Journal，替代原 Everything 集成）
 cargo test -p scout-search-backend # common
 cargo run  -p scout-evals --bin evals -- --fixtures v0.5   # parser-only 评测（期望 472/26/2）
 ```
@@ -197,7 +197,7 @@ STATUS / ROADMAP 里有几项一直**卡 Windows 真机**，正是这台机器�
 
 1. **两个 Windows 后端执行层 ✅ 已在 Windows 11 真机实测（2026-05-31，MVP-11/12）**：
    - `packages/search-backends/windows-search/src/lib.rs`：`PlatformWindowsSearchExecutor` 经 `Search.CollatorDSO` OLE DB provider（固定 `PowerShell` + ADODB 脚本，SQL 经环境变量传入）执行；用 `System.ItemUrl` 还原真实路径（非本地化 `ItemPathDisplay`）；相对时间在执行器解析为绝对 ISO（provider 不支持 `DATEADD`/`GETDATE`）。真机集成测试 `tests/real_windows_search.rs`（`cargo test -p scout-search-backend-windows-search -- --ignored`）。
-   - `packages/search-backends/everything/src/lib.rs`：`EsCliExecutor` spawn `es.exe`（结构化参数、取消/超时）。需装 [Everything](https://www.voidtools.com/) + ES CLI（`winget install voidtools.Everything.Cli`；es.exe 落在 `%LOCALAPPDATA%\Microsoft\WinGet\Packages\voidtools.Everything.Cli_*\`，重启 shell 后入 PATH）。真机集成测试 `tests/real_everything.rs`（`-- --ignored`，需 es.exe 在 PATH）。修复：早期误加的 `-path` 会把搜索项当路径吞掉（真机实测 0 结果），已移除。
+   - ~~`packages/search-backends/everything/src/lib.rs`：`EsCliExecutor` spawn `es.exe`~~——**2026-08-20 重构移除**：不再集成外部 Everything（需用户自装 `es.exe`），改用内置 `packages/search-backends/native-index`（`scout-native-index`）直接调用 Win32 API 读取 NTFS MFT / USN Journal，无需安装任何第三方软件、只需以管理员权限运行 Scout。真机集成测试 `packages/search-backends/native-index/tests/real_volume.rs`（`cargo test -p scout-native-index --test real_volume -- --ignored`）。
 2. **MVP-26 跨平台一致性测试**：在 Windows 跑 v0.5 evals，与 macOS 对比，验证「双平台通过率差 < 5pp」（M→B 切换硬指标，至今从未实跑过）。
 3. **BETA-09(a) 跨平台部署**：Windows 加载 GGUF（§5）验证推理路径与 macOS 一致（已闭合，详见 ROADMAP BETA-09(a) 归档）。
 4. **MVP-24 Windows 索引位置引导**：当前 macOS stub，Windows 真检测待真机。
@@ -231,7 +231,7 @@ STATUS / ROADMAP 里有几项一直**卡 Windows 真机**，正是这台机器�
 | `bash: scripts/ci.sh` 找不到 | 用 Git Bash 跑，或直接敲 cargo 命令（§3） |
 | git status 一堆伪改动（行尾） | `git config core.autocrlf false` 再重新 checkout（§1） |
 | 模型 fallback 不生效 / 找不到模型 | GGUF 被 gitignore，需手动拷 + 设 `SCOUT_MODEL_PATH`（§5）；sha256 务必核对 |
-| Everything 后端 `BackendUnavailable` | 执行层 pending（§6.1），且需装 Everything + 启用 ES CLI |
+| 内置原生索引后端 `BackendUnavailable` | 需以管理员权限运行 Scout（打开 NTFS 卷句柄的 Win32 硬性要求，见 §6.1） |
 
 ---
 

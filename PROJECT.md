@@ -33,7 +33,7 @@ Scout 是一个本地优先、跨平台（macOS + Windows）的**本地语义检
 - **本地优先**：默认不上传文件名、路径、内容、搜索词、索引数据。
 - **轻量可用**：普通 16GB Mac 或 Windows 电脑可流畅运行。
 - **跨平台一致**：macOS 与 Windows 共享同一份 Agent Harness、Search Intent JSON、UI、模型。
-- **后端可插拔**：系统搜索（Spotlight / Windows Search）是默认后端，Everything 是 Windows 上的可选加速。
+- **后端可插拔**：系统搜索（Spotlight / Windows Search）是默认后端，内置原生索引（MFT 枚举 + USN Journal）是 Windows 上的可选加速——不依赖任何第三方软件（2026-08-20 重构，取代原 Everything 集成）。
 - **可解释可控**：Agent 每一步工具调用、权限判断、错误状态可追踪。
 - **渐进扩展**：先做好系统搜索的自然语言前端，再发展为完整本地个人搜索 Agent。
 
@@ -52,8 +52,8 @@ Tool Registry
   └─ SearchBackend（trait）
        ├─ SpotlightBackend       [macOS 默认 — mdfind / NSMetadataQuery]
        ├─ WindowsSearchBackend   [Windows 默认 — OLE DB SystemIndex]
-       ├─ EverythingBackend      [Windows 可选加速 — ES / SDK]
-       └─ NativeIndexBackend     [未来]
+       ├─ NativeIndexBackend     [Windows 可选加速 — 内置 MFT 枚举 + USN Journal，无第三方依赖]
+       └─ LocalIndexBackend      [自建正文索引 — SQLite FTS5，文档/音乐/OCR]
   ↓
 Result Normalizer + Ranker
   ↓
@@ -97,7 +97,7 @@ Streaming Results UI（Tauri，跨平台）
 - 不做云端 AI 搜索。
 - **不做分析层**（2026-07-02 定位收敛）：内容关联分析、摘要、比对、起草等"理解/生成"类能力一律不自建——经 **BETA-32 MCP daemon + 外部 LLM（Claude 等）组合**实现，Scout 守住"数据不出门的检索"这一层。评估新特性时，凡属"理解/生成/分析文档内容"的需求引导到 MCP 工作流（ROADMAP BETA-40），不往产品里加。ROADMAP V10-13/15/16 已相应重定性。**2026-07-02 起，定位/范围以本文件为准**；早期计划书（docs/）中涉及摘要、比对、起草、内容关联分析等分析层展望，仅作为历史设计记录，不代表当前自建范围。
 - 不做*替代系统搜索的*完整全文搜索引擎（系统搜索仍是默认后端，不从零重建全文索引体系）；**但会在其上叠加一层本地语义召回索引**（embedding 住进 SQLite + 与 FTS5 hybrid 融合），把"按意思 / 跨语言模糊召回"做成差异化主打能力——这是 BETA-26 探针 2026-06-15 验证 GO 后用户选定的"进取档"方向（详 ROADMAP BETA-15B / BETA-26 + go/no-go 备忘）。
-- 不做强制依赖 Everything 的方案（Everything 仅作可选加速）。
+- 不做强制依赖第三方文件搜索工具的方案（2026-08-20 重构：原 Everything 可选加速集成已移除，改为内置原生索引——文件名加速能力完全自建，不再有"要不要求用户装第三方软件"这个问题）。
 - 不做商业分发前置（2026-07-04 开源免费拍板，2026-08-08 增补 SignPath 例外）：不注册商标、不购买商业代码签名证书、不注册 Apple Developer；Windows 使用 SignPath Foundation 面向开源项目的免费签名服务消除“未签名 / 未知发布者”这一类 SmartScreen 信任问题（最终提示仍由 Windows 信誉系统判定），macOS 继续接受 Gatekeeper 未签名提示并以安装文档 + 包管理器渠道（Homebrew / winget / Scoop）+ 从源码构建缓解。
 - 不做 Linux 桌面（架构预留，但短期不投入）。
 - 不做删除/批量修改的 Agent 自动执行（MVP 不支持，必须强确认）。

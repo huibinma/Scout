@@ -209,7 +209,7 @@ const fn backend_name(kind: BackendKind) -> &'static str {
     match kind {
         BackendKind::Spotlight => "spotlight",
         BackendKind::WindowsSearch => "windows_search",
-        BackendKind::Everything => "everything",
+        BackendKind::NativeFileIndex => "native_file_index",
         BackendKind::NativeIndex => "native_index",
         // BETA-15B：语义向量后端。
         BackendKind::SemanticIndex => "semantic_index",

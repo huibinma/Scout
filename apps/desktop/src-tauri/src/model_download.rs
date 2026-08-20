@@ -393,8 +393,9 @@ pub fn model_download_in_flight(kind: String) -> Result<bool, String> {
 // 真机反馈：重装后 onboarding 直接要求重下模型，但用户本机（其它路径 / 旧数据目录备份）
 // 可能已有同款 .gguf。下载 UI 出现前先做两级检查：
 // ① 默认路径已有完整文件 → 直接报 present（onboarding 显示"已就绪"跳过下载）；
-// ② 否则经 Everything（es.exe）按**精确文件名**全盘发现候选、让用户选择后**复制**进默认
-//    目录（拍板：复制而非引用，不依赖外部文件位置）。es.exe 不可用 → 候选空、走原下载 UI。
+// ② 否则经内置原生索引按**精确文件名**全盘发现候选、让用户选择后**复制**进默认
+//    目录（拍板：复制而非引用，不依赖外部文件位置）。原生索引不可用（非管理员权限等）
+//    → 候选空、走原下载 UI。
 
 impl ModelKind {
     /// 本地发现可接受的源文件名（大小写不敏感）：canonical 保存名 + HF 原始文件名。
@@ -424,41 +425,42 @@ pub(crate) fn parse_kind(kind: &str) -> Result<ModelKind, String> {
     }
 }
 
-// everything crate 是 Windows target-gated 依赖（Cargo.toml
+// scout-native-index 是 Windows target-gated 依赖（Cargo.toml
 // `[target.'cfg(target_os = "windows")'.dependencies]`）——非 Windows 平台经此对
-// shim 降级（不可用 / 零候选），macOS DMG CI 才能编（v0.9.16 首跑实锤踩坑）。
+// shim 降级（不可用 / 零候选），macOS DMG CI 才能编（v0.9.16 首跑实锤踩坑，重构后
+// 内置原生索引沿用同一降级契约）。
 #[cfg(target_os = "windows")]
-fn es_cli_available() -> bool {
-    scout_search_backend_everything::es_cli_available()
+fn native_index_available() -> bool {
+    scout_native_index::native_index_available()
 }
 
 #[cfg(not(target_os = "windows"))]
-const fn es_cli_available() -> bool {
+const fn native_index_available() -> bool {
     false
 }
 
 #[cfg(target_os = "windows")]
-fn es_find_files_named(name: &str, limit: usize) -> Vec<PathBuf> {
-    scout_search_backend_everything::find_files_named(name, limit)
+fn native_find_files_named(name: &str, limit: usize) -> Vec<PathBuf> {
+    scout_native_index::find_files_named(name, limit)
 }
 
 #[cfg(not(target_os = "windows"))]
-fn es_find_files_named(_name: &str, _limit: usize) -> Vec<PathBuf> {
+fn native_find_files_named(_name: &str, _limit: usize) -> Vec<PathBuf> {
     Vec::new()
 }
 
 #[cfg(target_os = "windows")]
-fn es_find_files_ext(ext: &str, limit: usize) -> Vec<PathBuf> {
-    scout_search_backend_everything::find_files_by_extension(ext, limit)
+fn native_find_files_ext(ext: &str, limit: usize) -> Vec<PathBuf> {
+    scout_native_index::find_files_by_extension(ext, limit)
 }
 
 #[cfg(not(target_os = "windows"))]
-fn es_find_files_ext(_ext: &str, _limit: usize) -> Vec<PathBuf> {
+fn native_find_files_ext(_ext: &str, _limit: usize) -> Vec<PathBuf> {
     Vec::new()
 }
 
-// windows-search / spotlight crate 同款 target-gated 依赖模式（见上 everything 注释）。
-// 与 Everything 不同，这两个是系统自带能力，不经 `enable_everything` 那样的用户开关——
+// windows-search / spotlight crate 同款 target-gated 依赖模式（见上内置原生索引注释）。
+// 与内置原生索引不同，这两个是系统自带能力，不经 `enable_native_file_index` 那样的用户开关——
 // 「可用」只取决于本机是否是对应平台（PlatformWindowsSearchExecutor::is_available()
 // 在 Windows 上恒 true，同款语义見 WindowsPane 的服务状态展示；mdfind 缺失的极端情况
 // 由 mdfind_available() 兜底）。
@@ -516,14 +518,14 @@ pub struct DiscoverResult {
     pub present: bool,
     /// 默认期望路径（呈现用）。
     pub expected_path: String,
-    /// Everything 发现的本机候选（`present=true` 时不扫、恒空）。
+    /// 内置原生索引发现的本机候选（`present=true` 时不扫、恒空）。
     pub candidates: Vec<LocalModelCandidate>,
-    /// es.exe 是否可用（false 时前端提示"无法自动发现、可手动放置或下载"）。
-    pub everything_available: bool,
+    /// 内置原生索引是否可用（false 时前端提示"无法自动发现、可手动放置或下载"）。
+    pub native_index_available: bool,
 }
 
-/// 本地模型发现（onboarding Step 3/4 挂载时调用；同步文件探测 + es.exe 短查询）。
-/// BETA-47：`enable_everything=false` 时跳过 es.exe 扫描（`everything_available=false`、
+/// 本地模型发现（onboarding Step 3/4 挂载时调用；同步文件探测 + 内置原生索引短查询）。
+/// `enable_native_file_index=false` 时跳过原生索引扫描（`native_index_available=false`、
 /// 零候选），前端按「无法自动发现」提示手动放置或下载。
 #[tauri::command]
 pub fn discover_local_model(app: tauri::AppHandle, kind: String) -> Result<DiscoverResult, String> {
@@ -536,18 +538,18 @@ pub fn discover_local_model(app: tauri::AppHandle, kind: String) -> Result<Disco
             present: true,
             expected_path,
             candidates: Vec::new(),
-            everything_available: true,
+            native_index_available: true,
         });
     }
 
-    let everything_available =
-        crate::settings::read_enable_everything(&crate::settings::settings_file_path(&app))
-            && es_cli_available();
+    let native_index_ready =
+        crate::settings::read_enable_native_file_index(&crate::settings::settings_file_path(&app))
+            && native_index_available();
     let mut candidates: Vec<LocalModelCandidate> = Vec::new();
-    if everything_available {
+    if native_index_ready {
         let target_key = target.to_string_lossy().to_lowercase();
         for name in kind.acceptable_source_names() {
-            for p in es_find_files_named(name, 10) {
+            for p in native_find_files_named(name, 10) {
                 let key = p.to_string_lossy().to_lowercase();
                 // 排除默认路径自身（不完整文件）与重复项。
                 if key == target_key || candidates.iter().any(|c| c.path.to_lowercase() == key) {
@@ -569,7 +571,7 @@ pub fn discover_local_model(app: tauri::AppHandle, kind: String) -> Result<Disco
         present: false,
         expected_path,
         candidates,
-        everything_available,
+        native_index_available: native_index_ready,
     })
 }
 
@@ -588,14 +590,15 @@ pub struct GgufCandidate {
 #[derive(Clone, Copy, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ScanBackend {
-    /// Windows + 装了 Everything（全盘 MFT 索引，最快最全，需额外装软件）。
-    Everything,
+    /// Windows 内置原生索引（MFT 枚举 + USN Journal 全盘发现，最快最全，
+    /// 零安装但需管理员权限）。
+    NativeFileIndex,
     /// Windows 自带 `SystemIndex`，零安装，但只覆盖系统「索引选项」纳入的目录。
     WindowsSearch,
     /// macOS 自带 `mdfind`，零安装，默认覆盖整个卷。
     Spotlight,
-    /// 三者都不可用（非 Windows/macOS，或 Windows 上 Everything 未装/未开且
-    /// Windows 搜索服务也拿不到）。
+    /// 三者都不可用（非 Windows/macOS，或 Windows 上内置原生索引不可用〔无管理员权限〕
+    /// 且 Windows 搜索服务也拿不到）。
     None,
 }
 
@@ -609,8 +612,8 @@ pub struct DiscoverGgufResult {
 }
 
 /// 自动发现本机所有 gguf 模型文件（设置页「自动发现模型」按钮，2026-07-07；
-/// 2026-08 从「仅 Everything」扩到「Everything / Windows 搜索 / Spotlight 三选一」，
-/// 免去 macOS 与未装 Everything 的 Windows 用户只能手填路径）。
+/// 2026-08 从「仅 Everything」扩到「内置原生索引 / Windows 搜索 / Spotlight 三选一」，
+/// 重构后 Windows 侧改用内置原生索引，免去 macOS 用户只能手填路径）。
 ///
 /// 与 [`discover_local_model`]（按 canonical 名找默认槽的同一模型）不同：本命令按
 /// **扩展名**全盘枚举**任意** gguf，供用户把语义 / 生成模型指向已有的更强本地模型
@@ -618,8 +621,8 @@ pub struct DiscoverGgufResult {
 /// 具体是否匹配该模型种类由用户判断 + 「检测」+ 应用后重启加载时验真）。
 ///
 /// 三个后端互斥尝试（按 [`ScanBackend`] 文档的优先级取第一个可用的），不逐个拼
-/// 结果——避免同一文件经不同后端重复出现、也不用做跨后端去重。Everything 优先
-/// 于 Windows 搜索：前者全盘覆盖、后者只覆盖系统索引范围，装了就该用更全的那个。
+/// 结果——避免同一文件经不同后端重复出现、也不用做跨后端去重。内置原生索引优先
+/// 于 Windows 搜索：前者全盘覆盖、后者只覆盖系统索引范围，可用就该用更全的那个。
 #[tauri::command]
 pub fn discover_gguf_models(app: tauri::AppHandle) -> DiscoverGgufResult {
     /// 发现列表体积下限：挡空/占位文件，比默认槽的 100MB 宽松以容纳较小的 embedding 模型。
@@ -627,12 +630,15 @@ pub fn discover_gguf_models(app: tauri::AppHandle) -> DiscoverGgufResult {
     /// 候选上限（防超长列表）。
     const LIMIT: usize = 60;
 
-    let everything_enabled =
-        crate::settings::read_enable_everything(&crate::settings::settings_file_path(&app))
-            && es_cli_available();
+    let native_index_enabled =
+        crate::settings::read_enable_native_file_index(&crate::settings::settings_file_path(&app))
+            && native_index_available();
 
-    let (backend, raw_paths) = if everything_enabled {
-        (ScanBackend::Everything, es_find_files_ext("gguf", LIMIT))
+    let (backend, raw_paths) = if native_index_enabled {
+        (
+            ScanBackend::NativeFileIndex,
+            native_find_files_ext("gguf", LIMIT),
+        )
     } else if win_search_available() {
         (
             ScanBackend::WindowsSearch,

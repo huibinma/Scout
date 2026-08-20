@@ -44,11 +44,14 @@ pub struct AppSettings {
     /// 开启后图片走更严的 0.75 质量门槛（`IMAGE_MEANINGFUL_RATIO_FLOOR`）入嵌；
     /// 关闭时 embed / purge / 段落级 explain 三处均与 BETA-33 cycle 4 一刀切现状一致。
     pub enable_image_semantics: bool,
-    /// BETA-47：Everything 集成总开关（默认开，装了就用、没装优雅降级——现状零回归）。
-    /// 关闭后三处 es.exe 调用点全部停用：① 搜索后端不注册（**需重启生效**，与 model_path
-    /// 口径一致）；② 索引期音频全盘发现回退目录扫描（live-read）；③ 模型本地发现跳过
-    /// es.exe 扫描（live-read）。仅 Windows 有意义，其他平台忽略。
-    pub enable_everything: bool,
+    /// 重构（原 BETA-47 Everything 集成总开关）：内置原生文件索引（MFT 枚举 + USN
+    /// Journal，`scout-native-index`）总开关（默认开）。关闭后三处调用点全部停用：
+    /// ① 搜索后端不注册（**需重启生效**，与 model_path 口径一致）；② 索引期全盘发现
+    /// 回退目录扫描（live-read）；③ 模型本地发现跳过原生索引扫描（live-read）。
+    /// 仅 Windows 有意义，其他平台忽略。字段名保留旧 `enable_everything` 的 serde 兼容
+    /// 别名，避免老 `settings.json` 升级后开关静默复位。
+    #[serde(alias = "enable_everything")]
+    pub enable_native_file_index: bool,
     /// BETA-53：本机 MCP 服务开关意图（默认关）。为 true 时 app 启动会自动拉起服务
     /// （只绑 `127.0.0.1`，让本机 LLM 客户端经 MCP 检索本机文件）。用户显式关闭即置 false。
     pub mcp_service_enabled: bool,
@@ -111,7 +114,7 @@ impl Default for AppSettings {
             auto_index_interval_minutes: DEFAULT_AUTO_INDEX_INTERVAL_MINUTES,
             semantic_weight: None,
             enable_image_semantics: false,
-            enable_everything: true,
+            enable_native_file_index: true,
             mcp_service_enabled: false,
             mcp_service_token: None,
             search_match_all_conditions: true,
@@ -295,17 +298,17 @@ pub(crate) fn read_enable_image_semantics(settings_path: &Option<std::path::Path
         .is_some_and(|v| v.enable_image_semantics)
 }
 
-/// BETA-47：从 settings.json live-read「Everything 集成」开关（音频全盘发现 / 模型本地
-/// 发现两处 live 调用点 + 启动期后端注册共用）。读 / 解析失败 → **true**（安全侧 =
-/// 现状「装了就用、没装优雅降级」，不因配置损坏静默关掉加速）。
-pub(crate) fn read_enable_everything(settings_path: &Option<std::path::PathBuf>) -> bool {
+/// 重构（原 BETA-47）：从 settings.json live-read「内置原生文件索引」开关（全盘发现 /
+/// 模型本地发现两处 live 调用点 + 启动期后端注册共用）。读 / 解析失败 → **true**
+/// （安全侧 = 现状「装了就用、没装优雅降级」，不因配置损坏静默关掉加速）。
+pub(crate) fn read_enable_native_file_index(settings_path: &Option<std::path::PathBuf>) -> bool {
     settings_path
         .as_ref()
         .and_then(|p| fs::read_to_string(p).ok())
         .and_then(|s| serde_json::from_str::<AppSettings>(&s).ok())
         // 注：不用 `is_none_or`（1.82 稳定）——crate 声明 rust-version 1.80，
         // clippy `incompatible_msrv` 会拦。
-        .map_or(true, |v| v.enable_everything)
+        .map_or(true, |v| v.enable_native_file_index)
 }
 
 /// 从 settings.json live-read 自动增量索引间隔。读取失败或旧配置缺字段时回退默认 30 分钟；
@@ -667,26 +670,35 @@ mod tests {
         std::fs::remove_dir_all(&dir).ok();
     }
 
-    /// BETA-47：Everything 开关默认开 + 旧 settings.json 缺字段解析为 true（零回归）+
-    /// live-read 三态（无路径 → true；显式 false / true → 读真值）。
+    /// 重构（原 BETA-47 Everything 开关）：内置原生文件索引开关默认开 + 旧
+    /// settings.json 缺字段解析为 true（零回归）+ live-read 三态（无路径 → true；
+    /// 显式 false / true → 读真值）+ 旧字段名 `enable_everything` 经 serde alias 仍可读
+    /// （用户升级后开关不静默复位）。
     #[test]
-    fn enable_everything_defaults_on_and_reads_ok() {
-        assert!(AppSettings::default().enable_everything, "默认开");
+    fn enable_native_file_index_defaults_on_and_reads_ok() {
+        assert!(AppSettings::default().enable_native_file_index, "默认开");
         let json = r#"{"global_shortcut":"Ctrl+Space"}"#;
         let s: AppSettings = serde_json::from_str(json).unwrap();
-        assert!(s.enable_everything, "旧配置缺字段 → true（现状零回归）");
+        assert!(
+            s.enable_native_file_index,
+            "旧配置缺字段 → true（现状零回归）"
+        );
         // live-read：无路径 → true（安全侧 = 现状）；有配置 → 读真值。
-        assert!(read_enable_everything(&None));
-        let dir = std::env::temp_dir().join(format!("scout-everything-{}", std::process::id()));
+        assert!(read_enable_native_file_index(&None));
+        let dir =
+            std::env::temp_dir().join(format!("scout-native-file-index-{}", std::process::id()));
         std::fs::create_dir_all(&dir).unwrap();
         let f = dir.join("settings.json");
+        std::fs::write(&f, r#"{"enable_native_file_index":false}"#).unwrap();
+        assert!(!read_enable_native_file_index(&Some(f.clone())));
+        std::fs::write(&f, r#"{"enable_native_file_index":true}"#).unwrap();
+        assert!(read_enable_native_file_index(&Some(f.clone())));
+        // 旧字段名（升级前用户配置）经 serde alias 仍能读到 false，不静默复位为 true。
         std::fs::write(&f, r#"{"enable_everything":false}"#).unwrap();
-        assert!(!read_enable_everything(&Some(f.clone())));
-        std::fs::write(&f, r#"{"enable_everything":true}"#).unwrap();
-        assert!(read_enable_everything(&Some(f.clone())));
+        assert!(!read_enable_native_file_index(&Some(f.clone())));
         // 配置损坏 → true（不因坏文件静默关加速）。
         std::fs::write(&f, "not json").unwrap();
-        assert!(read_enable_everything(&Some(f)));
+        assert!(read_enable_native_file_index(&Some(f)));
         std::fs::remove_dir_all(&dir).ok();
     }
 
@@ -907,7 +919,7 @@ mod tests {
     fn global_shortcut_defaults_to_ctrl_space() {
         assert_eq!(AppSettings::default().global_shortcut, "Ctrl+Space");
         // 结构体级 `#[serde(default)]` 缺字段时取整个 `AppSettings::default()`，
-        // 与其他字段（如 enable_everything 默认 true）同一套机制，故旧配置缺
+        // 与其他字段（如 enable_native_file_index 默认 true）同一套机制，故旧配置缺
         // global_shortcut 字段时也回退到 "Ctrl+Space" 而非 String 原生空串默认。
         let json = r#"{"search_scope":["~"]}"#;
         let s: AppSettings = serde_json::from_str(json).unwrap();

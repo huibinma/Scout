@@ -220,7 +220,7 @@ impl<B: SearchBackend + 'static> SearchTool<B> {
     /// 构造一个 [`SearchTool`]。
     ///
     /// `id` 推荐用 `"search.<backend>"` 形式（如 `"search.spotlight"`、
-    /// `"search.windows"`、`"search.everything"`）。
+    /// `"search.windows"`、`"search.native-file-index"`）。
     #[must_use]
     pub fn new(
         id: impl Into<String>,
@@ -676,8 +676,8 @@ mod tests {
             .unwrap();
         registry
             .register(make_search_tool(
-                "search.everything",
-                BackendKind::Everything,
+                "search.native-file-index",
+                BackendKind::NativeFileIndex,
                 ImplementationStatus::Stub,
                 true,
             ))
@@ -721,8 +721,8 @@ mod tests {
         // Stub → 不入选
         registry
             .register(make_search_tool(
-                "search.everything",
-                BackendKind::Everything,
+                "search.native-file-index",
+                BackendKind::NativeFileIndex,
                 ImplementationStatus::Stub,
                 true,
             ))
@@ -851,8 +851,8 @@ mod tests {
         // Stub → 不入选
         registry
             .register_search(make_search_tool(
-                "search.everything",
-                BackendKind::Everything,
+                "search.native-file-index",
+                BackendKind::NativeFileIndex,
                 ImplementationStatus::Stub,
                 true,
             ))

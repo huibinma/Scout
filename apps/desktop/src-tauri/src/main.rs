@@ -37,7 +37,7 @@ use scout_local_index_backend::LocalIndexBackend;
 use scout_search_backend_spotlight::SpotlightBackend;
 
 #[cfg(target_os = "windows")]
-use scout_search_backend_everything::EverythingBackend;
+use scout_native_index::backend::NativeIndexBackend;
 #[cfg(target_os = "windows")]
 use scout_search_backend_windows_search::WindowsSearchBackend;
 
@@ -259,33 +259,34 @@ fn build_registry(
                 warn!(backend = "windows-search", error = %err, "backend 初始化失败");
             }
         }
-        // BETA-47：Everything 集成开关（设置默认开）。关闭时不注册后端——改动开关
-        // 需重启应用生效（与 model_path 覆盖同口径）；索引/模型发现两处 live-read 另行门控。
-        if !settings::read_enable_everything(&settings_path) {
+        // 重构：不再集成外部 Everything（es.exe），改用内置 MFT/USN 原生索引服务
+        // （`scout-native-index`）。设置开关沿用同一用户心智（默认开、可关闭），
+        // 关闭时不注册后端——改动开关需重启应用生效（与 model_path 覆盖同口径）。
+        if !settings::read_enable_native_file_index(&settings_path) {
             info!(
-                backend = "everything",
-                "Everything 集成已在设置中关闭，跳过注册"
+                backend = "native_file_index",
+                "内置原生文件索引已在设置中关闭，跳过注册"
             );
         } else {
-            match EverythingBackend::new() {
+            match NativeIndexBackend::new() {
                 Ok(backend) => {
                     let tool = SearchTool::new(
-                        "search.everything",
-                        "Everything",
+                        "search.native_file_index",
+                        "NativeFileIndex",
                         backend,
                         vec![SupportedIntent::FileSearch, SupportedIntent::MediaSearch],
-                        "Everything 加速搜索（es.exe CLI）",
+                        "内置原生文件索引（MFT 枚举 + USN Journal 实时监控）",
                     );
                     if let Err(err) = registry.register_search(tool) {
-                        eprintln!("注册 EverythingBackend 失败: {err}");
-                        warn!(backend = "everything", error = %err, "注册 backend 失败");
+                        eprintln!("注册 NativeIndexBackend 失败: {err}");
+                        warn!(backend = "native_file_index", error = %err, "注册 backend 失败");
                     } else {
-                        info!(backend = "everything", "backend 注册成功");
+                        info!(backend = "native_file_index", "backend 注册成功");
                     }
                 }
                 Err(err) => {
-                    eprintln!("初始化 EverythingBackend 失败: {err}");
-                    warn!(backend = "everything", error = %err, "backend 初始化失败");
+                    eprintln!("初始化 NativeIndexBackend 失败: {err}");
+                    warn!(backend = "native_file_index", error = %err, "backend 初始化失败");
                 }
             }
         }
@@ -970,7 +971,7 @@ fn main() {
             permissions::open_macos_fda_settings,
             permissions::check_windows_search_indexed,
             permissions::open_windows_indexing_options,
-            permissions::check_everything_available,
+            permissions::check_native_file_index_available,
             permissions::check_pdftoppm_available,
             permissions::get_onboarding_state,
             permissions::complete_onboarding,
@@ -1099,17 +1100,17 @@ mod tests {
     }
 
     /// MVP-26 自动切换 registry 真机实测：生产 `build_registry()` 在 Windows 真机上
-    /// 同时注册 WindowsSearch（内容型）+ Everything（文件名型）两个**真实可用**后端，
+    /// 同时注册 WindowsSearch（内容型）+ 内置原生索引（文件名型）两个**真实可用**后端，
     /// 能力感知路由（`IntentRouter::route_search`）应据 intent 自动切换：
-    ///   - 内容/关键词查询 → `search.windows`（即使 Everything 在 id 序更靠前）
-    ///   - 纯扩展名查询 → `search.everything`（id 序首位，更快）
+    ///   - 内容/关键词查询 → `search.windows`（即使 内置原生索引在 id 序更靠前）
+    ///   - 纯扩展名查询 → `search.native_file_index`（id 序首位，更快）
     /// 并执行各自路由到的后端、确认对同一合成语料返回预期文件——把单测里的 fake 路由
     /// 升级为真后端 + 真 es.exe / Windows Search 的端到端切换证据。
     ///
     /// 前置同 `mvp26_corpus_consistency`：生成语料并 `set SCOUT_MVP26_CORPUS=<dir>`。
     #[cfg(target_os = "windows")]
     #[tokio::test]
-    #[ignore = "requires Windows 真机 with Everything + Windows Search + indexed corpus; set SCOUT_MVP26_CORPUS"]
+    #[ignore = "requires Windows 真机（管理员权限）with 内置原生索引 + Windows Search + indexed corpus; set SCOUT_MVP26_CORPUS"]
     async fn registry_auto_switches_between_content_and_filename_backends() {
         use futures::StreamExt;
         use scout_harness::IntentRouter;
@@ -1124,7 +1125,7 @@ mod tests {
         ));
         let registry = build_registry(embedding, None);
         // 两个真实后端都必须真机可用，否则路由切换无从谈起——premise 失败应大声报错。
-        for id in ["search.windows", "search.everything"] {
+        for id in ["search.windows", "search.native_file_index"] {
             let tool = registry
                 .find_search_tool(id)
                 .unwrap_or_else(|| panic!("Windows 构建应注册 {id}"));
@@ -1175,22 +1176,22 @@ mod tests {
                 .collect::<Vec<_>>()
         );
 
-        // 2) 纯扩展名查询 → 沿用 id 序首位的 Everything（文件名引擎，更快）。
+        // 2) 纯扩展名查询 → 沿用 id 序首位的内置原生索引（文件名引擎，更快）。
         let ext_intent = scoped(serde_json::json!({
             "schema_version":"1.0","intent":"file_search","extensions":["pdf"]
         }));
         let ext_tool = router.route_search(&ext_intent).expect("route ext");
         assert_eq!(
             ext_tool.id(),
-            "search.everything",
-            "纯扩展名查询应路由到文件名型 Everything"
+            "search.native_file_index",
+            "纯扩展名查询应路由到文件名型内置原生索引"
         );
         let ext_results = run(ext_tool, ext_intent).await;
         assert!(
             ext_results
                 .iter()
                 .any(|r| r.name == "synthetic-received-last-week.pdf"),
-            "Everything 扩展名 pdf 应命中合成文件: {:?}",
+            "内置原生索引 扩展名 pdf 应命中合成文件: {:?}",
             ext_results
                 .iter()
                 .map(|r| r.name.clone())
@@ -1200,12 +1201,12 @@ mod tests {
 
     /// fallback chain 真双后端集成验证（Windows-only 缺口闭合，spec §6.3 交接项）。
     ///
-    /// 场景=「WindowsSearch 漏 → Everything 兜底」的真实价值：探针文件放在
+    /// 场景=「WindowsSearch 漏 → 内置原生索引兜底」的真实价值：探针文件放在
     /// `%TEMP%`（`AppData\Local\Temp`，Windows Search 默认**不索引**）。WindowsSearch
-    /// 对该 scope 干净返回 0 → `SwitchReason::Empty` 切到 Everything（扫 NTFS MFT，不依赖
+    /// 对该 scope 干净返回 0 → `SwitchReason::Empty` 切到内置原生索引（扫 NTFS MFT，不依赖
     /// 系统索引）命中。直接驱动生产 [`run_fallback_chain`](scout_harness::run_fallback_chain)
-    /// + 两个**真实** backend，断言：① 切换事件 from=windows/to=everything/reason=empty；
-    /// ② `served_by`=everything（telemetry 归属正确，spec 交接 (c)）；③ 去重累积命中探针文件。
+    /// + 两个**真实** backend，断言：① 切换事件 from=windows/to=native_file_index/reason=empty；
+    /// ② `served_by`=native_file_index（telemetry 归属正确，spec 交接 (c)）；③ 去重累积命中探针文件。
     ///
     /// 与 mock 单测（harness `fallback_chain::tests`）的区别：那里验证编排逻辑，这里验证
     /// 真 es.exe + 真 Windows Search 在真机上的端到端回退（macOS 仅 Spotlight 单候选无法触发）。
@@ -1214,9 +1215,9 @@ mod tests {
     /// scoped 查询返回 0，强制场景确定性成立。
     #[cfg(target_os = "windows")]
     #[tokio::test]
-    #[ignore = "requires Windows 真机 with Everything (es.exe) + Windows Search running"]
+    #[ignore = "requires Windows 真机（管理员权限）with 内置原生索引 + Windows Search running"]
     #[allow(clippy::print_stderr)]
-    async fn fallback_chain_windows_search_misses_then_everything_serves() {
+    async fn fallback_chain_windows_search_misses_then_native_index_serves() {
         use scout_harness::{
             run_fallback_chain, BackendSwitch, SearchTool, SearchableTool, SupportedIntent,
             SwitchReason,
@@ -1226,21 +1227,21 @@ mod tests {
         };
         use std::sync::Arc;
 
-        // 1) 探针文件放进 %TEMP%（Windows Search 默认不索引），唯一名供 Everything 按名命中。
+        // 1) 探针文件放进 %TEMP%（Windows Search 默认不索引），唯一名供内置原生索引按名命中。
         let marker = format!("lociprobe{}", std::process::id());
         let dir = std::env::temp_dir().join(format!("scout-fallback-{marker}"));
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).expect("create temp dir");
         let file = dir.join(format!("{marker}.txt"));
         std::fs::write(&file, b"probe").expect("write probe file");
-        // 给 Everything 索引新文件留时间（MFT 近实时；与 real_everything 同款 2s）。
+        // 给内置原生索引 USN Journal 反映新文件留时间（近实时）。
         std::thread::sleep(std::time::Duration::from_secs(2));
 
-        // 2) 构造两个真实 backend，按 [windows, everything] 顺序入链（强制 windows 先行）。
+        // 2) 构造两个真实 backend，按 [windows, native_file_index] 顺序入链（强制 windows 先行）。
         let windows = WindowsSearchBackend::new().expect("construct WindowsSearchBackend");
-        let everything = EverythingBackend::new().expect("construct EverythingBackend");
+        let native_index = NativeIndexBackend::new().expect("construct NativeIndexBackend");
         assert!(
-            everything.is_available(),
+            native_index.is_available(),
             "es.exe 应在 PATH 上（本测试前置）"
         );
         let win_tool: Arc<dyn SearchableTool> = Arc::new(SearchTool::new(
@@ -1250,14 +1251,14 @@ mod tests {
             vec![SupportedIntent::FileSearch],
             "Windows Search 系统索引",
         ));
-        let es_tool: Arc<dyn SearchableTool> = Arc::new(SearchTool::new(
-            "search.everything",
-            "Everything",
-            everything,
+        let native_tool: Arc<dyn SearchableTool> = Arc::new(SearchTool::new(
+            "search.native_file_index",
+            "NativeFileIndex",
+            native_index,
             vec![SupportedIntent::FileSearch],
-            "Everything es.exe",
+            "内置原生索引 MFT/USN",
         ));
-        let candidates = vec![win_tool, es_tool];
+        let candidates = vec![win_tool, native_tool];
 
         // 3) 按文件名 keyword 查询，scope 限定到探针目录。
         let intent: SearchIntent = serde_json::from_value(serde_json::json!({
@@ -1293,20 +1294,20 @@ mod tests {
         );
 
         // 5) 断言真回退发生。
-        // ① WindowsSearch 干净漏 → 恰一次切换 windows→everything，原因 Empty。
+        // ① WindowsSearch 干净漏 → 恰一次切换 windows→native_file_index，原因 Empty。
         assert_eq!(switches.len(), 1, "应恰好发生一次后端切换");
         assert_eq!(switches[0].from, "search.windows");
-        assert_eq!(switches[0].to, "search.everything");
+        assert_eq!(switches[0].to, "search.native_file_index");
         assert_eq!(
             switches[0].reason,
             SwitchReason::Empty,
             "Windows Search 对未索引 scope 应干净返回 0 → Empty 切换"
         );
-        // ② telemetry 归属（spec 交接 (c)）：实际服务者是 Everything。
+        // ② telemetry 归属（spec 交接 (c)）：实际服务者是内置原生索引。
         assert_eq!(
             outcome.served_by.as_deref(),
-            Some("search.everything"),
-            "served_by 应归属实际产出结果的 Everything"
+            Some("search.native_file_index"),
+            "served_by 应归属实际产出结果的内置原生索引"
         );
         // ③ 去重累积命中探针文件。
         assert!(outcome.total >= 1, "应至少命中探针文件");
@@ -1321,16 +1322,16 @@ mod tests {
     /// fan-out 文件名兜底真双后端集成验证（Windows-only，闭合「内容查询漏非索引位置文件」缺口）。
     ///
     /// 生产 wiring 里内容查询走 fan-out（仅 content-capable：本地索引 + WindowsSearch），**不含
-    /// Everything**。文件在系统索引/本地索引未覆盖的位置、但文件名含关键词时会漏。本测试验证
+    /// 内置原生索引**。文件在系统索引/本地索引未覆盖的位置、但文件名含关键词时会漏。本测试验证
     /// [`run_fanout_merge_with_fallback`](scout_harness::run_fanout_merge_with_fallback)：
     /// 内容轮（WindowsSearch 对 `%TEMP%` 未索引 scope）干净零结果 → 触发 `on_fallback` → 对
-    /// 纯文件名后端 Everything 补一轮、按文件名命中探针文件。
+    /// 纯文件名后端（内置原生索引）补一轮、按文件名命中探针文件。
     ///
     /// 与 fallback chain 测试的区别：那条验证**纯文件名查询**的链式回退；这条验证**内容查询**
     /// 的 fan-out 文件名兜底（两条是不同路由路径）。
     #[cfg(target_os = "windows")]
     #[tokio::test]
-    #[ignore = "requires Windows 真机 with Everything (es.exe) + Windows Search running"]
+    #[ignore = "requires Windows 真机（管理员权限）with 内置原生索引 + Windows Search running"]
     #[allow(clippy::print_stderr)]
     async fn fanout_filename_fallback_when_content_misses() {
         use scout_harness::{
@@ -1350,10 +1351,13 @@ mod tests {
         std::fs::write(&file, b"probe").expect("write probe file");
         std::thread::sleep(std::time::Duration::from_secs(2));
 
-        // 内容后端 = WindowsSearch（系统索引）；文件名兜底 = Everything（MFT）。
+        // 内容后端 = WindowsSearch（系统索引）；文件名兜底 = 内置原生索引（MFT）。
         let windows = WindowsSearchBackend::new().expect("construct WindowsSearchBackend");
-        let everything = EverythingBackend::new().expect("construct EverythingBackend");
-        assert!(everything.is_available(), "es.exe 应在 PATH（本测试前置）");
+        let native_index = NativeIndexBackend::new().expect("construct NativeIndexBackend");
+        assert!(
+            native_index.is_available(),
+            "es.exe 应在 PATH（本测试前置）"
+        );
         let content: Vec<Arc<dyn SearchableTool>> = vec![Arc::new(SearchTool::new(
             "search.windows",
             "Windows Search",
@@ -1362,11 +1366,11 @@ mod tests {
             "Windows Search 系统索引",
         ))];
         let fallback: Vec<Arc<dyn SearchableTool>> = vec![Arc::new(SearchTool::new(
-            "search.everything",
-            "Everything",
-            everything,
+            "search.native_file_index",
+            "NativeFileIndex",
+            native_index,
             vec![SupportedIntent::FileSearch],
-            "Everything es.exe",
+            "内置原生索引 MFT/USN",
         ))];
 
         // 内容查询（keyword）scope 到探针目录。
@@ -1404,7 +1408,7 @@ mod tests {
             fallback_used,
             "WindowsSearch 对未索引 %TEMP% scope 应零结果 → 触发文件名兜底"
         );
-        assert!(outcome.total >= 1, "Everything 应按文件名命中探针文件");
+        assert!(outcome.total >= 1, "内置原生索引应按文件名命中探针文件");
         assert!(
             got.iter().any(|m| m.result.name.contains(&marker)),
             "结果应含探针文件 {marker}.txt"

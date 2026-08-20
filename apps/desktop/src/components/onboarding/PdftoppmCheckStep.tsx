@@ -1,5 +1,5 @@
 // BETA-35 cycle 6：扫描版 PDF OCR 页渲染依赖引导（poppler-utils 里的 pdftoppm）。
-// 与 EverythingCheckStep 同构：3s 自动轮询，装了自动绿标；未装展示复制按钮 + 官网链接。
+// 与 NativeIndexCheckStep 同构：3s 自动轮询，装了自动绿标；未装展示复制按钮 + 官网链接。
 // Windows 优先 winget 命令；macOS 走 brew。**opt-in**：只在需要检索扫描版 PDF
 // （律所卷宗、扫描合同、老档案）时才需装；跳过不影响文本层 PDF / docx / 图片 OCR。
 import React, { useCallback, useEffect, useState } from "react";

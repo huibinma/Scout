@@ -42,9 +42,11 @@ pub enum BackendKind {
     Spotlight,
     /// Windows Search / `SystemIndex`。
     WindowsSearch,
-    /// Everything 可选加速后端。
-    Everything,
-    /// `Scout` 未来自建索引。
+    /// Windows 内置原生文件名索引（MFT 枚举 + USN Journal，替代原 Everything 集成）。
+    /// 只索引文件名/路径，不含正文——[`crate`] 的 fanout/fallback 路由据此与
+    /// [`BackendKind::NativeIndex`] 区分对待。
+    NativeFileIndex,
+    /// `Scout` 自建正文索引（SQLite FTS5：文档/音乐/OCR 内容）。
     NativeIndex,
     /// BETA-15B 语义向量索引（本地嵌入 + 暴力 cosine 最近邻）。
     SemanticIndex,

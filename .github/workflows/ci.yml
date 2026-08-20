@@ -8,7 +8,7 @@ name: CI
 # 设计意图：发现的回归类别 = (a) Rust 编译错误（含本 ci 包不到的 crate 因 workspace
 # build 间接发现）；(b) crate 内部 lib + integration test 回归；(c) clippy lint 红线。
 # 不发现的：daemon binary 端到端集成测、桌面 GUI、跨平台真机行为、评测指标、OS-conditional
-# crate（spotlight / windows-search / everything / platform-*）的 OS-specific path。
+# crate（spotlight / windows-search / native-index / platform-*）的 OS-specific path。
 #
 # 与 release-daemon.yml / release-windows.yml 分工：本 workflow = 持续 quality gate、
 # 每 push 跑；release-*.yml = tag 触发 + 产分发 binary、不跑测。

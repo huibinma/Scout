@@ -126,8 +126,8 @@ pub fn check_windows_search_indexed() -> Result<WindowsIndexStatus, String> {
     #[cfg(target_os = "windows")]
     {
         use std::os::windows::process::CommandExt;
-        // CREATE_NO_WINDOW：GUI app spawn sc.exe 不闪控制台黑框（与 windows-search /
-        // everything 后端同款惯例）。
+        // CREATE_NO_WINDOW：GUI app spawn sc.exe 不闪控制台黑框（与 windows-search
+        // 后端同款惯例）。
         const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         match Command::new("sc")
             .args(["query", "WSearch"])
@@ -146,16 +146,19 @@ pub fn check_windows_search_indexed() -> Result<WindowsIndexStatus, String> {
     }
 }
 
-/// BETA-47：探测 Everything CLI（es.exe）是否可用（选项页「Everything」tab 检测行）。
-/// 与 `enable_everything` 设置**无关**——集成关闭时也要能告知「装没装」，
-/// 供用户决定开关。检测走 everything crate 两段式定位（PATH 裸名 → winget 已知
-/// 安装位置兜底）。everything crate 是 Windows target-gated 依赖，非 Windows 恒 false
-///（v0.9.16 macOS CI E0433 踩坑口径，同 model_download.rs shim）。
+/// 重构（原 BETA-47 `check_everything_available`）：探测内置原生索引（MFT 枚举 +
+/// USN Journal）当前是否可用（选项页「内置原生索引」tab 检测行）。与
+/// `enable_native_file_index` 设置**无关**——集成关闭时也要能告知「能不能用」，
+/// 供用户决定开关。检测会真的尝试为本机每个已知盘符启动一次索引服务（打开卷句柄 +
+/// 查询 USN Journal），最常见的失败原因是**进程未以管理员权限运行**——这是 Win32
+/// 打开卷句柄的硬性要求，不是本实现的选择。`scout-native-index` 是 Windows
+/// target-gated 依赖，非 Windows 恒 false（v0.9.16 macOS CI E0433 踩坑口径，同
+/// model_download.rs shim）。
 #[tauri::command]
-pub fn check_everything_available() -> bool {
+pub fn check_native_file_index_available() -> bool {
     #[cfg(target_os = "windows")]
     {
-        scout_search_backend_everything::es_cli_available()
+        scout_native_index::native_index_available()
     }
     #[cfg(not(target_os = "windows"))]
     {

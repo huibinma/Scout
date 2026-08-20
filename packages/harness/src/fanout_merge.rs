@@ -444,7 +444,7 @@ where
     }
 }
 
-/// 内容 fan-out 零结果时，回退到纯文件名后端（如 Everything）按文件名补一轮召回。
+/// 内容 fan-out 零结果时，回退到纯文件名后端（如 Windows Search / 内置原生索引）按文件名补一轮召回。
 ///
 /// 先对 `content_backends` 跑 [`run_fanout_merge`]；若合并后 `total > 0`（或已取消，
 /// 或 `filename_fallback` 为空）直接返回——**文件名兜底不触发**，常见路径零行为变化。
@@ -452,7 +452,7 @@ where
 /// `filename_fallback` 再跑一轮 merge 并返回其 outcome（errors 合并两轮，便于诊断）。
 ///
 /// 闭合 [`IntentRouter::route_search_fanout`](crate::IntentRouter::route_search_fanout)
-/// 内容分支不含 Everything 的盲区：文件在系统索引/本地索引未覆盖的位置、但文件名含关键词时，
+/// 内容分支的盲区：文件在系统索引/本地索引未覆盖的位置、但文件名含关键词时，
 /// 仍能按文件名命中。两轮都空 → `total == 0`。
 #[must_use = "FanoutOutcome 须被检查；total==0 时需向用户报告空态/错误"]
 pub async fn run_fanout_merge_with_fallback<R, F>(
@@ -1082,7 +1082,7 @@ mod tests {
 
     #[test]
     fn fallback_not_triggered_when_content_has_results() {
-        // 内容轮（local）有结果 → 文件名兜底（everything）不被调用。
+        // 内容轮（local）有结果 → 文件名兜底不被调用。
         let content = vec![tool(
             "search.local",
             BackendKind::NativeIndex,
@@ -1093,11 +1093,11 @@ mod tests {
             )]),
         )];
         let fallback = vec![tool(
-            "search.everything",
-            BackendKind::Everything,
+            "search.filename-fallback",
+            BackendKind::WindowsSearch,
             Script::Results(vec![result_at(
                 "/noise",
-                BackendKind::Everything,
+                BackendKind::WindowsSearch,
                 MatchType::Filename,
             )]),
         )];
@@ -1121,18 +1121,18 @@ mod tests {
 
     #[test]
     fn fallback_triggered_when_content_empty() {
-        // 内容轮（windows）干净零结果 → 文件名兜底（everything）命中并返回。
+        // 内容轮（windows）干净零结果 → 文件名兜底命中并返回。
         let content = vec![tool(
             "search.windows",
             BackendKind::WindowsSearch,
             Script::Results(vec![]),
         )];
         let fallback = vec![tool(
-            "search.everything",
-            BackendKind::Everything,
+            "search.filename-fallback",
+            BackendKind::NativeIndex,
             Script::Results(vec![result_at(
                 "/non-indexed/预算报告.xlsx",
-                BackendKind::Everything,
+                BackendKind::NativeIndex,
                 MatchType::Filename,
             )]),
         )];
@@ -1163,8 +1163,8 @@ mod tests {
             Script::Results(vec![]),
         )];
         let fallback = vec![tool(
-            "search.everything",
-            BackendKind::Everything,
+            "search.filename-fallback",
+            BackendKind::NativeIndex,
             Script::Results(vec![]),
         )];
         let mut got = Vec::new();

@@ -966,11 +966,11 @@ pub fn escape_like_pattern(value: &str) -> String {
 }
 
 /// 按**扩展名**全盘查找文件（设置页「自动发现本机 gguf 模型」用，2026-08 加、
-/// 与 everything crate 的 `find_files_by_extension` 同一用途、跨后端对齐 UX）。
+/// 与 `scout-native-index` crate 的 `find_files_by_extension` 同一用途、跨后端对齐 UX）。
 /// `ext` 传裸扩展名（如 `gguf`，不含点）。**已知限制**：`SystemIndex` 只覆盖系统
-/// 「索引选项」纳入的目录（通常是用户库文件夹），不像 Everything / Spotlight 那样
+/// 「索引选项」纳入的目录（通常是用户库文件夹），不像内置原生索引 / Spotlight 那样
 /// 默认全盘覆盖——常用目录之外（如另一块盘、临时下载目录）的文件扫不到，调用方
-/// 应告知用户这一点而非当作与 Everything 等价的全盘扫描。执行失败 / 非 Windows →
+/// 应告知用户这一点而非当作与内置原生索引等价的全盘扫描。执行失败 / 非 Windows →
 /// 返回空（调用方按"未发现"降级，不报错）。
 #[cfg(target_os = "windows")]
 #[must_use]

@@ -160,10 +160,10 @@ mod tests {
         // 2. Real + Unavailable + MediaSearch
         registry
             .register(SearchTool::new(
-                "search.everything",
-                "Everything",
+                "search.native-index",
+                "NativeIndex",
                 MockBackend {
-                    kind: BackendKind::Everything,
+                    kind: BackendKind::NativeIndex,
                     status: ImplementationStatus::Real,
                     available: false,
                 },
@@ -204,7 +204,7 @@ mod tests {
         // backend_summary 应该按 id 排序包含所有 1, 2, 3
         let summary = discovery.backend_summary();
         assert_eq!(summary.len(), 3);
-        assert_eq!(summary[0].id, "search.everything");
+        assert_eq!(summary[0].id, "search.native-index");
         assert_eq!(summary[1].id, "search.spotlight");
         assert_eq!(summary[2].id, "search.stub");
     }

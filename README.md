@@ -64,7 +64,7 @@ Scout/
 │   │   ├── common/                             SearchBackend trait + 归一化结果
 │   │   ├── spotlight/                          macOS（mdfind / NSMetadataQuery）
 │   │   ├── windows-search/                     Windows（OLE DB SystemIndex）
-│   │   ├── everything/                         Windows 可选加速（ES / SDK）
+│   │   ├── native-index/                       Windows 内置原生索引（MFT 枚举 + USN Journal）
 │   │   ├── local-index/                        自建本地索引后端（音乐/文档/图片 OCR）
 │   │   └── semantic-index/                     语义召回后端（embedding hybrid）
 │   ├── scout-server/                        daemon 服务层（MCP adapter + auth + tools）

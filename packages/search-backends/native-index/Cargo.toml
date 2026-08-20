@@ -1,0 +1,52 @@
+[package]
+name = "scout-native-index"
+description = "Windows 内置文件元数据索引服务：MFT 枚举 + USN Journal 实时监控 + 内存索引，替代对外部 Everything（es.exe）的依赖"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+# 本 crate 是仓库内唯一需要直接调用 Win32 卷 I/O / USN Journal API 的地方（打开
+# `\\.\C:` 卷句柄、`DeviceIoControl` 枚举/读取 USN 记录）——这类调用在 `windows` crate
+# 里签名即为 `unsafe fn`，与 workspace 默认的 `unsafe_code = "forbid"` 冲突。
+# 不整体继承 `[lints] workspace = true`，改为手动复制其余 lint 配置、仅放开
+# `unsafe_code`；所有 `unsafe` 收敛在 `sys` 模块，经安全的公开 API 暴露给其余 crate
+# （与 `platform/windows` 用 `dirs` crate 收敛 unsafe 的思路一致，见该 crate 头注释）。
+[lints.rust]
+missing_debug_implementations = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+module_name_repetitions = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+
+[dependencies]
+thiserror = "2"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+scout-platform-windows = { path = "../../../platform/windows" }
+scout-search-backend = { path = "../common" }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Ioctl",
+    "Win32_System_IO",
+] }
+
+[dev-dependencies]
+tempfile = "3"
+futures-executor.workspace = true
+futures-util.workspace = true

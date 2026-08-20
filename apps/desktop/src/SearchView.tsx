@@ -2820,8 +2820,8 @@ function friendlyBackend(id: string): string {
   switch (id) {
     case "search.windows":
       return "Windows Search";
-    case "search.everything":
-      return "Everything";
+    case "search.native_file_index":
+      return "内置原生索引";
     case "search.spotlight":
       return "Spotlight";
     case "search.local":

@@ -10,7 +10,7 @@ labels: bug
 - 操作系统与版本：<!-- 如 Windows 11 23H2 / macOS 14.5 -->
 - Scout 版本与形态：<!-- 如 v0.9.13 桌面版 / scoutd daemon / 源码构建（commit） -->
 - 安装方式：<!-- GitHub Releases 安装包 / 源码构建 -->
-- 相关外部组件（如涉及）：<!-- 如 Everything CLI 版本、已下载的模型 -->
+- 相关外部组件（如涉及）：<!-- 如已下载的模型、Windows 是否以管理员权限运行 -->
 
 ## 复现步骤
 

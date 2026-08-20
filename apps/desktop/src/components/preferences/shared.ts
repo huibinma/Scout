@@ -3,7 +3,7 @@
 
 /**
  * 分类 key（2026-07-29 五 tab 改版：常规 / 索引 / 语义召回 / 术语与同义词 / 本机 MCP 服务）。
- * Everything / Windows 系统集成收进「常规」内的子分区（不再是独立 tab，见 GeneralPane）；
+ * 内置原生索引 / Windows 系统集成收进「常规」内的子分区（不再是独立 tab，见 GeneralPane）；
  * 「隐私与记录」内容并入「索引」（索引概貌 + 数据/隐私管理同属"本机数据"这一件事，
  * 原「索引了什么」与隐私页的索引统计是同一份数据的重复展示，见 IndexingPane）。
  * `misc` 这个 key 因历史兼容保留，实际内容是「我的同义词」管理（见 SynonymsPane），
@@ -11,7 +11,7 @@
  */
 export type Category = "general" | "indexing" | "semantic" | "misc" | "mcp";
 
-/** 当前是否 Windows（Everything / Windows 系统集成子分区仅 Windows 显示，见 GeneralPane）。 */
+/** 当前是否 Windows（内置原生索引 / Windows 系统集成子分区仅 Windows 显示，见 GeneralPane）。 */
 export const IS_WINDOWS =
   typeof navigator !== "undefined" && /Win/i.test(navigator.platform);
 
@@ -123,7 +123,7 @@ export function phaseProgressText(
 export function phaseChipLabel(phase: IndexPhase): string {
   switch (phase) {
     case "music_discovery":
-      return "🎵 扫描音频（Everything 快速发现，请稍候）";
+      return "🎵 扫描音频（内置原生索引快速发现，请稍候）";
     case "music_scan":
       return "🎵 扫描音频目录";
     case "doc":

@@ -88,6 +88,7 @@
 | toml | 0.8.2 | TOML 配置文件解析 | crates.io | MIT OR Apache-2.0 | 否 | 是 | BETA-32 T10 登记；BETA-36 起 scout-server 直接依赖（daemon `--config` collections/tokens/audit 配置） |
 | tracing-subscriber | 0.3.23 | tracing 日志后端（env-filter + json） | crates.io | MIT | 否 | 是 | BETA-32 T9 daemon 日志 |
 | tracing-appender | 0.2 | tracing 文件 sink（daily 滚动 + non-blocking writer） | crates.io | MIT | 否 | 是 | BETA-31-v3 cycle 2 桌面 app scout.log 持久化 |
+| windows | 0.61 | Win32 API 绑定（Rust） | crates.io | MIT OR Apache-2.0 | 否 | 是 | 重构（2026-08-20）：`scout-native-index` 直接调用 `CreateFileW`/`DeviceIoControl` 读取 NTFS MFT / USN Journal，替代对外部 Everything（`es.exe`）的依赖；该 crate 是仓库内唯一放开 `unsafe_code` 的地方（见其 `Cargo.toml` 头注释），其余 crate 仍受 workspace `forbid` 约束 |
 
 ## 预期组件清单（计划中，尚未引入）
 
@@ -95,7 +96,6 @@
 |---|---|---|
 | Qwen2.5-1.5B-Instruct | 基座模型 | Apache 2.0（以模型卡为准） |
 | objc2 crate | macOS API（Rust） | MIT |
-| Everything `es.exe` CLI（非 SDK） | Windows 可选加速——**运行期外部进程**，用户自装、不随产品分发 | voidtools License（MIT 风格宽松许可，**2026-07-04 已核查**，见下方说明） |
 | Tesseract | 跨平台 OCR 兜底 | Apache-2.0 |
 | Apple Vision framework | macOS OCR | macOS 系统 API |
 | Windows.Media.Ocr | Windows OCR | Windows 系统 API |
@@ -107,10 +107,10 @@
 > shell-out **Tesseract**（Apache-2.0，用户**可选**自行安装，未装则图片索引优雅跳过）。
 > 二者均不进 `Cargo.lock`，故仍列于本「预期/外部」区。
 
-> **Everything 再分发条款核查（2026-07-04，BETA-00 开源发布审查项）**：
-> `packages/search-backends/everything` 仅在运行期 spawn 用户自装的 `es.exe`（onboarding 引导用户到
-> voidtools 官网自行下载），**未使用 Everything SDK、仓库与安装包均不含任何 voidtools 二进制**
-> （git 全库无 exe/dll/lib 入库）——即不构成再分发，voidtools 条款对本项目分发物不产生约束。
-> 另查 [voidtools License.txt](https://www.voidtools.com/License.txt) 本身为 MIT 风格宽松许可
-> （免费使用含商业、允许再分发、仅要求保留版权声明），即便未来改为捆绑分发亦无阻碍。
-> **结论：核查通过，开源分发无风险；命名上继续以描述性方式提及 Everything，不暗示 voidtools 背书。**
+> **Everything 集成移除（2026-08-20 重构）**：`packages/search-backends/everything`
+> （spawn 用户自装 `es.exe` 的可选加速后端）已整体移除，替换为内置的
+> `packages/search-backends/native-index`（`scout-native-index`）——直接调用 Windows
+> 系统 API（`windows` crate，已在上方正式表格登记）读取 NTFS MFT / USN Journal，
+> 不再依赖任何第三方可执行文件，也不再有 voidtools 许可条款需要核查。上一条
+> "Everything 再分发条款核查（2026-07-04）"记录已随依赖移除失效，仅作历史存档，
+> 不再代表当前状态。

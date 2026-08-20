@@ -15,7 +15,7 @@ Search Intent JSON 是**模型 / 规则解析器**与**搜索后端**之间的�
     ↓ （规则解析器 + 本地小模型）
 Search Intent JSON ← 本文档
     ↓ （SearchBackend 适配层）
-Spotlight 谓词 / Windows Search SQL / Everything 查询 / 自建索引查询
+Spotlight 谓词 / Windows Search SQL / 内置原生索引查询 / 自建索引查询
 ```
 
 ### 1.2 原则
@@ -29,7 +29,7 @@ Spotlight 谓词 / Windows Search SQL / Everything 查询 / 自建索引查询
 
 ### 1.3 不放在 Intent 里的东西
 
-- 后端查询语法（mdfind 表达式、SQL、Everything 语法）
+- 后端查询语法（mdfind 表达式、SQL、内置原生索引查询语法）
 - 具体日期边界（由程序按本地时区/locale 计算）
 - 具体路径（除非用户明确说了；否则模型只给 `path_hint`，程序解析）
 - 排序权重、向量检索参数（属于 Ranker 与 Indexer 的内部参数）

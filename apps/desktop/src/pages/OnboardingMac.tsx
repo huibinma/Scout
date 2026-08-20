@@ -5,7 +5,7 @@
 // 4. 配置索引目录
 // 5. 首次索引
 //
-// Mac 上不涉及 Everything，故比 Windows 少一步；其余步骤组件复用。
+// Mac 上不涉及内置原生索引（Windows 专属），故比 Windows 少一步；其余步骤组件复用。
 // 每步都提供 skipAction（"跳过此步"）保证用户不会被困在任何一步。
 import React, { useEffect, useState } from 'react';
 import { invoke } from '@tauri-apps/api/core';

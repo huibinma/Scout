@@ -29,7 +29,7 @@ let merged: Vec<MergedResult> = merge_results(all_results_from_multiple_backends
 ## 关联
 
 - 上游：[`scout-local-index-backend`](../search-backends/local-index)（本地索引源）+ 系统
-  搜索后端（Spotlight / WindowsSearch / Everything）；
+  搜索后端（Spotlight / WindowsSearch / 内置原生索引 `scout-native-index`）；
 - 调用方：`scout-harness::run_fanout_merge`（fan-out 多源查询后调本层合并）；
 - 下游：BETA-05 Ranker（对合并集打分排序）。
 

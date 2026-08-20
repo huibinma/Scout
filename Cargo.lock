@@ -5311,11 +5311,11 @@ dependencies = [
  "scout-intent-parser",
  "scout-local-index-backend",
  "scout-model-runtime",
+ "scout-native-index",
  "scout-platform-macos",
  "scout-ranker",
  "scout-result-normalizer",
  "scout-search-backend",
- "scout-search-backend-everything",
  "scout-search-backend-spotlight",
  "scout-search-backend-windows-search",
  "scout-semantic-index",
@@ -5394,6 +5394,7 @@ dependencies = [
  "quick-xml 0.40.1",
  "rayon",
  "rusqlite",
+ "scout-native-index",
  "serde",
  "tempfile",
  "thiserror 2.0.18",
@@ -5441,6 +5442,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "scout-native-index"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "futures-executor",
+ "futures-util",
+ "scout-platform-windows",
+ "scout-search-backend",
+ "tempfile",
+ "thiserror 2.0.18",
+ "windows",
+]
+
+[[package]]
 name = "scout-platform-macos"
 version = "0.1.0"
 dependencies = [
@@ -5481,19 +5496,6 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
-]
-
-[[package]]
-name = "scout-search-backend-everything"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "futures-executor",
- "futures-util",
- "scout-platform-windows",
- "scout-search-backend",
- "serde",
- "serde_json",
 ]
 
 [[package]]

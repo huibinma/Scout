@@ -91,7 +91,8 @@ scout-platform-macos = { path = "../../../platform/macos" }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 scout-search-backend-windows-search = { path = "../../../packages/search-backends/windows-search" }
-scout-search-backend-everything = { path = "../../../packages/search-backends/everything" }
+# 重构：不再集成外部 Everything（es.exe），改用内置 MFT/USN 原生索引服务。
+scout-native-index = { path = "../../../packages/search-backends/native-index" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "time", "fs", "io-util"] }

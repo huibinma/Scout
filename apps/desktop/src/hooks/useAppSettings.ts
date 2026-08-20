@@ -33,9 +33,10 @@ export interface AppSettings {
   include_system_defaults: boolean;
   /** BETA-39：图片 OCR 文本参与语义索引 opt-in（默认 false，防乱码 OCR 污染召回）。 */
   enable_image_semantics: boolean;
-  /** BETA-47：Everything 集成总开关（默认 true）。关闭停用搜索加速（需重启）、
-   *  索引期音频全盘发现与模型本地发现（live 生效）三处 es.exe 调用。 */
-  enable_everything: boolean;
+  /** 重构（原 BETA-47 Everything 集成总开关，默认 true）：内置原生文件索引
+   *  （MFT 枚举 + USN Journal）总开关。关闭停用搜索加速（需重启）、索引期
+   *  全盘发现与模型本地发现（live 生效）三处调用。 */
+  enable_native_file_index: boolean;
   exclude_globs: string[];
   /** cycle 7-b：per-root 子路径排除（相对 root 的 path glob）。 */
   root_excludes: RootExclude[];
@@ -43,7 +44,7 @@ export interface AppSettings {
   auto_index_interval_minutes: number;
   /** 2026-07-20：多个复合检索条件（关键词组）之间的匹配模式，全局配置。
    *  true（默认）= 全部复合条件命中（严格 AND）；false = 任一条件命中（OR，广召回）。
-   *  四个检索后端（本地索引 / Windows Search / Everything / Spotlight）统一读取。 */
+   *  各检索后端（本地索引 / Windows Search / 内置原生索引 / Spotlight）统一读取。 */
   search_match_all_conditions: boolean;
   /** 2026-07-26：Windows 专属——关闭主窗口时驻留系统托盘而非退出进程，默认 false。
    *  开启后点系统关闭按钮只隐藏窗口（后台索引 / 全局快捷键继续跑），托盘图标常驻、

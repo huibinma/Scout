@@ -22,7 +22,11 @@ interface GgufCandidate {
 }
 
 /** 与后端 model_download.rs::ScanBackend 对应（本次「扫描本机 gguf」实际用的后端）。 */
-type ScanBackend = "everything" | "windows_search" | "spotlight" | "none";
+type ScanBackend =
+  | "native_file_index"
+  | "windows_search"
+  | "spotlight"
+  | "none";
 
 /** 与后端 model_download.rs::DiscoverGgufResult 对应。 */
 interface DiscoverGgufResult {
@@ -31,7 +35,7 @@ interface DiscoverGgufResult {
 }
 
 const SCAN_BACKEND_LABEL: Record<ScanBackend, string> = {
-  everything: "Everything",
+  native_file_index: "内置原生索引",
   windows_search: "Windows 搜索",
   spotlight: "Spotlight",
   none: "",
@@ -110,7 +114,7 @@ export function SemanticPane({
   };
 
   // 手动浏览本地文件系统选一个 gguf 模型文件，回填路径覆盖并立即检测反馈——
-  // 不依赖自动发现（后者靠 Everything/Windows 搜索/Spotlight 三选一，用户本机
+  // 不依赖自动发现（后者靠 内置原生索引/Windows 搜索/Spotlight 三选一，用户本机
   // 可能三者都不可用，或模型放在这些后端扫不到的位置）。
   const browseFor = async (
     kind: "embedding" | "generation",
@@ -249,8 +253,8 @@ export function SemanticPane({
           扫描本机已有的 gguf 模型文件，选用后回填到下方「语义 / 生成模型路径覆盖」——
           用于切换到更强的本地模型或局域网可信模型。请自行确认所选模型与用途匹配
           （embedding 模型用于语义、生成模型用于复杂查询解析）。按可用性依次尝试
-          Everything（Windows，全盘扫描，需装）→ Windows 搜索（Windows 自带，仅
-          覆盖系统索引范围）→ Spotlight（macOS 自带，默认全盘扫描）。
+          内置原生索引（Windows，全盘扫描，需管理员权限）→ Windows 搜索（Windows
+          自带，仅覆盖系统索引范围）→ Spotlight（macOS 自带，默认全盘扫描）。
         </p>
         <button
           type="button"
@@ -262,14 +266,16 @@ export function SemanticPane({
         </button>
         {discovered && discovered.backend === "none" && (
           <p className="prefs-hint status-text-warn">
-            当前不可用：Windows 上未装/未开 Everything 且拿不到系统搜索服务；
-            非 Windows/macOS 平台无自动发现能力。请在下方手动浏览选择模型文件。
+            当前不可用：Windows 上内置原生索引不可用（多半未以管理员权限运行）
+            且拿不到系统搜索服务；非 Windows/macOS 平台无自动发现能力。请在下方
+            手动浏览选择模型文件。
           </p>
         )}
         {discovered && discovered.backend === "windows_search" && (
           <p className="prefs-hint status-text-warn">
             经 Windows 搜索扫描——只覆盖系统「索引选项」纳入的目录，不在索引范围内的
-            文件（如另一块盘、临时下载目录）扫不到；装 Everything 可获得全盘覆盖。
+            文件（如另一块盘、临时下载目录）扫不到；以管理员权限运行 Scout 启用
+            内置原生索引可获得全盘覆盖。
           </p>
         )}
         {discovered && discovered.backend !== "none" && discovered.candidates.length === 0 && (

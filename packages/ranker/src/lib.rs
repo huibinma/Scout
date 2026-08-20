@@ -599,7 +599,7 @@ mod tests {
         );
         let mut dup = merged(
             "x.dat",
-            vec![BackendKind::Everything],
+            vec![BackendKind::NativeFileIndex],
             vec![MatchType::Filename],
         );
         a1.result.path = PathBuf::from("/shared/x.dat");

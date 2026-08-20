@@ -29,8 +29,8 @@ impl<E> Error for FallbackError<E> where E: fmt::Debug + fmt::Display {}
 
 /// 按能力发现结果和注册表状态生成 fallback 候选链。
 ///
-/// 排序规则固定为：系统索引（Spotlight / Windows Search）优先，其次 Everything，
-/// 最后 NativeIndex；同一后端等级内按工具 id 升序。
+/// 排序规则固定为：系统索引（Spotlight / Windows Search）优先，其次自建索引
+/// （`NativeIndex` / `SemanticIndex`）；同一后端等级内按工具 id 升序。
 #[derive(Debug, Clone, Copy)]
 pub struct FallbackChain<'a> {
     registry: &'a ToolRegistry,
@@ -94,8 +94,10 @@ impl<'a> FallbackChain<'a> {
 const fn backend_priority(kind: Option<BackendKind>) -> u8 {
     match kind {
         Some(BackendKind::Spotlight | BackendKind::WindowsSearch) => 0,
-        Some(BackendKind::Everything) => 1,
-        // SemanticIndex 与 NativeIndex 同级（均为本地自建索引）。
+        // NativeFileIndex 替代原 Everything 的优先级档位：内容型系统索引之后、
+        // 自建正文索引之前——只索引文件名，但比正文索引更快、覆盖面更全。
+        Some(BackendKind::NativeFileIndex) => 1,
+        // SemanticIndex 与 NativeIndex 同级（均为本地自建正文索引）。
         Some(BackendKind::NativeIndex | BackendKind::SemanticIndex) => 2,
         None => u8::MAX,
     }
@@ -187,12 +189,12 @@ mod tests {
     }
 
     #[test]
-    fn spotlight_precedes_everything_when_both_available() {
+    fn spotlight_precedes_native_index_when_both_available() {
         let mut registry = ToolRegistry::new();
         registry
             .register(FakeTool::new(
-                "search.everything",
-                BackendKind::Everything,
+                "search.native-index",
+                BackendKind::NativeIndex,
                 ImplementationStatus::Real,
                 true,
             ))
@@ -212,7 +214,7 @@ mod tests {
             .map(Tool::id)
             .collect();
 
-        assert_eq!(ids, vec!["search.spotlight", "search.everything"]);
+        assert_eq!(ids, vec!["search.spotlight", "search.native-index"]);
     }
 
     #[test]
@@ -244,8 +246,8 @@ mod tests {
             .unwrap();
         registry
             .register(FakeTool::new(
-                "search.everything",
-                BackendKind::Everything,
+                "search.native-index",
+                BackendKind::NativeIndex,
                 ImplementationStatus::Real,
                 true,
             ))
@@ -263,7 +265,7 @@ mod tests {
             })
             .unwrap();
 
-        assert_eq!(value, "search.everything");
+        assert_eq!(value, "search.native-index");
         assert_eq!(seen.get(), 2);
     }
 
@@ -280,8 +282,8 @@ mod tests {
             .unwrap();
         registry
             .register(FakeTool::new(
-                "search.everything",
-                BackendKind::Everything,
+                "search.native-index",
+                BackendKind::NativeIndex,
                 ImplementationStatus::Real,
                 true,
             ))
@@ -301,8 +303,8 @@ mod tests {
                     "search.spotlight failed".to_owned(),
                 ),
                 (
-                    "search.everything".to_owned(),
-                    "search.everything failed".to_owned(),
+                    "search.native-index".to_owned(),
+                    "search.native-index failed".to_owned(),
                 ),
             ])
         );

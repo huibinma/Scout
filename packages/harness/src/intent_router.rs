@@ -81,9 +81,9 @@ impl<'a> IntentRouter<'a> {
             .available_search_tools_supporting(supported_intent);
 
         // 能力感知路由：需要正文内容 / 媒体元数据匹配的查询，优先选内容型后端
-        // （Spotlight / WindowsSearch 索引正文与媒体标签；Everything 只索引文件名+路径，
+        // （Spotlight / WindowsSearch 索引正文与媒体标签；内置原生索引只索引文件名+路径，
         // 对这类查询会退化）。纯文件名 / 路径 / 大小 / 扩展名查询不触发，沿用 id 序首位
-        // （Windows 上 Everything 因 id 靠前被优先选中，更快）。内容型后端不可用时回落首位。
+        // （Windows 上内置原生索引因 id 靠前被优先选中，更快）。内容型后端不可用时回落首位。
         if requires_content_or_metadata(intent) {
             if let Some(rich) = candidates
                 .iter()
@@ -100,7 +100,7 @@ impl<'a> IntentRouter<'a> {
     ///
     /// 与 [`Self::route_search`] 的区别：路由依据扩展后的关键词组——即使 parser 未抽出
     /// keyword、由 gazetteer（BETA-15E）兜底注入的内容词，也能把查询导向内容型后端。
-    /// 否则纯文件名查询命中的 base intent 无 keyword，会错误落到只索引文件名的 Everything。
+    /// 否则纯文件名查询命中的 base intent 无 keyword，会错误落到只索引文件名的内置原生索引。
     pub fn route_search_expanded(
         &self,
         expanded: &ExpandedSearchIntent,
@@ -167,7 +167,7 @@ impl<'a> IntentRouter<'a> {
     /// **同时查询、结果归一化合并**。规则：
     /// - 内容/媒体查询（base 需内容 或 扩展产生内容词组）→ **全部 content-capable 可用后端**
     ///   （Spotlight / `WindowsSearch` / `NativeIndex`），让本地索引与系统搜索一起命中；
-    /// - 纯文件名/扩展名查询 → **单个首选**（id 序首位，通常是 Everything 快通道）。
+    /// - 纯文件名/扩展名查询 → **单个首选**（id 序首位，通常是内置原生索引快通道）。
     ///
     /// 内容查询但无任何 content-capable 后端时，回落单个首位（best-effort）。
     pub fn route_search_fanout(
@@ -192,7 +192,7 @@ impl<'a> IntentRouter<'a> {
                 .filter(|tool| backend_indexes_content(tool.capability().backend_kind))
                 .map(Arc::clone)
                 .collect();
-            // 有内容关键词时，并列纯文件名后端（Everything）做全盘召回——有关键词时其文件名
+            // 有内容关键词时，并列纯文件名后端（内置原生索引）做全盘召回——有关键词时其文件名
             // 匹配是合理召回、不会 match-all（无关键词查询才会，见 search.rs 注释），故无关键词
             // 的纯类型查询不并列、维持现状。无纯文件名后端（如 macOS）时此追加为空 → 零变化。
             if !expanded.keyword_groups.is_empty() {
@@ -212,15 +212,15 @@ impl<'a> IntentRouter<'a> {
         Ok(vec![first])
     }
 
-    /// 返回**纯文件名后端**（如 Everything），供内容 fan-out 零结果时按文件名兜底召回。
+    /// 返回**纯文件名后端**（如内置原生索引），供内容 fan-out 零结果时按文件名兜底召回。
     ///
-    /// [`Self::route_search_fanout`] 的内容分支：**有内容关键词时已并列纳入 Everything**（全盘文件名
-    /// 召回）；但**无关键词的纯类型/扩展名查询**仍只纳 content-capable 后端、不含 Everything。本方法
+    /// [`Self::route_search_fanout`] 的内容分支：**有内容关键词时已并列纳入内置原生索引**（全盘文件名
+    /// 召回）；但**无关键词的纯类型/扩展名查询**仍只纳 content-capable 后端、不含内置原生索引。本方法
     /// 返回被排除的纯文件名后端，供调用方在内容轮**零结果时**按文件名补一轮（见
-    /// [`crate::run_fanout_merge_with_fallback`]）——覆盖「无关键词查询」或「content 与并列 Everything
+    /// [`crate::run_fanout_merge_with_fallback`]）——覆盖「无关键词查询」或「content 与并列内置原生索引
     /// 都零结果」的盲区。
     ///
-    /// 仅当存在纯文件名后端时非空（Windows 有 Everything；macOS 仅 Spotlight/本地索引，返回空 → 无兜底）。
+    /// 仅当存在纯文件名后端时非空（Windows 有内置原生索引；macOS 仅 Spotlight/本地索引，返回空 → 无兜底）。
     /// Clarify 不可路由 → 空。
     #[must_use]
     pub fn route_filename_fallback(
@@ -268,7 +268,7 @@ fn has_nonempty_keywords(keywords: Option<&[String]>) -> bool {
     keywords.is_some_and(|words| words.iter().any(|word| !word.trim().is_empty()))
 }
 
-/// 该后端是否索引正文内容与媒体元数据。Everything 仅文件名/路径，返回 `false`。
+/// 该后端是否索引正文内容与媒体元数据。内置原生索引仅文件名/路径，返回 `false`。
 /// SemanticIndex（BETA-15B 语义召回臂）也索引正文，须放行进内容 fanout。
 const fn backend_indexes_content(kind: Option<BackendKind>) -> bool {
     matches!(
@@ -397,7 +397,7 @@ mod tests {
                 "search.zeta",
                 ImplementationStatus::Real,
                 true,
-                BackendKind::Everything,
+                BackendKind::NativeFileIndex,
                 vec![SupportedIntent::FileSearch],
             ))
             .unwrap();
@@ -535,16 +535,16 @@ mod tests {
         }
     }
 
-    /// 同时注册 Everything（id 靠前）与 WindowsSearch（内容型）两个真实后端。
-    fn registry_everything_and_windows() -> ToolRegistry {
+    /// 同时注册内置原生索引（id 靠前）与 WindowsSearch（内容型）两个真实后端。
+    fn registry_native_file_index_and_windows() -> ToolRegistry {
         let mut registry = ToolRegistry::new();
         registry
             .register_search(SearchTool::new(
-                "search.everything",
-                "Everything",
-                FakeKindBackend(BackendKind::Everything),
+                "search.native-file-index",
+                "NativeFileIndex",
+                FakeKindBackend(BackendKind::NativeFileIndex),
                 vec![SupportedIntent::FileSearch, SupportedIntent::MediaSearch],
-                "everything",
+                "native-file-index",
             ))
             .unwrap();
         registry
@@ -581,46 +581,46 @@ mod tests {
     #[test]
     fn keyword_query_prefers_content_backend_over_id_order() {
         // file_search_intent() 带 keyword "budget" → 需内容匹配 → 选 WindowsSearch，
-        // 即使 Everything 在 id 序中更靠前。
-        let registry = registry_everything_and_windows();
+        // 即使内置原生索引在 id 序中更靠前。
+        let registry = registry_native_file_index_and_windows();
         let router = IntentRouter::new(&registry);
         let tool = router.route_search(&file_search_intent()).unwrap();
         assert_eq!(tool.id(), "search.windows_search");
     }
 
     #[test]
-    fn attribute_only_query_keeps_id_order_everything_first() {
-        // 纯扩展名查询 → 不需内容 → 沿用 id 序首位（Everything）。
-        let registry = registry_everything_and_windows();
+    fn attribute_only_query_keeps_id_order_native_file_index_first() {
+        // 纯扩展名查询 → 不需内容 → 沿用 id 序首位（内置原生索引）。
+        let registry = registry_native_file_index_and_windows();
         let router = IntentRouter::new(&registry);
         let tool = router.route_search(&file_search_extensions_only()).unwrap();
-        assert_eq!(tool.id(), "search.everything");
+        assert_eq!(tool.id(), "search.native-file-index");
     }
 
     #[test]
     fn keyword_query_falls_back_when_no_content_backend() {
-        // 只有 Everything 可用时，内容查询回落到 Everything（best-effort，不报错）。
+        // 只有内置原生索引可用时，内容查询回落到内置原生索引（best-effort，不报错）。
         let mut registry = ToolRegistry::new();
         registry
             .register_search(SearchTool::new(
-                "search.everything",
-                "Everything",
-                FakeKindBackend(BackendKind::Everything),
+                "search.native-file-index",
+                "NativeFileIndex",
+                FakeKindBackend(BackendKind::NativeFileIndex),
                 vec![SupportedIntent::FileSearch],
-                "everything",
+                "native-file-index",
             ))
             .unwrap();
         let router = IntentRouter::new(&registry);
         let tool = router.route_search(&file_search_intent()).unwrap();
-        assert_eq!(tool.id(), "search.everything");
+        assert_eq!(tool.id(), "search.native-file-index");
     }
 
     #[test]
     fn expanded_with_injected_keyword_group_routes_to_content_backend() {
         use scout_search_backend::{ExpandedSearchIntent, KeywordGroup};
         // base 无 keyword（模拟 parser 对自然中文 query 未抽出名词短语），但 gazetteer
-        // 注入了内容词组 → 应路由到内容型 WindowsSearch，而非 id 靠前的 Everything。
-        let registry = registry_everything_and_windows();
+        // 注入了内容词组 → 应路由到内容型 WindowsSearch，而非 id 靠前的内置原生索引。
+        let registry = registry_native_file_index_and_windows();
         let router = IntentRouter::new(&registry);
         let expanded = ExpandedSearchIntent {
             base: file_search_extensions_only(),
@@ -637,8 +637,8 @@ mod tests {
     #[test]
     fn expanded_without_keyword_groups_keeps_id_order() {
         use scout_search_backend::ExpandedSearchIntent;
-        // 无任何关键词组（纯文件名/扩展名查询）→ 沿用 id 序首位（Everything，快）。
-        let registry = registry_everything_and_windows();
+        // 无任何关键词组（纯文件名/扩展名查询）→ 沿用 id 序首位（内置原生索引，快）。
+        let registry = registry_native_file_index_and_windows();
         let router = IntentRouter::new(&registry);
         let expanded = ExpandedSearchIntent {
             base: file_search_extensions_only(),
@@ -646,7 +646,7 @@ mod tests {
             match_mode: scout_search_backend::MatchMode::default(),
         };
         let tool = router.route_search_expanded(&expanded).unwrap();
-        assert_eq!(tool.id(), "search.everything");
+        assert_eq!(tool.id(), "search.native-file-index");
     }
 
     // ===== fallback chain：route_search_chain 返回有序候选列表 =====
@@ -658,7 +658,7 @@ mod tests {
 
     #[test]
     fn route_search_chain_returns_all_candidates_ordered() {
-        let registry = registry_everything_and_windows();
+        let registry = registry_native_file_index_and_windows();
         let router = IntentRouter::new(&registry);
         // 纯扩展名查询（无 keywords）→ 不触发内容排序，沿 id 序返回全部 2 个候选。
         let expanded = expanded_of(file_search_extensions_only());
@@ -668,7 +668,7 @@ mod tests {
 
     #[test]
     fn route_search_chain_content_query_puts_rich_backend_first() {
-        let registry = registry_everything_and_windows();
+        let registry = registry_native_file_index_and_windows();
         let router = IntentRouter::new(&registry);
         // file_search_intent() 含 keyword "budget" → 内容查询 → 内容型后端排首位。
         let expanded = expanded_of(file_search_intent());
@@ -711,16 +711,19 @@ mod tests {
 
     // ===== BETA-04 fan-out：route_search_fanout 返回该一起查询的后端集合 =====
 
-    /// Everything（filename）+ WindowsSearch（content）+ NativeIndex（content）三后端。
+    /// 内置原生索引（filename）+ WindowsSearch（content）+ NativeIndex（content）三后端。
     fn registry_three_backends() -> ToolRegistry {
-        let mut registry = registry_everything_and_windows();
+        let mut registry = registry_native_file_index_and_windows();
+        // id 故意选 "search.other_content"（字母序排在 "native-file-index" 之后）——
+        // 下面 `fanout_attribute_only_returns_single_primary` 依赖 id 序首位恰好落在
+        // 内置原生索引，用以验证"纯属性查询选中单个最快后端"这一路由行为。
         registry
             .register_search(SearchTool::new(
-                "search.local",
-                "LocalIndex",
+                "search.other_content",
+                "OtherContentIndex",
                 FakeKindBackend(BackendKind::NativeIndex),
                 vec![SupportedIntent::FileSearch, SupportedIntent::MediaSearch],
-                "local index",
+                "other content index",
             ))
             .unwrap();
         registry
@@ -730,12 +733,12 @@ mod tests {
     fn fanout_content_query_returns_all_content_backends() {
         // 有 keyword 的内容查询（keyword_groups 非空）→ content-capable + 纯文件名后端并列。
         // identity 展开：keywords=["budget"] → keyword_groups=[singleton("budget")]（非空），
-        // 故 Everything 也被纳入（有关键词时文件名匹配合理、不会 match-all）。
+        // 故内置原生索引也被纳入（有关键词时文件名匹配合理、不会 match-all）。
         let registry = registry_three_backends();
         let router = IntentRouter::new(&registry);
         let expanded = expanded_of(file_search_intent());
         let fanout = router.route_search_fanout(&expanded).unwrap();
-        assert_eq!(fanout.len(), 3, "content-capable(2) + Everything(1) 并列");
+        assert_eq!(fanout.len(), 3, "content-capable(2) + 内置原生索引(1) 并列");
         assert!(
             fanout
                 .iter()
@@ -743,33 +746,33 @@ mod tests {
             "应含 content 后端"
         );
         assert!(
-            fanout.iter().any(|t| t.id() == "search.everything"),
-            "有关键词查询应并列 Everything"
+            fanout.iter().any(|t| t.id() == "search.native-file-index"),
+            "有关键词查询应并列内置原生索引"
         );
     }
 
     #[test]
     fn fanout_attribute_only_returns_single_primary() {
-        // 纯扩展名查询 → 单个首选（id 序首位 Everything）。
+        // 纯扩展名查询 → 单个首选（id 序首位内置原生索引）。
         let registry = registry_three_backends();
         let router = IntentRouter::new(&registry);
         let expanded = expanded_of(file_search_extensions_only());
         let fanout = router.route_search_fanout(&expanded).unwrap();
         assert_eq!(fanout.len(), 1);
-        assert_eq!(fanout[0].id(), "search.everything");
+        assert_eq!(fanout[0].id(), "search.native-file-index");
     }
 
     #[test]
     fn fanout_content_query_falls_back_when_no_content_backend() {
-        // 只有 Everything（filename）可用时，内容查询回落单个首位（best-effort）。
+        // 只有内置原生索引（filename）可用时，内容查询回落单个首位（best-effort）。
         let mut registry = ToolRegistry::new();
         registry
             .register_search(SearchTool::new(
-                "search.everything",
-                "Everything",
-                FakeKindBackend(BackendKind::Everything),
+                "search.native-file-index",
+                "NativeFileIndex",
+                FakeKindBackend(BackendKind::NativeFileIndex),
                 vec![SupportedIntent::FileSearch],
-                "everything",
+                "native-file-index",
             ))
             .unwrap();
         let router = IntentRouter::new(&registry);
@@ -777,7 +780,7 @@ mod tests {
             .route_search_fanout(&expanded_of(file_search_intent()))
             .unwrap();
         assert_eq!(fanout.len(), 1);
-        assert_eq!(fanout[0].id(), "search.everything");
+        assert_eq!(fanout[0].id(), "search.native-file-index");
     }
 
     #[test]
@@ -806,9 +809,9 @@ mod tests {
     }
 
     #[test]
-    fn fanout_keyword_query_includes_everything_for_full_recall() {
+    fn fanout_keyword_query_includes_native_file_index_for_full_recall() {
         use scout_search_backend::{ExpandedSearchIntent, KeywordGroup};
-        // 有内容关键词组 → content 后端(windows + local) 并列 Everything(filename) 做全盘召回。
+        // 有内容关键词组 → content 后端(windows + local) 并列内置原生索引(filename) 做全盘召回。
         let registry = registry_three_backends();
         let router = IntentRouter::new(&registry);
         let expanded = ExpandedSearchIntent {
@@ -823,11 +826,11 @@ mod tests {
         assert_eq!(
             fanout.len(),
             3,
-            "content(windows+local) + Everything 并列，实际 {fanout:?}"
+            "content(windows+local) + 内置原生索引并列，实际 {fanout:?}"
         );
         assert!(
-            fanout.iter().any(|t| t.id() == "search.everything"),
-            "有关键词查询应并列 Everything"
+            fanout.iter().any(|t| t.id() == "search.native-file-index"),
+            "有关键词查询应并列内置原生索引"
         );
         assert!(
             fanout
@@ -887,12 +890,12 @@ mod tests {
 
     #[test]
     fn filename_fallback_returns_only_non_content_backends() {
-        // Everything（filename）+ WindowsSearch + NativeIndex（content）→ 只返回 Everything。
+        // 内置原生索引（filename）+ WindowsSearch + NativeIndex（content）→ 只返回内置原生索引。
         let registry = registry_three_backends();
         let router = IntentRouter::new(&registry);
         let fallback = router.route_filename_fallback(&expanded_of(file_search_intent()));
-        assert_eq!(fallback.len(), 1, "应只含纯文件名后端 Everything");
-        assert_eq!(fallback[0].id(), "search.everything");
+        assert_eq!(fallback.len(), 1, "应只含纯文件名后端内置原生索引");
+        assert_eq!(fallback[0].id(), "search.native-file-index");
         assert!(!backend_indexes_content(
             fallback[0].capability().backend_kind
         ));
