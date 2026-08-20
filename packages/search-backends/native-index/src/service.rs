@@ -14,6 +14,7 @@ use crate::index::FileRecord;
 use crate::index::{MemIndex, NameQuery};
 #[cfg(windows)]
 use crate::record::parse_usn_records;
+#[cfg(windows)]
 use crate::sys;
 #[cfg(windows)]
 use crate::sys::VolumeHandle;
@@ -48,7 +49,7 @@ impl NativeIndexService {
         #[cfg(not(windows))]
         {
             let _ = drive_letter;
-            return Err(NativeIndexError::UnsupportedPlatform);
+            Err(NativeIndexError::UnsupportedPlatform)
         }
 
         #[cfg(windows)]

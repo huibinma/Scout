@@ -4,6 +4,14 @@
 //! `windows` crate 的 `USN_RECORD_V2` 结构体（该结构体含变长文件名的"柔性数组
 //! 成员"，转型需要 `unsafe` 指针运算且要自行处理对齐；显式按偏移量读取更简单、
 //! 更容易审计，且天然是安全代码）。
+//!
+//! 本模块是纯函数、无 I/O，刻意不 `#[cfg(windows)]` 整体裁剪——即便生产调用方
+//! （[`crate::service`]）只在 Windows 下调用，解析逻辑本身平台无关，跨平台跑测试
+//! 能在任何开发机/Linux CI 上验证字节解析正确性（BETA-76 开发期正是这样抓到一个
+//! 测试 fixture 的 padding 计算 bug）。代价是非 Windows 平台把 lib（非 test）构建
+//! 成依赖时，这些函数确实无生产调用点——用 crate 级 `allow` 而非拆分 cfg 承认这点。
+
+#![cfg_attr(not(windows), allow(dead_code))]
 
 /// 从一条 `USN_RECORD_V2` 解析出的最小必要字段。
 #[derive(Debug, Clone, PartialEq, Eq)]
