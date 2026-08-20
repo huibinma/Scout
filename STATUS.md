@@ -7,31 +7,29 @@
 ## 📍 速览
 
 - **阶段**：B（Beta）进行中；P ✅ / M 代码层 ✅，M→B 正式切换仍待 [ROADMAP §8](./ROADMAP.md) 长周期项；总体 parser-only evals 已达 99.4%（994/6/0、fail=0）。
-- **版本**：**v0.9.54 已发布**；本机（Windows 11 实机）另有 BETA-76（已提交，未 push）+ BETA-77（工作区未提交）两轮重构。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
+- **版本**：**v0.9.55 发布中**（BETA-76+77 已合入，正走 CI/Release 流水线，见下方「当前 Task」）。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
 - **定位**：开源免费（MIT）本地语义检索底座——**面向 agent 的本地文件搜索工具**（经 MCP 接入 Claude Code / Codex 等），同时提供桌面应用供人直接使用；不做分析层，分析经 MCP daemon + 外部 LLM 组合。口号 **Deep Local Search**。以 [PROJECT.md](./PROJECT.md) 为准。
-- **当前 task**：**BETA-77 重构：找文件搜索框"快速查找 + 深度检索"双模式 + 启动期原生索引后台预热**——详见下方「当前 Task」节。
-- **下一步 top-3**：① 用户决定是否提交 BETA-77 改动、是否 push BETA-76+77；② 管理员权限下真机验证 quick_search 实际响应延迟与结果质量；③ 继续 BETA-64~75 真机验证积压。
-- **阻塞**：BETA-77 改动待用户决定是否提交；Class A 仅剩双平台 evals 真机；Class B 已清零。
+- **当前 task**：**v0.9.55 发版：BETA-76+77 + 完整 CI/Release + 本地验收**——详见下方「当前 Task」节。
+- **下一步 top-3**：① CI/Release 三个 workflow 跑绿确认；② 本地下载安装包做完整验收（含管理员权限 quick_search 真机延迟）；③ 验收发现的 bug 就地修复。
+- **阻塞**：无（BETA-76/77 已提交并 push，v0.9.55 CI/Release 进行中）；Class A 仅剩双平台 evals 真机；Class B 已清零。
 
 ## 当前 Task
 
-**2026-08-20（最新，Claude Code）— BETA-77：找文件双模式检索 + 启动期原生索引预热**
+**2026-08-20（最新，Claude Code）— v0.9.55 发版：BETA-76+77 完整提交 + CI/Release + 本地验收**
 
-用户经 `/goal` 下达：① 找文件搜索框支持"快速查找"（输入即按元数据索引出结果，类 Everything）与"深度检索"（回车后元数据+语义全量检索）；② desktop 启动时元数据索引常驻内存、极速启动，语义索引等重资源后台准备不卡顿。新增 `apps/desktop/src-tauri/src/search/quick.rs`：`quick_search` 命令跳过 NL 解析/policy/同义词扩展，直接并发查 `search.local`/`search.native_file_index` 两个已注册 backend 的原始 `SearchBackend::search()`，合并去重后按匹配紧密度粗排。前端 `SearchView.tsx` 加 120ms 防抖下拉（`quick-results-dropdown`），回车切换深度检索并压制下拉误弹回（真机浏览器验证时抓到一个真实竞态：回车后若 input 重新聚焦，防抖 effect 会因 `inputFocused` 变化重跑、把刚关掉的下拉弹回来——加 `suppressQuickRef` 修复）。`main.rs` `.setup()` 里新增 native-index 后台 `spawn_blocking` 预热（不阻塞窗口显示），语义索引沿用已有的 `spawn_semantic_index` 后台管线（原架构已满足，未新增代码）。完整实现细节见 [ROADMAP BETA-77](./ROADMAP.md)。**本次未提交**，改动全部在工作区。
+用户经 `/goal` 下达："完整commit一次，并完成一轮CI和Release，并对release结果在本地进行完整验收、对验收发现的bug进行修改"。BETA-76（原生 MFT/USN 索引替代外部 Everything）与 BETA-77（找文件双模式检索：找文件搜索框支持"快速查找"输入即按元数据索引出结果 + "深度检索"回车后元数据+语义全量检索；desktop 启动期元数据索引常驻内存极速启动、语义索引后台准备不卡顿）此前已分别提交（`11cfd7e`/`b6d1165`）。本轮：bump `tauri.conf.json`/`Cargo.toml`/`Cargo.lock` 到 v0.9.55 → 全量本地校验（workspace fmt/clippy -D warnings/7 crate test 全绿、desktop 211 测试全绿、`tsc --noEmit` 全绿）→ push `main` 触发 CI → push `v0.9.55` tag 触发 Release macOS/Windows/daemon 三个 workflow → 本地下载 Windows 安装包做完整功能验收。完整实现细节见 [ROADMAP BETA-76](./ROADMAP.md)/[BETA-77](./ROADMAP.md)。
 
 ## 下一步
 
-1. **BETA-77 是否提交**：用户决定——workspace `cargo check/clippy -D warnings/test/fmt --check` 与桌面 `tsc`/`vite build` 均已在本机 Windows 11 实机验证全绿；quick_search 下拉交互（防抖/Enter 压制/Escape/点击打开）已用浏览器预览注入 Tauri IPC stub 真实点击验证。
-2. **BETA-76 是否 push**：已本地提交（`11cfd7e`），未推远程。
-3. **quick_search 管理员权限真机验证**：实际输入延迟感受、native-index 未预热完成时首次查询是否有感知卡顿。
-4. **v0.9.54 真机回归**：Release、DMG、NSIS、changelog 与 Windows PE 闸门均已收口；Windows 上逐项复测 BETA-75。
-5. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
+1. **CI/Release 结果确认**：ci.yml / release-macos.yml / release-windows.yml（release-daemon.yml 视配置）跑绿，Windows 产物 `dumpbin` 无动态 CRT 导入闸门通过。
+2. **本地完整验收**：下载 Windows 安装包实机安装，验证 BETA-76 原生索引（管理员权限下 MFT 全盘枚举 + USN 实时监控）与 BETA-77 快速查找/深度检索双模式 + 启动预热，发现的 bug 就地修复、必要时补发 patch 版本。
+3. **changelog 补全**：`gh release edit` 按 CONVENTIONS §8 补真实 changelog（替换模板占位文案）。
+4. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
 
-**流程备忘**：桌面发版 = bump `apps/desktop/src-tauri/tauri.conf.json` + `apps/desktop/src-tauri/Cargo.toml` + `Cargo.lock` → 推 `main` → 推 `v*` tag → Release 产物完成后补真实 changelog。Windows 编带 llama 的 scoutd 使用 `scripts\build-scoutd-llama.bat`。**本机 Rust/Node 工具链路径（2026-08-20，Windows 实机）**：`cargo`/`rustc` 在 `%USERPROFILE%\.cargo\bin`、`node`/`npm` 在 `%ProgramFiles%\nodejs`，均不在默认 PATH，需显式补全后才能跑 `cargo`/`npm`/`npx`。
+**流程备忘**：桌面发版 = bump `apps/desktop/src-tauri/tauri.conf.json` + `apps/desktop/src-tauri/Cargo.toml` + `Cargo.lock` → 推 `main` → 推 `v*` tag → Release 产物完成后补真实 changelog。Windows 编带 llama 的 scoutd 使用 `scripts\build-scoutd-llama.bat`。**本机 Rust/Node 工具链路径（2026-08-20，Windows 实机）**：`cargo`/`rustc` 在 `%USERPROFILE%\.cargo\bin`、`node`/`npm` 在 `%ProgramFiles%\nodejs`、`gh` 在 `C:\Program Files\GitHub CLI`，均不在默认 PATH，需显式补全后才能跑 `cargo`/`npm`/`npx`/`gh`。
 
 ## 阻塞 / 待用户决策
 
-- **BETA-77 提交与否 / BETA-76+77 push 与否**：均已完成并验证，留待用户决定——按 git 安全协议，提交/push 需用户明确要求。
 - **Class A（外部条件，阻塞出场评测、不阻塞代码）**：BETA-09(a)/MVP-26/28 双平台 evals——需 Windows 真机 + 完整 Spotlight 索引 macOS。
 - **Class B（产品决策）**：已全部清零。
 - **SignPath 集成暂缓**：2026-08-09 用户确认证书申请暂搁置；本次只做静态 CRT/PE 导入验证，不恢复代码签名流程。
