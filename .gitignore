@@ -58,6 +58,8 @@ src-tauri/WixTools/
 # BETA-78：CI 把带 llama-cpp 的 scoutd.exe 拷到这里再打进桌面 NSIS 安装包
 # （tauri.conf.json bundle.resources），本地不追踪。
 apps/desktop/src-tauri/service/
+# BETA-78：release-windows.yml CI 步骤生成的临时 tauri --config 补丁文件。
+apps/desktop/tauri.beta78.patch.json
 
 # ===== Python (训练侧) =====
 __pycache__/

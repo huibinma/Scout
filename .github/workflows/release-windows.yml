@@ -47,6 +47,24 @@ jobs:
         shell: bash
         run: cargo metadata --locked --format-version 1 > /dev/null
 
+      # BETA-78：先写这个小文件（几乎零耗时），再进入下面几个耗时的 llama.cpp
+      # patch/build 步骤——任何 YAML/JSON 层面的问题几秒内就能暴露，不用等 8-9
+      # 分钟的 llama-cpp 编译跑完才发现。历史教训见下方原注释：直接把 JSON 内联
+      # 进 tauri-action 的 `args` 字符串（`--config "{\"bundle\":...}"`）在 CI 上
+      # 炸了——GitHub Actions 把 `args` 当 YAML 纯量传给 action，`\"` 不会被当成
+      # 转义引号处理，action 内部按空白拆分 argv 时就把 `{\` 拆成了独立 token、
+      # 当成文件路径去找，报 "Provided config path `...\{\` does not exist"。
+      # 改成写一个真实 JSON 文件、`--config` 传文件路径——彻底绕开这层引号转义的坑
+      # （错误信息里被解析出的路径前缀 `...\apps\desktop\{\` 也证实了 `--config`
+      # 相对路径就是相对 tauri-action 的 `projectPath`=`apps/desktop` 解析的，
+      # 与本文件写入的位置一致）。
+      - name: Write tauri config patch for scoutd.exe resource
+        shell: bash
+        run: |
+          cat > apps/desktop/tauri.beta78.patch.json <<'EOF'
+          {"bundle":{"resources":{"./service/scoutd.exe":"scoutd.exe"}}}
+          EOF
+
       # llama-cpp-sys-4 v0.3.2 的 build.rs 虽调用 config.static_crt(true)，随后却显式
       # 覆盖 CMAKE_C/CXX_FLAGS_RELEASE，令 cmake crate 无法可靠追加 /MT；CMake 的
       # MSVC_RUNTIME_LIBRARY 默认值还可能后置选择 /MD。这里对锁定版本做 fail-closed
@@ -166,12 +184,13 @@ jobs:
             （详细 changelog 发版后补全）
           releaseDraft: false
           prerelease: true
-          # BETA-78：`--config` 内联 JSON 只在这次 CI release 构建时把 scoutd.exe
-          # 加进 bundle.resources——**故意不写进 tauri.conf.json 本体**：那个文件
-          # 是本地 `cargo check`/`npm run tauri dev` 也会读的基础配置，resources
+          # BETA-78：`--config` 指向上一步写好的 JSON 文件（相对 projectPath=
+          # apps/desktop），只在这次 CI release 构建时把 scoutd.exe 加进
+          # bundle.resources——**故意不写进 tauri.conf.json 本体**：那个文件是
+          # 本地 `cargo check`/`npm run tauri dev` 也会读的基础配置，resources
           # 声明的文件在打包阶段之前必须真实存在，本地开发机没有（也不需要）编好的
           # scoutd.exe，写进去会让所有人的本地构建直接报错退出。
-          args: --config "{\"bundle\":{\"resources\":{\"./service/scoutd.exe\":\"scoutd.exe\"}}}" --features model-fallback,semantic-recall -- --locked
+          args: --config tauri.beta78.patch.json --features model-fallback,semantic-recall -- --locked
 
       # 防止后续依赖/构建脚本漂移把 C++ 动态 CRT 偷偷带回来。MSVCP/VCRUNTIME 是本次
       # 真机 AppCrash 的关键指纹；Release exe 必须在 CI 中证明不再导入它们。
