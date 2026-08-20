@@ -42,6 +42,16 @@ interface SearchResultJson {
   size_bytes: number | null;
 }
 
+// 重构：与 src-tauri/src/search/quick.rs::QuickResultJson 对应（"快速查找"模式，
+// 输入即出结果，字段刻意精简于 SearchResultJson——不含 score/sources/match_type）。
+interface QuickResultJson {
+  path: string;
+  name: string;
+  source: string;
+  modified_time: string | null;
+  size_bytes: number | null;
+}
+
 // BETA-15B-5：与 src-tauri 的 explain_semantic_hit 返回对应；start/end 为正文字符偏移。
 interface ExplainPayload {
   passages: { start: number; end: number; score: number }[];
@@ -534,6 +544,21 @@ export default function SearchView() {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [saved, setSaved] = useState<SavedSearch[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  // 重构：快速查找（输入即出，Everything 风格）——独立于下方"深度检索"结果区，
+  // 浮于搜索框下方的下拉列表；回车后切到深度检索、本区隐藏。
+  const [quickResults, setQuickResults] = useState<QuickResultJson[]>([]);
+  const [showQuickResults, setShowQuickResults] = useState(false);
+  const [inputFocused, setInputFocused] = useState(false);
+  // 防旧请求（网络/IPC 延迟）覆盖新输入的结果——只接受最新一次请求的返回。
+  const quickRequestSeq = useRef(0);
+  // 回车提交深度检索后，压制快速查找重新弹出：input 重新拿到焦点（如点击回结果表格后
+  // 又点回搜索框）会让下方 debounce effect 因 inputFocused 变化重跑，如果不压制，
+  // 120ms 后 quick_search 请求返回会把刚被 Enter 关掉的下拉又弹回来（真机浏览器验证时
+  // 复现的真实竞态）。用户继续打字（onChange）才解除压制。
+  const suppressQuickRef = useRef(false);
+  // onBlur 里 setTimeout 延迟隐藏，用户快速"失焦又聚焦"时旧定时器可能在新聚焦之后
+  // 才触发、把 inputFocused 错误地重置回 false——聚焦时清掉尚未执行的旧定时器。
+  const blurTimerRef = useRef<number | undefined>(undefined);
   const [savingName, setSavingName] = useState<string | null>(null);
   // BETA-29 v2：保存草稿时暂存的意图 JSON（命名确认时随 save_search 一并提交；
   // 普通「☆ 保存此搜索」入口不带意图，保持 null）。
@@ -552,6 +577,32 @@ export default function SearchView() {
     intent: null,
     results: [],
   });
+
+  // 重构：快速查找防抖——输入停顿 120ms 后才发起 quick_search，避免每个按键都发一次
+  // IPC；用请求代次丢弃迟到的旧响应（用户继续打字后，上一次请求的结果不该覆盖新输入）。
+  useEffect(() => {
+    const q = query.trim();
+    if (!q || !inputFocused || suppressQuickRef.current) {
+      setShowQuickResults(false);
+      return;
+    }
+    const seq = ++quickRequestSeq.current;
+    const timer = setTimeout(() => {
+      invoke<QuickResultJson[]>("quick_search", { query: q })
+        .then((results) => {
+          // 已过期请求，或等待期间被回车压制——都不应把下拉弹回来。
+          if (seq !== quickRequestSeq.current || suppressQuickRef.current) return;
+          setQuickResults(results);
+          setShowQuickResults(results.length > 0);
+        })
+        .catch(() => {
+          if (seq !== quickRequestSeq.current) return;
+          setQuickResults([]);
+          setShowQuickResults(false);
+        });
+    }, 120);
+    return () => clearTimeout(timer);
+  }, [query, inputFocused]);
 
   // BETA-22：拉取历史 + 保存的搜索（启动 / 变更后刷新）。失败静默（功能降级不阻断搜索）。
   const refreshHistory = useCallback(() => {
@@ -1268,9 +1319,27 @@ export default function SearchView() {
             className="search-input"
             placeholder="用自然语言描述你要找的文件…"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => {
+              suppressQuickRef.current = false; // 用户又开始打字，解除回车压制
+              setQuery(e.target.value);
+            }}
+            onFocus={() => {
+              // 清掉上一次失焦排的延迟隐藏——避免它在本次重新聚焦之后才触发，
+              // 把 inputFocused 错误地掰回 false（真机浏览器验证时复现的真实竞态）。
+              window.clearTimeout(blurTimerRef.current);
+              setInputFocused(true);
+            }}
+            onBlur={() => {
+              // 延迟隐藏：不然点击下拉项时 blur 先于 onClick 触发，点击会落空。
+              blurTimerRef.current = window.setTimeout(
+                () => setInputFocused(false),
+                150,
+              );
+            }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
+                suppressQuickRef.current = true;
+                setShowQuickResults(false);
                 // BETA-29 v2：Shift+Enter = 先预览意图草稿再搜索。
                 if (e.shiftKey) {
                   e.preventDefault();
@@ -1280,6 +1349,7 @@ export default function SearchView() {
                 }
               } else if (e.key === "Escape") {
                 setShowHistory(false);
+                setShowQuickResults(false);
               }
             }}
             autoFocus
@@ -1289,7 +1359,10 @@ export default function SearchView() {
             <button
               type="button"
               className={`search-aux${showHistory ? " active" : ""}`}
-              onClick={() => setShowHistory((v) => !v)}
+              onClick={() => {
+                setShowQuickResults(false);
+                setShowHistory((v) => !v);
+              }}
               title="搜索历史"
               aria-label="搜索历史"
             >
@@ -1360,6 +1433,42 @@ export default function SearchView() {
                   {h.run_count > 1 && (
                     <span className="history-count">{h.run_count}×</span>
                   )}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
+        {/* 重构：快速查找下拉（浮于搜索框下方，输入停顿 120ms 后出现，Everything 风格）。
+            与历史下拉互斥显示；回车/Escape/失焦均隐藏，不打断下方"深度检索"结果区。 */}
+        {showQuickResults && !showHistory && (
+          <>
+            <div
+              className="history-backdrop"
+              onClick={() => setShowQuickResults(false)}
+            />
+            <ul className="history-dropdown quick-results-dropdown">
+              <li className="history-head">
+                <span>快速查找 · 按文件名</span>
+                <span className="quick-results-hint">回车做深度检索</span>
+              </li>
+              {quickResults.map((r) => (
+                <li
+                  key={r.path}
+                  className="history-item quick-result-item"
+                  onClick={() => {
+                    setShowQuickResults(false);
+                    void handleOpen(r.path);
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    setShowQuickResults(false);
+                    void handleLocate(r.path);
+                  }}
+                  title={r.path}
+                >
+                  <span className="quick-result-name">{r.name}</span>
+                  <span className="quick-result-path">{r.path}</span>
                 </li>
               ))}
             </ul>

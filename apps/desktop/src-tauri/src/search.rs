@@ -31,10 +31,12 @@ mod index_status;
 // BETA-23：不进通配重导出（CLEAN-1 教训），跨模块以 `model_fallback::` 路径引用。
 pub(crate) mod model_fallback;
 mod preview;
+mod quick;
 pub(crate) use fanout::*;
 pub(crate) use file_actions::*;
 pub(crate) use index_status::*;
 pub(crate) use preview::*;
+pub(crate) use quick::QuickResultJson;
 
 /// 序列化给前端的搜索结果。
 #[derive(Debug, Clone, Serialize)]
@@ -331,6 +333,16 @@ pub async fn search(
     deps: tauri::State<'_, SearchDeps>,
 ) -> Result<(), String> {
     search_impl(query, None, on_event, deps.inner()).await
+}
+
+/// 重构：找文件搜索框"快速查找"模式——thin wrapper，解 State 后委托
+/// [`quick::quick_search_impl`]。与 [`search`] 分工见 [`quick`] 模块文档。
+#[tauri::command]
+pub async fn quick_search(
+    query: String,
+    deps: tauri::State<'_, SearchDeps>,
+) -> Result<Vec<QuickResultJson>, String> {
+    Ok(quick::quick_search_impl(&query, deps.inner()).await)
 }
 
 /// BETA-29：意图草稿重跑——thin wrapper，解 State 后委托 [`search_with_intent_impl`]。

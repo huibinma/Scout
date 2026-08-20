@@ -674,6 +674,28 @@ fn main() {
                 embedding.clone(),
                 settings::settings_file_path(&app.handle().clone()),
             ));
+            // 重构：内置原生索引（MFT/USN）后台预热——首次全盘枚举可能耗时数百毫秒到数秒
+            // （视卷内文件数），不能等它跑完才显示窗口，也不能让用户打开应用后第一次
+            // "快速查找"卡一下。这里在 setup() 返回前 fire-and-forget 一个 spawn_blocking
+            // 任务触发枚举（`native_index_available()` 是触发点，见 `scout-native-index`
+            // 的 `Manager::service_for` 惰性构建 + 缓存），跑在后台线程，不阻塞窗口显示；
+            // 真正的搜索命令（`quick_search`/`search`）随后拿到的是已缓存的常驻索引。
+            #[cfg(target_os = "windows")]
+            {
+                let warmup_settings_path = settings::settings_file_path(&app.handle().clone());
+                tauri::async_runtime::spawn_blocking(move || {
+                    if !settings::read_enable_native_file_index(&warmup_settings_path) {
+                        return;
+                    }
+                    let start = std::time::Instant::now();
+                    let available = scout_native_index::native_index_available();
+                    info!(
+                        available,
+                        elapsed_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX),
+                        "内置原生索引后台预热完成"
+                    );
+                });
+            }
             // 收拢所有命令共享依赖为单一 managed 状态；BETA-06 注入持久审计日志。
             let audit: Arc<dyn scout_harness::AuditLog> =
                 Arc::new(scout_harness::JsonlAuditLog::new(audit_log_path()));
@@ -940,6 +962,7 @@ fn main() {
             search::embedding_model_status,
             search::probe_model_file,
             search::search,
+            search::quick_search,
             search::search_with_adhoc_synonyms,
             search::search_with_intent,
             search::preview_intent,
