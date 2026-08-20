@@ -7,17 +7,17 @@
 ## 📍 速览
 
 - **阶段**：B（Beta）进行中；P ✅ / M 代码层 ✅，M→B 正式切换仍待 [ROADMAP §8](./ROADMAP.md) 长周期项；总体 parser-only evals 已达 99.4%（994/6/0、fail=0）。
-- **版本**：**v0.9.57 已发布**（BETA-78 服务化拆分 + 装机 bug 修复）；BETA-79 全面评审对照 Everything 已完成，发现并修复 native-index 一处真实路径重建 bug，即将随下一版本发布，见下方「当前 Task」。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
+- **版本**：**v0.9.58 已发布**（CI/Release macOS/Release Windows 三个 workflow 全绿，`gh release edit` 已补真实 changelog）——BETA-79 全面评审对照 Everything + 修复 native-index 路径重建 bug。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
 - **定位**：开源免费（MIT）本地语义检索底座——**面向 agent 的本地文件搜索工具**（经 MCP 接入 Claude Code / Codex 等），同时提供桌面应用供人直接使用；不做分析层，分析经 MCP daemon + 外部 LLM 组合。口号 **Deep Local Search**。以 [PROJECT.md](./PROJECT.md) 为准。
-- **当前 task**：**BETA-79：全面评审 native-index/scoutd 重构对照 Everything，修复发现的 bug + 发版**——详见下方「当前 Task」节。
-- **下一步 top-3**：① 用户真机验证 v0.9.57 服务注册是否成功（`services.msc` 能看到 `Scoutd` Running）；② connection.json 明文 token 的 ACL 加固（需按装机用户 SID 精确授权，需真机多用户环境验证，本会话条件不具备）；③ 继续 BETA-64~75 真机验证积压。
+- **当前 task**：**BETA-79 已完成并随 v0.9.58 发布**——详见下方「当前 Task」节。
+- **下一步 top-3**：① 用户真机验证 v0.9.57/58 服务注册是否成功（`services.msc` 能看到 `Scoutd` Running）；② connection.json 明文 token 的 ACL 加固（需按装机用户 SID 精确授权，需真机多用户环境验证，本会话条件不具备）；③ 继续 BETA-64~75 真机验证积压。
 - **阻塞**：无；Class A 仅剩双平台 evals 真机 + BETA-78/79 真机装机验证。
 
 ## 当前 Task
 
 **2026-08-20（最新，Claude Code）— BETA-79：全面评审 native-index/scoutd 重构，对照 Everything 逐项核对 + 修复发现的 bug + 发版**
 
-用户经 `/goal` 下达："全面评审这次重构的架构和代码实现，对照'everything'的公开功能和关键技术实现做逐项比对，以确保Scout实现了对everything的全面替换；修复、优化评审过程中发现的bug"。用 WebSearch/WebFetch 核实 voidtools 官方文档后逐项核对：核心索引机制（MFT+USN Journal）、ReFS 不支持（Everything 自身同样不支持，非缺口）均确认对等；原以为的最大缺口"权限隔离架构"核对后发现 BETA-78 已经解决（`scoutd` LocalSystem service + 桌面非管理员经 token 连接，对齐 Everything Service 模式）；查询语法（通配符/正则/布尔 NOT）差异判定为设计取舍（`SearchIntent` 是跨 4 个 backend 共用的后端无关抽象，非 es.exe DSL 克隆）非 bug。**修复的真实 bug**：[index.rs](../packages/search-backends/native-index/src/index.rs) 的 `MemIndex::full_path` 祖先链断裂时会静默拼出一个看似合法实则完全错误的路径（如误报成卷根下的错误位置），而非返回"未找到"——已修复为断链一律 `None`，新增回归测试。详见 [ROADMAP BETA-79](./ROADMAP.md)。
+用户经 `/goal` 下达："全面评审这次重构的架构和代码实现，对照'everything'的公开功能和关键技术实现做逐项比对，以确保Scout实现了对everything的全面替换；修复、优化评审过程中发现的bug，并在最后完成一轮commit和release"。用 WebSearch/WebFetch 核实 voidtools 官方文档后逐项核对：核心索引机制（MFT+USN Journal）、ReFS 不支持（Everything 自身同样不支持，非缺口）均确认对等；原以为的最大缺口"权限隔离架构"核对后发现 BETA-78 已经解决（`scoutd` LocalSystem service + 桌面非管理员经 token 连接，对齐 Everything Service 模式）；查询语法（通配符/正则/布尔 NOT）差异判定为设计取舍（`SearchIntent` 是跨 4 个 backend 共用的后端无关抽象，非 es.exe DSL 克隆）非 bug。**修复的真实 bug**：[index.rs](../packages/search-backends/native-index/src/index.rs) 的 `MemIndex::full_path` 祖先链断裂时会静默拼出一个看似合法实则完全错误的路径（如误报成卷根下的错误位置），而非返回"未找到"——已修复为断链一律 `None`，新增回归测试。bump 到 v0.9.58 → push main + tag → CI/Release macOS/Release Windows 三个 workflow 全绿 → `gh release edit` 补真实 changelog。详见 [ROADMAP BETA-79](./ROADMAP.md)。
 
 ## 下一步
 
