@@ -33,10 +33,10 @@ Var ScoutdDataDir
 !macro NSIS_HOOK_POSTINSTALL
   SetDetailsPrint both
   DetailPrint "配置 Scout 后台服务…"
-  nsExec::ExecToLog '"$INSTDIR\resources\scoutd.exe" bootstrap-personal-config'
+  nsExec::ExecToLog '"$INSTDIR\scoutd.exe" bootstrap-personal-config'
   Pop $0
   DetailPrint "注册并启动 Scout 后台服务…"
-  nsExec::ExecToLog '"$INSTDIR\resources\scoutd.exe" install-service'
+  nsExec::ExecToLog '"$INSTDIR\scoutd.exe" install-service'
   Pop $0
 !macroend
 

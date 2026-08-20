@@ -5326,7 +5326,7 @@ dependencies = [
 
 [[package]]
 name = "scout-desktop"
-version = "0.9.56"
+version = "0.9.57"
 dependencies = [
  "chrono",
  "dirs 5.0.1",

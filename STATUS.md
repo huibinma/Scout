@@ -7,10 +7,10 @@
 ## 📍 速览
 
 - **阶段**：B（Beta）进行中；P ✅ / M 代码层 ✅，M→B 正式切换仍待 [ROADMAP §8](./ROADMAP.md) 长周期项；总体 parser-only evals 已达 99.4%（994/6/0、fail=0）。
-- **版本**：**v0.9.56 已发布**（BETA-78 服务化拆分）。CI/Release Windows/Release macOS 三个 workflow 全绿（Release Windows 首次失败——`tauri-action` `args` 里内联 JSON 传 `--config` 的转义在 GitHub Actions YAML 纯量传递下被打散成非法路径，改成 CI 里写临时文件、`--config` 传文件路径修复），真实 `tauri build` 日志证实 `scoutd.exe` 已正确打进 NSIS 安装包（Windows 安装包 7.94MB→14.56MB，新增体积即为打包进去的 llama-cpp 版 `scoutd.exe`，已用构建日志核实、非异常）。已补真实 changelog。管理员权限/真实安装包端到端仍未做，见下方「下一步」。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
+- **版本**：**v0.9.56 装机验证发现服务未注册的真 bug，v0.9.57 修复中**——真机装完 v0.9.56 后 `services.msc` 找不到 `Scoutd` 服务；根因是 `nsis/hooks.nsh` 的 `NSIS_HOOK_POSTINSTALL` 里 `scoutd.exe` 路径写成 `$INSTDIR\resources\scoutd.exe`，但 Tauri NSIS 打包实际把 `bundle.resources` 平铺到 `$INSTDIR` 根（没有 `resources` 子目录），`nsExec::ExecToLog` 找不到文件静默失败（返回码本就没检查，装机看起来一切正常）——已改成 `$INSTDIR\scoutd.exe` 并 bump 到 v0.9.57，commit/tag/CI/Release 见下方「当前 Task」。v0.9.56 遗留问题：Release Windows 首次失败——`tauri-action` `args` 里内联 JSON 传 `--config` 的转义在 GitHub Actions YAML 纯量传递下被打散成非法路径，改成 CI 里写临时文件、`--config` 传文件路径修复；Windows 安装包 7.94MB→14.56MB 新增体积即为打包进去的 llama-cpp 版 `scoutd.exe`，已用构建日志核实、非异常。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
 - **定位**：开源免费（MIT）本地语义检索底座——**面向 agent 的本地文件搜索工具**（经 MCP 接入 Claude Code / Codex 等），同时提供桌面应用供人直接使用；不做分析层，分析经 MCP daemon + 外部 LLM 组合。口号 **Deep Local Search**。以 [PROJECT.md](./PROJECT.md) 为准。
-- **当前 task**：**BETA-78 服务化拆分**——scoutd 新增 Windows Service 个人模式、桌面三个索引类 backend 改为远程代理，代码与本地 HTTP 集成已验证，真机安装/管理员权限/CI 验证未做。详见下方「当前 Task」节。
-- **下一步 top-3**：① 管理员权限下真机走查 `--install-service`/真实 NSIS 安装包装机流程（本轮非管理员会话未覆盖）；② 桌面本地 reindex 循环 / `mcp_service.rs` / 设置页 roots 编辑迁移到调用 scoutd（BETA-78 明确延后的后续任务）；③ 继续 BETA-64~75 真机验证积压。
+- **当前 task**：**BETA-78 服务化拆分 → v0.9.57 装机 bug 修复**——用户真机装了 v0.9.56，`services.msc` 里找不到 `Scoutd` 服务；定位到 `hooks.nsh` 里 `scoutd.exe` 路径拼错（多了个不存在的 `resources\` 前缀），已修复+bump v0.9.57，等真机重新装包验证。详见下方「当前 Task」节。
+- **下一步 top-3**：① 用户真机重装 v0.9.57，确认 `services.msc` 里 `Scoutd` 服务已注册且 Running、桌面能连上；② 桌面本地 reindex 循环 / `mcp_service.rs` / 设置页 roots 编辑迁移到调用 scoutd（BETA-78 明确延后的后续任务）；③ 继续 BETA-64~75 真机验证积压。
 - **阻塞**：无；Class A 仅剩双平台 evals 真机 + BETA-78 真机装机验证。
 
 ## 当前 Task
@@ -37,6 +37,10 @@
 
 > 摘要 ≤5 条；更早历史见 `git log`。
 
+### 2026-08-20 — Claude Code (Sonnet 5) — v0.9.57：修复 v0.9.56 装机后 Scoutd 服务未注册
+
+**承接**：用户真机装完 v0.9.56 反馈 `services.msc` 里找不到 `Scoutd` 服务。**排查**：先读 `hooks.nsh`/`service.rs`/`cli.rs`/`main.rs` 全链路代码逻辑，均无问题（子命令 kebab-case 匹配、`ServiceManager::create_service` 调用、`LocalSystem` 账户配置都对），怀疑过未签名二进制被 Defender 拦截；让用户实机核对三件事：安装目录下有没有 `resources` 子目录、`scoutd.exe` 实际在哪、Windows 安全中心有没有相关拦截记录。**根因**：用户回报安装目录下根本没有 `resources` 子目录，`scoutd.exe` 直接躺在 `Scout` 安装目录根——即 Tauri NSIS 打包器把 `bundle.resources` 平铺到 `$INSTDIR` 根，而 `hooks.nsh` 里两处 `nsExec::ExecToLog` 硬编码的路径是 `$INSTDIR\resources\scoutd.exe`，根本不存在；`nsExec` 找不到文件直接失败，紧接着 `Pop $0` 又把返回码扔掉不检查（设计上"失败只记日志、不中断安装"），导致装机界面完全正常，服务却从未被创建。桌面自身加载同义词词典的代码（`main.rs` 的 `resource_dir().join("synonyms/zh.yaml")`）本来就没加 `resources/` 前缀，是对的；`hooks.nsh` 是唯一一处路径拼错的地方。**修复**：`hooks.nsh` 两处路径去掉多余的 `resources\` 前缀，改成 `$INSTDIR\scoutd.exe`；bump `apps/desktop/src-tauri/{Cargo.toml,tauri.conf.json}` + `Cargo.lock` 到 v0.9.57。**未尽事宜**：本次修复未经真机验证（本环境无 Windows 管理员会话），需要用户重新下载 v0.9.57 安装包实机确认 `services.msc` 能看到 `Scoutd` 服务且 Running。
+
 ### 2026-08-20 — Claude Code (Sonnet 5) — BETA-78：Scout 拆分为后台 Windows Service + 前端瘦客户端桌面
 
 **承接**：用户经 `/goal` 下达服务/桌面拆分需求（见上「当前 Task」），选择一次性打通端到端。**关键决策**：① 桌面 harness 管线（policy/refine/同义词/多类型均衡/tracer）里程碑式复杂，早期研究阶段误判过其"可整体丢弃改走远程 `/search`"，实际读全 `search.rs` 后发现代价太大——改为更小侵入的方案：只把 `search.local`/`search.semantic`/`search.native_file_index` 三个 `SearchBackend` 换成 `RemoteSearchBackend`（经新增 `POST /backend/search` 代理 `search_expanded()`），桌面其余管线零改动，产品体验零回归。② `scoutd` 新增 `windows-service` crate 支持，`Cli` 加可选子命令（`bootstrap-personal-config`/`install-service`/`uninstall-service`/`service`），不给子命令走今天的前台团队部署路径，零迁移。③ 语义相似度下限过滤原在桌面本地 `SemanticIndexBackend` 内部执行，backend 挪服务端后服务不知道桌面这个个性化设置，改为在 `RemoteSearchBackend` 拿到结果后本地 filter，行为不变。④ `/admin/personal/roots` 因 `CollectionRuntime.meta.roots` 无运行时热更新路径，只做落盘 + `restart_required` 标志，不做实时局部 reindex（避免半吊子不一致状态）。⑤ tauri.conf.json 不直接加 `scoutd.exe` 到 `bundle.resources`（会让所有人本地 `cargo check`/`tauri dev` 因文件不存在而报错），改为 CI release-windows.yml 用 `tauri build --config` 传内联 JSON 只在 CI 注入。**产出**：`apps/daemon/src/{personal,service}.rs`（新增）、`cli.rs`/`main.rs` 改造；`packages/scout-server` 新增 `quick_search.rs`/`search_http.rs`，`admin.rs`/`app.rs`/`collections.rs`/`tools/search.rs` 加 `/search`/`/search/quick`/`/backend/search`/`/admin/status`/`/admin/personal/roots`；`apps/desktop/src-tauri/src/service_client.rs`（新增）+ `main.rs` 改造；`nsis/uninstall-hooks.nsh` 改名 `hooks.nsh` 加 POSTINSTALL/PREUNINSTALL；`.github/workflows/release-windows.yml`/`apps/daemon/README.md` 同步。**验证**：workspace `cargo check/clippy -D warnings/fmt --check/test`（scoutd 25 + scout-server 99 + scout-desktop 211 = 335 测试）全绿；手动起真实 scoutd 前台实例（真实索引一份中英文测试语料）+ `curl` 验证 5 个端点端到端返回正确命中。**未尽事宜**：无管理员权限/无法弹 UAC，`--install-service`/真实 Windows Service/真实 NSIS 安装包链路未验证；桌面本地 reindex 循环/`mcp_service.rs`/设置页 roots 编辑/`reindex`/`reindex_root` 命令均未迁移到调用 scoutd（刻意延后，避免预览功能因索引不一致出新 bug）；无原生桌面自动化工具，Tauri 原生窗口下的搜索 UI 未做人工点击复测。
@@ -50,7 +54,3 @@
 ### 2026-08-20 — Claude Code (Sonnet 5) — BETA-77：找文件双模式检索 + 启动期原生索引预热
 
 **承接**：紧接 BETA-76，用户经 `/goal` 下达第二轮重构：① 找文件搜索框"快速查找"（输入即出，类 Everything）+"深度检索"（回车触发，元数据+语义全量）双模式；② desktop 启动时元数据索引常驻内存极速启动，语义索引后台准备不卡启动。**关键决策**：`quick_search` 不走 NL intent 解析/policy/同义词扩展的完整管线，直接从 `ToolRegistry` 按 id 取已注册 `SearchableTool` 构造最小 intent 直调 `SearchBackend::search()`。**产出**：`search/quick.rs`（quick_search_impl + 粗排）；`SearchView.tsx` 防抖下拉；`main.rs` 原生索引后台预热。**验证**：workspace 全绿；浏览器预览注入 Tauri IPC stub 做了真实点击验证，抓到并修复一个真实竞态 bug（回车提交后重新聚焦触发防抖把刚关的下拉又弹回来）。
-
-### 2026-08-20 — Claude Code (Sonnet 5) — BETA-76：重构移除外部 Everything 依赖，内置 MFT/USN 原生索引服务
-
-**承接**：用户经 `/goal` 下达：① 去掉对外部 Everything 的集成与依赖；② 内置实现"everything"索引的服务（MFT 枚举 + 内存索引 + USN Journal 实时监控）。**关键决策**：MFT 枚举用官方 `FSCTL_ENUM_USN_DATA`；内存索引线性扫描扁平 `HashMap`（Everything 自身的实际技术路线）；新 crate 因需 `unsafe fn` 单独放开 `unsafe_code`。**产出**：新 crate `packages/search-backends/native-index`；删除 `packages/search-backends/everything`；desktop/harness 全链路同步改名。**验证**：本机真实 Windows 11 实机全绿；真机冒烟确认非管理员降级路径符合设计。**未尽事宜**：管理员权限下完整真机功能验证留待下一轮——本轮（BETA-78）已解决这个缺口。

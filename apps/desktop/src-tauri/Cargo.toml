@@ -1,6 +1,6 @@
 [package]
 name = "scout-desktop"
-version = "0.9.56"
+version = "0.9.57"
 description = "Scout Desktop App"
 authors = ["Scout Project"]
 edition = "2021"
