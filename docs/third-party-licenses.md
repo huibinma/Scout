@@ -89,6 +89,8 @@
 | tracing-subscriber | 0.3.23 | tracing 日志后端（env-filter + json） | crates.io | MIT | 否 | 是 | BETA-32 T9 daemon 日志 |
 | tracing-appender | 0.2 | tracing 文件 sink（daily 滚动 + non-blocking writer） | crates.io | MIT | 否 | 是 | BETA-31-v3 cycle 2 桌面 app scout.log 持久化 |
 | windows | 0.61 | Win32 API 绑定（Rust） | crates.io | MIT OR Apache-2.0 | 否 | 是 | 重构（2026-08-20）：`scout-native-index` 直接调用 `CreateFileW`/`DeviceIoControl` 读取 NTFS MFT / USN Journal，替代对外部 Everything（`es.exe`）的依赖；该 crate 是仓库内唯一放开 `unsafe_code` 的地方（见其 `Cargo.toml` 头注释），其余 crate 仍受 workspace `forbid` 约束 |
+| windows-service | 0.7.0 | Windows Service Control Manager 注册/运行封装 | crates.io | MIT OR Apache-2.0 | 否 | 是 | BETA-78（2026-08-20）：`apps/daemon` 个人模式 `--install-service`/`--service` 子命令，把 `scoutd` 注册为 `LocalSystem` 常驻 Windows Service（读 NTFS MFT 需要管理员权限，桌面进程本身满足不了）；仅 `[target.'cfg(windows)'.dependencies]` |
+| rand | 0.8.7 | 随机数生成（个人模式 bearer token） | crates.io | MIT OR Apache-2.0 | 否 | 是 | BETA-78：`apps/daemon` 个人模式 bootstrap 生成 48 字符随机 token |
 
 ## 预期组件清单（计划中，尚未引入）
 

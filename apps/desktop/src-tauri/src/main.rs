@@ -7,6 +7,7 @@ mod model_download;
 mod permissions;
 mod privacy;
 mod search;
+mod service_client;
 mod settings;
 mod shortcut;
 mod status;
@@ -31,13 +32,11 @@ use scout_harness::{
 };
 use scout_search_backend::FileAction;
 
-use scout_local_index_backend::LocalIndexBackend;
+use service_client::{RemoteSearchBackend, ServiceConnection};
 
 #[cfg(target_os = "macos")]
 use scout_search_backend_spotlight::SpotlightBackend;
 
-#[cfg(target_os = "windows")]
-use scout_native_index::backend::NativeIndexBackend;
 #[cfg(target_os = "windows")]
 use scout_search_backend_windows_search::WindowsSearchBackend;
 
@@ -161,55 +160,65 @@ pub(crate) fn audit_log_path() -> PathBuf {
     scout_data_dir().join("audit.jsonl")
 }
 
-fn build_registry(
-    embedding: Arc<search::embedding_model::EmbeddingModelHandle>,
-    settings_path: Option<PathBuf>,
-) -> ToolRegistry {
+/// BETA-78：重构为瘦客户端后，`search.local`/`search.semantic`/
+/// `search.native_file_index` 三个 backend 不再在桌面进程内直接跑——真正的索引
+/// 与查询执行都挪到了后台 `scoutd` 服务（`LocalSystem` 常驻、能读 NTFS MFT）。
+/// 桌面只经 [`RemoteSearchBackend`] 把 `search_expanded()` 调用转发给
+/// `POST /backend/search`；harness 管线（policy/refine/同义词/路由/fan-out/
+/// tracer）在 `search.rs` 里完全不变。`WindowsSearchBackend`/`SpotlightBackend`
+/// 查的是操作系统自己的搜索索引，不依赖 Scout 索引也不需要特权，继续留在本地。
+fn build_registry(conn: Arc<ServiceConnection>, settings_path: Option<PathBuf>) -> ToolRegistry {
     let mut registry = ToolRegistry::new();
 
-    // BETA-04：本地音频/文档索引后端（跨平台，纯 Rust，恒可用）。内容/媒体查询时与
-    // 系统搜索一起 fan-out 合并（见 search.rs）。未 reindex 时返回空、不影响系统后端。
+    // BETA-04 → BETA-78：本地 FTS 索引（文档/音乐，artist/正文全文检索）——由
+    // scoutd 维护，桌面经 RemoteSearchBackend 代理。
     {
-        let local = LocalIndexBackend::new(local_index_db_path());
+        let backend = RemoteSearchBackend::new(
+            "search.local",
+            scout_search_backend::BackendKind::NativeIndex,
+            conn.clone(),
+        );
         let tool = SearchTool::new(
             "search.local",
             "本地索引",
-            local,
+            backend,
             vec![SupportedIntent::FileSearch, SupportedIntent::MediaSearch],
-            "Scout 本地音频/文档索引（artist/正文 FTS）",
+            "Scout 本地音频/文档索引（artist/正文 FTS，经后台服务）",
         );
         if let Err(err) = registry.register_search(tool) {
-            eprintln!("注册 LocalIndexBackend 失败: {err}");
+            eprintln!("注册 search.local 失败: {err}");
             warn!(backend = "local-index", error = %err, "注册 backend 失败");
         } else {
-            info!(backend = "local-index", "backend 注册成功");
+            info!(backend = "local-index", "backend 注册成功（远程代理）");
         }
     }
 
-    // BETA-15B-1：本地语义召回后端（embedding + cosine，按意思/跨语言模糊召回）。
-    // 与 FTS 内容后端并列 fan-out，融合走加权 RRF（见 search/fanout.rs）。embedding 句柄
-    // 与索引期文档嵌入、F5 状态命令共用同一 Arc（main.rs setup 构造）。句柄探测不可用
-    // （feature 关 / 模型缺失 / 加载失败，TextEmbedder::is_ready()=false）时
-    // is_available()=false，语义臂路由期即退出、整链优雅降级 FTS-only（BETA-33 cycle 9）。
+    // BETA-15B-1 → BETA-78：本地语义召回（embedding + cosine，按意思/跨语言）——
+    // 同样由 scoutd 维护，经 RemoteSearchBackend 代理。`is_available()` 反映的是
+    // 服务连接态，不是本地模型加载态——服务未连接时语义臂路由期即退出，
+    // 整链优雅降级到其余可用后端（与旧行为同一降级语义，只是判据换了）。
     {
         let floor_settings_path = settings_path.clone();
-        let semantic = scout_search_backend_semantic::SemanticIndexBackend::new(
-            local_index_db_path(),
-            Some(embedding.clone() as Arc<dyn scout_indexer::embed::TextEmbedder>),
-            std::sync::Arc::new(move || settings::read_similarity_floor(&floor_settings_path)),
-        );
+        let backend = RemoteSearchBackend::new(
+            "search.semantic",
+            scout_search_backend::BackendKind::SemanticIndex,
+            conn.clone(),
+        )
+        .with_similarity_floor(Arc::new(move || {
+            settings::read_similarity_floor(&floor_settings_path)
+        }));
         let tool = SearchTool::new(
             "search.semantic",
             "语义召回",
-            semantic,
+            backend,
             vec![SupportedIntent::FileSearch],
-            "Scout 本地语义召回（embedding + cosine，按意思/跨语言）",
+            "Scout 本地语义召回（embedding + cosine，经后台服务）",
         );
         if let Err(err) = registry.register_search(tool) {
-            eprintln!("注册 SemanticIndexBackend 失败: {err}");
+            eprintln!("注册 search.semantic 失败: {err}");
             warn!(backend = "semantic", error = %err, "注册 backend 失败");
         } else {
-            info!(backend = "semantic", "backend 注册成功");
+            info!(backend = "semantic", "backend 注册成功（远程代理）");
         }
     }
 
@@ -259,35 +268,37 @@ fn build_registry(
                 warn!(backend = "windows-search", error = %err, "backend 初始化失败");
             }
         }
-        // 重构：不再集成外部 Everything（es.exe），改用内置 MFT/USN 原生索引服务
-        // （`scout-native-index`）。设置开关沿用同一用户心智（默认开、可关闭），
-        // 关闭时不注册后端——改动开关需重启应用生效（与 model_path 覆盖同口径）。
+        // BETA-78：内置 MFT/USN 原生索引服务（`scout-native-index`）读取 NTFS MFT
+        // 需要管理员权限——桌面进程本身不再具备也不再尝试这个前提，改为经
+        // RemoteSearchBackend 向以 LocalSystem 常驻的 scoutd 借这次查询（正是本次
+        // service/desktop 拆分要解决的核心问题）。设置开关沿用同一用户心智
+        // （默认开、可关闭）——改动开关仍需重启应用生效，与其余开关同口径。
         if !settings::read_enable_native_file_index(&settings_path) {
             info!(
                 backend = "native_file_index",
                 "内置原生文件索引已在设置中关闭，跳过注册"
             );
         } else {
-            match NativeIndexBackend::new() {
-                Ok(backend) => {
-                    let tool = SearchTool::new(
-                        "search.native_file_index",
-                        "NativeFileIndex",
-                        backend,
-                        vec![SupportedIntent::FileSearch, SupportedIntent::MediaSearch],
-                        "内置原生文件索引（MFT 枚举 + USN Journal 实时监控）",
-                    );
-                    if let Err(err) = registry.register_search(tool) {
-                        eprintln!("注册 NativeIndexBackend 失败: {err}");
-                        warn!(backend = "native_file_index", error = %err, "注册 backend 失败");
-                    } else {
-                        info!(backend = "native_file_index", "backend 注册成功");
-                    }
-                }
-                Err(err) => {
-                    eprintln!("初始化 NativeIndexBackend 失败: {err}");
-                    warn!(backend = "native_file_index", error = %err, "backend 初始化失败");
-                }
+            let backend = RemoteSearchBackend::new(
+                "search.native_file_index",
+                scout_search_backend::BackendKind::NativeFileIndex,
+                conn.clone(),
+            );
+            let tool = SearchTool::new(
+                "search.native_file_index",
+                "NativeFileIndex",
+                backend,
+                vec![SupportedIntent::FileSearch, SupportedIntent::MediaSearch],
+                "内置原生文件索引（MFT 枚举 + USN Journal，经后台服务）",
+            );
+            if let Err(err) = registry.register_search(tool) {
+                eprintln!("注册 search.native_file_index 失败: {err}");
+                warn!(backend = "native_file_index", error = %err, "注册 backend 失败");
+            } else {
+                info!(
+                    backend = "native_file_index",
+                    "backend 注册成功（远程代理）"
+                );
             }
         }
     }
@@ -669,33 +680,19 @@ fn main() {
                 settings::settings_file_path(&app.handle().clone()),
                 scout_data_dir(),
             ));
-            // registry 需 embedding 句柄（注册语义后端）→ 在此构造（原在 main() 体外，已下移）。
+            // BETA-78：到后台 scoutd 的连接——发现 connection.json + 健康态缓存，
+            // 三个远程 backend（search.local/semantic/native_file_index）共享同一份。
+            // 每 5s 探测一次：服务刚装好/重启后自动重连，用户不需要重启桌面
+            // （"desktop 启动后自动连接 service" 就是这个循环 + build_registry 里
+            // RemoteSearchBackend::is_available() 落到 conn.is_connected() 的组合）。
+            let service_conn = ServiceConnection::new();
+            service_conn.spawn_health_loop(std::time::Duration::from_secs(5));
+
+            // registry 需连接句柄（注册三个远程 backend）→ 在此构造。
             let registry = Arc::new(build_registry(
-                embedding.clone(),
+                service_conn.clone(),
                 settings::settings_file_path(&app.handle().clone()),
             ));
-            // 重构：内置原生索引（MFT/USN）后台预热——首次全盘枚举可能耗时数百毫秒到数秒
-            // （视卷内文件数），不能等它跑完才显示窗口，也不能让用户打开应用后第一次
-            // "快速查找"卡一下。这里在 setup() 返回前 fire-and-forget 一个 spawn_blocking
-            // 任务触发枚举（`native_index_available()` 是触发点，见 `scout-native-index`
-            // 的 `Manager::service_for` 惰性构建 + 缓存），跑在后台线程，不阻塞窗口显示；
-            // 真正的搜索命令（`quick_search`/`search`）随后拿到的是已缓存的常驻索引。
-            #[cfg(target_os = "windows")]
-            {
-                let warmup_settings_path = settings::settings_file_path(&app.handle().clone());
-                tauri::async_runtime::spawn_blocking(move || {
-                    if !settings::read_enable_native_file_index(&warmup_settings_path) {
-                        return;
-                    }
-                    let start = std::time::Instant::now();
-                    let available = scout_native_index::native_index_available();
-                    info!(
-                        available,
-                        elapsed_ms = u64::try_from(start.elapsed().as_millis()).unwrap_or(u64::MAX),
-                        "内置原生索引后台预热完成"
-                    );
-                });
-            }
             // 收拢所有命令共享依赖为单一 managed 状态；BETA-06 注入持久审计日志。
             let audit: Arc<dyn scout_harness::AuditLog> =
                 Arc::new(scout_harness::JsonlAuditLog::new(audit_log_path()));
@@ -793,6 +790,9 @@ fn main() {
             // 2026-07-26：整块挪进 spawn_blocking，不再直接同步跑在 setup() 里——理由见下方
             // 合并后的启动链注释（原因未变，只是执行位置从这里挪到了链的第一步）。
             app.manage(deps);
+            // BETA-78：service_client 连接句柄 managed 状态——UI 侧「服务连接状态」
+            // 指示（`service_connection_status` 命令）与未来设置页复用同一实例。
+            app.manage(service_conn);
             // BETA-11D：注册用户词典 managed 状态，与 LayeredSynonymExpander 共享同一 Arc。
             let user_synonyms_path = user_synonyms::user_synonyms_path(&app.handle().clone())
                 .unwrap_or_else(|| std::path::PathBuf::from("user-synonyms.yaml"));
@@ -1018,6 +1018,7 @@ fn main() {
             mcp_service::reset_mcp_token,
             update::check_for_updates,
             update::install_update,
+            service_client::service_connection_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -1082,11 +1083,7 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn build_registry_exposes_real_spotlight_on_macos() {
-        let embedding = Arc::new(search::embedding_model::EmbeddingModelHandle::new(
-            None,
-            PathBuf::from("."),
-        ));
-        let registry = build_registry(embedding, None);
+        let registry = build_registry(ServiceConnection::new(), None);
 
         // 通用 tools 表
         let tool = registry
@@ -1142,11 +1139,12 @@ mod tests {
         let corpus = std::env::var("SCOUT_MVP26_CORPUS")
             .expect("set SCOUT_MVP26_CORPUS to the generated+indexed corpus dir");
 
-        let embedding = std::sync::Arc::new(search::embedding_model::EmbeddingModelHandle::new(
-            None,
-            PathBuf::from("."),
-        ));
-        let registry = build_registry(embedding, None);
+        let conn = ServiceConnection::new();
+        assert!(
+            conn.health_check().await,
+            "premise 失败：本机 scoutd 服务必须已装好并可连接（BETA-78 后 native_file_index 经服务代理）"
+        );
+        let registry = build_registry(conn, None);
         // 两个真实后端都必须真机可用，否则路由切换无从谈起——premise 失败应大声报错。
         for id in ["search.windows", "search.native_file_index"] {
             let tool = registry
@@ -1261,11 +1259,22 @@ mod tests {
         std::thread::sleep(std::time::Duration::from_secs(2));
 
         // 2) 构造两个真实 backend，按 [windows, native_file_index] 顺序入链（强制 windows 先行）。
+        // BETA-78：native_file_index 挪到 scoutd 服务端，本地经 RemoteSearchBackend 代理，
+        // 前置条件从「es.exe 在 PATH」改为「本机 scoutd 已装好并可连接」。
         let windows = WindowsSearchBackend::new().expect("construct WindowsSearchBackend");
-        let native_index = NativeIndexBackend::new().expect("construct NativeIndexBackend");
+        let conn = ServiceConnection::new();
+        assert!(
+            conn.health_check().await,
+            "本机 scoutd 服务必须已装好并可连接"
+        );
+        let native_index = RemoteSearchBackend::new(
+            "search.native_file_index",
+            scout_search_backend::BackendKind::NativeFileIndex,
+            conn,
+        );
         assert!(
             native_index.is_available(),
-            "es.exe 应在 PATH 上（本测试前置）"
+            "scoutd 已连接，native_index 应可用"
         );
         let win_tool: Arc<dyn SearchableTool> = Arc::new(SearchTool::new(
             "search.windows",
@@ -1374,12 +1383,21 @@ mod tests {
         std::fs::write(&file, b"probe").expect("write probe file");
         std::thread::sleep(std::time::Duration::from_secs(2));
 
-        // 内容后端 = WindowsSearch（系统索引）；文件名兜底 = 内置原生索引（MFT）。
+        // 内容后端 = WindowsSearch（系统索引）；文件名兜底 = 内置原生索引（MFT，经 scoutd 代理）。
         let windows = WindowsSearchBackend::new().expect("construct WindowsSearchBackend");
-        let native_index = NativeIndexBackend::new().expect("construct NativeIndexBackend");
+        let conn = ServiceConnection::new();
+        assert!(
+            conn.health_check().await,
+            "本机 scoutd 服务必须已装好并可连接"
+        );
+        let native_index = RemoteSearchBackend::new(
+            "search.native_file_index",
+            scout_search_backend::BackendKind::NativeFileIndex,
+            conn,
+        );
         assert!(
             native_index.is_available(),
-            "es.exe 应在 PATH（本测试前置）"
+            "scoutd 已连接，native_index 应可用"
         );
         let content: Vec<Arc<dyn SearchableTool>> = vec![Arc::new(SearchTool::new(
             "search.windows",

@@ -95,6 +95,23 @@ jobs:
           $patched = [regex]::Replace($source, $pattern, $replacement)
           [IO.File]::WriteAllText($buildFile, $patched, [Text.UTF8Encoding]::new($false))
 
+      # BETA-78：把带 llama-cpp 的 scoutd.exe 编出来、拷进桌面安装包资源目录
+      # （tauri.conf.json bundle.resources 引用 `./service/scoutd.exe`）——安装器
+      # `NSIS_HOOK_POSTINSTALL`（nsis/hooks.nsh）装机时调它做个人模式配置引导 +
+      # 注册 Windows Service。必须在下面的 tauri-action 之前跑（bundler 打包时
+      # 该文件已经要在位）；与桌面构建共用同一个 workspace target 目录，llama-cpp-sys-4
+      # 只编一次两边共用，不重复编译。env 与下方 tauri-action 保持一致（同一份
+      # 静态 CRT 策略，`scripts/build-scoutd-llama.bat` 是本机开发态等价物）。
+      - name: Build scoutd (llama-cpp) for bundling into desktop installer
+        shell: bash
+        env:
+          RUSTFLAGS: -C target-feature=+crt-static
+          LLAMA_STATIC_CRT: "1"
+        run: |
+          cargo build -p scoutd --release --locked --features scout-model-runtime/llama-cpp
+          mkdir -p apps/desktop/src-tauri/service
+          cp target/release/scoutd.exe apps/desktop/src-tauri/service/scoutd.exe
+
       # 构建说明（model-fallback + semantic-recall feature）：
       #   - `args: --features model-fallback,semantic-recall` 让 tauri build 透传给 cargo，
       #     同时启用 (a) 模型 fallback 真推理（BETA-23/24）+ (b) BETA-15B-1 语义召回 embedding；
@@ -149,7 +166,12 @@ jobs:
             （详细 changelog 发版后补全）
           releaseDraft: false
           prerelease: true
-          args: --features model-fallback,semantic-recall -- --locked
+          # BETA-78：`--config` 内联 JSON 只在这次 CI release 构建时把 scoutd.exe
+          # 加进 bundle.resources——**故意不写进 tauri.conf.json 本体**：那个文件
+          # 是本地 `cargo check`/`npm run tauri dev` 也会读的基础配置，resources
+          # 声明的文件在打包阶段之前必须真实存在，本地开发机没有（也不需要）编好的
+          # scoutd.exe，写进去会让所有人的本地构建直接报错退出。
+          args: --config "{\"bundle\":{\"resources\":{\"./service/scoutd.exe\":\"scoutd.exe\"}}}" --features model-fallback,semantic-recall -- --locked
 
       # 防止后续依赖/构建脚本漂移把 C++ 动态 CRT 偷偷带回来。MSVCP/VCRUNTIME 是本次
       # 真机 AppCrash 的关键指纹；Release exe 必须在 CI 中证明不再导入它们。

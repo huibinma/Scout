@@ -51,7 +51,20 @@ parking_lot = "0.12"
 # 时间戳（RuntimeState.indexed_at）
 chrono = { version = "0.4", features = ["serde"] }
 
+# 随机 token 生成（个人模式 bootstrap）
+rand = "0.8"
+
+# 个人模式 config.toml / connection.json 手写序列化
+serde = { version = "1", features = ["derive"] }
+
+# 个人模式首启自动下载 embedding 模型；同时供既有 e2e 测试用（json 特性）
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream", "json"] }
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+serde_json = "1"
+
+# Windows Service 注册/运行（LocalSystem、开机自启，读 NTFS MFT 需要的特权边界）
+[target.'cfg(windows)'.dependencies]
+windows-service = "0.7"
+
 [dev-dependencies]
 tempfile = "3"
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
-serde_json = "1"

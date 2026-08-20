@@ -180,3 +180,128 @@ pub async fn admin_audit_report(
     };
     Ok(([(axum::http::header::CONTENT_TYPE, content_type)], body).into_response())
 }
+
+/// `GET /admin/status` 单 collection 状态（BETA-78：desktop 瘦客户端轮询用，
+/// 取代此前桌面本地 `status.rs`/`index_status.rs` 直接探测本地 backend 的做法）。
+#[derive(Debug, Serialize)]
+pub struct CollectionStatus {
+    pub id: String,
+    pub display_name: String,
+    pub doc_count: u64,
+    pub indexed_at: Option<chrono::DateTime<chrono::Utc>>,
+    pub reindex_in_flight: bool,
+}
+
+/// `GET /admin/status` 响应体。
+#[derive(Debug, Serialize)]
+pub struct StatusResp {
+    pub collections: Vec<CollectionStatus>,
+    /// 语义臂是否就绪（embedder 非 stub 且 `embed("ping")` 成功）。
+    pub semantic_ready: bool,
+    /// Windows 原生文件名索引（MFT/USN）是否可用——服务以 `LocalSystem` 常驻时
+    /// 应为 `true`；非 Windows 或探测失败恒 `false`。
+    pub native_file_index_available: bool,
+    pub indexing_in_progress: bool,
+}
+
+/// `GET /admin/status`：鉴权即可读（不需要 admin 标志——desktop 瘦客户端用
+/// 普通个人 token 轮询这个端点展示索引进度/后端可用性，团队部署下非 admin
+/// token 只能看到自己被授权的 collection，不泄漏未授权集合信息）。
+pub async fn admin_status(
+    State(ctx): State<Arc<ServerCtx>>,
+    Extension(principal): Extension<Arc<AuthedPrincipal>>,
+) -> Json<StatusResp> {
+    let collections = ctx
+        .collections
+        .values()
+        .filter(|rt| principal.can_access(&rt.meta.id))
+        .map(|rt| {
+            let state = rt.state.read();
+            CollectionStatus {
+                id: rt.meta.id.clone(),
+                display_name: rt.meta.display_name().to_string(),
+                doc_count: state.doc_count,
+                indexed_at: state.indexed_at,
+                reindex_in_flight: state.reindex_in_flight,
+            }
+        })
+        .collect();
+
+    Json(StatusResp {
+        collections,
+        semantic_ready: ctx.embedder.embed("ping").is_ok(),
+        native_file_index_available: native_file_index_available(),
+        indexing_in_progress: ctx.indexing_in_progress(),
+    })
+}
+
+#[cfg(windows)]
+fn native_file_index_available() -> bool {
+    scout_native_index::native_index_available()
+}
+
+#[cfg(not(windows))]
+fn native_file_index_available() -> bool {
+    false
+}
+
+/// `POST /admin/personal/roots` 请求体。
+#[derive(Debug, Deserialize)]
+pub struct UpdateRootsParams {
+    pub roots: Vec<String>,
+}
+
+/// `POST /admin/personal/roots` 响应体。
+#[derive(Debug, Serialize)]
+pub struct UpdateRootsResp {
+    pub status: &'static str,
+    pub restart_required: bool,
+}
+
+/// `POST /admin/personal/roots`（BETA-78）：个人模式便捷端点——改
+/// `default` collection 的索引根目录并持久化回 `config.toml`。**v1 简化**：
+/// 只落盘，不做实时局部 reindex——`CollectionRuntime.meta.roots` 目前是
+/// 构造期定值（无 `RwLock` 包裹），本进程内没有安全的运行时热更新路径；新
+/// roots 在下次服务重启（Windows Service `AutoStart`，随系统或手动
+/// `sc stop/start Scoutd` 生效）后随正常 reindex 流程生效。桌面客户端据
+/// `restart_required` 提示用户。
+///
+/// 仅接受单 collection（`default`，个人模式约定）——多 collection（团队模式）
+/// 场景改根目录属于运维改配置文件的范畴，不经这个便捷端点。
+pub async fn admin_update_personal_roots(
+    State(ctx): State<Arc<ServerCtx>>,
+    Extension(principal): Extension<Arc<AuthedPrincipal>>,
+    Json(params): Json<UpdateRootsParams>,
+) -> Result<Json<UpdateRootsResp>, StatusCode> {
+    require_admin(&ctx, &principal, "/admin/personal/roots")?;
+
+    if ctx.collections.len() != 1 {
+        tracing::warn!(
+            collections = ctx.collections.len(),
+            "/admin/personal/roots 仅支持单 collection 个人模式部署，本部署非个人模式"
+        );
+        return Err(StatusCode::CONFLICT);
+    }
+    let Some(rt) = ctx.collection(crate::collections::LEGACY_COLLECTION_ID) else {
+        return Err(StatusCode::CONFLICT);
+    };
+    if rt.meta.read_only {
+        return Err(StatusCode::CONFLICT);
+    }
+
+    let roots: Vec<std::path::PathBuf> = params.roots.into_iter().map(Into::into).collect();
+    if roots.is_empty() {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+
+    let config_path = ctx.config.data_dir.join("config.toml");
+    crate::collections::rewrite_personal_roots(&config_path, &roots).map_err(|e| {
+        tracing::error!(error = %e, "重写个人模式配置 roots 失败");
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    Ok(Json(UpdateRootsResp {
+        status: "saved",
+        restart_required: true,
+    }))
+}

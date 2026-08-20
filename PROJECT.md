@@ -62,6 +62,8 @@ Streaming Results UI（Tauri，跨平台）
 
 同一检索栈另有 **headless daemon 形态**（`apps/daemon` 的 `scoutd`，复用 `packages/scout-server`）：以 MCP streamable-HTTP 服务把 hybrid 检索暴露给团队内网的 LLM 客户端（BETA-32）。
 
+**Windows 个人模式默认即服务化**（BETA-78，2026-08-20）：读取 NTFS MFT（内置原生索引）依赖管理员权限，桌面进程本身满足不了这个前提——`scoutd` 因此新增个人模式，随桌面安装器自动装好、注册为 Windows Service（`LocalSystem` 常驻，开机自启）；桌面本身降级为经本机 HTTP（`127.0.0.1:8765`）连接它的瘦客户端（`search.local`/`search.semantic`/`search.native_file_index` 三个 backend 改为远程代理，其余本地 harness 管线不变）。macOS 无此权限问题，架构上不受影响，仍走原有本地嵌入模式；macOS 版的等价"自动装 launchd agent"留作后续（Tauri macOS 打包目前是 DMG，无 post-install 钩子）。
+
 详细架构、Search Intent schema 设计、Harness 能力清单见 [docs/local-personal-search-agent-project-plan.md](./docs/local-personal-search-agent-project-plan.md)。
 
 ## 阶段路线图

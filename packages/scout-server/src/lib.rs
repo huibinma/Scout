@@ -29,4 +29,7 @@ pub mod reindex;
 pub mod test_support;
 pub mod tools;
 
+mod quick_search;
+mod search_http;
+
 pub use config::{ServerConfig, ServerCtx};

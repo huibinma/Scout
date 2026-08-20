@@ -52,18 +52,20 @@ const INDEXING_IN_PROGRESS_NOTE: &str = "本地索引正在构建中，结果可
 /// settings.json，用编译期常量。低于此 cosine 的候选在融合前过滤）。
 pub const DAEMON_SIMILARITY_FLOOR: f32 = 0.30;
 
+/// BETA-78：`pub(crate)`——除了 MCP `invoke` 外，`app.rs` 的 `POST /search`
+/// REST handler 也直接反序列化请求 body 到本类型，复用同一份校验/默认值逻辑。
 #[derive(Deserialize)]
-struct SearchInput {
-    query: String,
+pub(crate) struct SearchInput {
+    pub(crate) query: String,
     #[serde(default)]
-    limit: Option<usize>,
+    pub(crate) limit: Option<usize>,
     /// 目标 collection id 列表；缺省 = token 授权的全部。
     #[serde(default)]
-    collections: Option<Vec<String>>,
+    pub(crate) collections: Option<Vec<String>>,
 }
 
 #[derive(Serialize)]
-struct SearchHit {
+pub(crate) struct SearchHit {
     path: String,
     name: String,
     /// 命中所属 collection id（BETA-36；BETA-43 出处三要素之一）。
@@ -86,12 +88,12 @@ struct SearchHit {
 }
 
 #[derive(Serialize)]
-struct SearchOutput {
-    results: Vec<SearchHit>,
+pub(crate) struct SearchOutput {
+    pub(crate) results: Vec<SearchHit>,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
-    degraded: bool,
+    pub(crate) degraded: bool,
     #[serde(skip_serializing_if = "std::ops::Not::not")]
-    indexing_in_progress: bool,
+    pub(crate) indexing_in_progress: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     note: Option<&'static str>,
 }
@@ -115,7 +117,7 @@ fn search_output(
 
 /// 解析目标 collection：显式请求逐个校验授权与存在性（两种失败同文案，防探测）；
 /// 缺省 = principal 授权且已声明的全部。
-fn resolve_target_ids(
+pub(crate) fn resolve_target_ids(
     ctx: &ServerCtx,
     principal: &AuthedPrincipal,
     requested: Option<&[String]>,
@@ -179,221 +181,231 @@ impl Tool for SearchTool {
         })
     }
 
-    #[tracing::instrument(
-        skip(self, args, ctx, principal),
-        fields(
-            subject = %principal.subject,
-            query_len = tracing::field::Empty,
-            limit = tracing::field::Empty,
-            targets = tracing::field::Empty,
-            results = tracing::field::Empty,
-            degraded = tracing::field::Empty,
-            elapsed_ms = tracing::field::Empty,
-        )
-    )]
     async fn invoke(
         &self,
         args: Value,
         ctx: Arc<ServerCtx>,
         principal: Arc<AuthedPrincipal>,
     ) -> Result<Value, ToolError> {
-        // spec §6.2 隐私硬规则：不把 query 内容写进 ops log，仅记 query_len / limit / count。
-        // （audit.jsonl 专用留痕另一套规则，见 crate::audit——cycle 4。）
-        let started = std::time::Instant::now();
-        let span = tracing::Span::current();
-
         let input: SearchInput =
             serde_json::from_value(args).map_err(|e| ToolError::InvalidParams(e.to_string()))?;
-
-        if input.query.trim().is_empty() {
-            return Err(ToolError::InvalidParams("query 不能为空".into()));
-        }
-        let limit = input
-            .limit
-            .unwrap_or(DEFAULT_LIMIT)
-            .clamp(1, HARD_LIMIT_CAP);
-
-        // 越权 / 未知 collection → Denied + audit denied 留痕（验收 ④）。
-        let target_ids = match resolve_target_ids(&ctx, &principal, input.collections.as_deref()) {
-            Ok(ids) => ids,
-            Err(e) => {
-                if let ToolError::Denied(reason) = &e {
-                    ctx.audit.record(
-                        &AuditRecord::now(
-                            &principal.subject,
-                            AuditAction::Denied,
-                            input.collections.clone().unwrap_or_default(),
-                        )
-                        .with_query(&input.query, ctx.audit.log_query)
-                        .with_denied_reason(reason),
-                    );
-                }
-                return Err(e);
-            }
-        };
-
-        span.record("query_len", input.query.len());
-        span.record("limit", limit);
-        span.record("targets", target_ids.len());
-
-        // 1) NL → SearchIntent（rule parser；模型 fallback 不在 daemon 范围）
-        let intent: SearchIntent = scout_intent_parser::parse(&input.query);
-
-        // 2) Refine / FileAction / Clarify 在 daemon search 路径下不可执行 —— 返空。
-        if !matches!(
-            intent,
-            SearchIntent::FileSearch(_) | SearchIntent::MediaSearch(_)
-        ) {
-            span.record("results", 0);
-            span.record("degraded", false);
-            tracing::info!(
-                intent_variant = ?std::mem::discriminant(&intent),
-                "search short-circuited: intent variant not supported in daemon"
-            );
-            let output = search_output(Vec::new(), false, ctx.indexing_in_progress());
-            return serde_json::to_value(output).map_err(|e| ToolError::Internal(e.to_string()));
-        }
-
-        // 3) daemon FTS-only 关键词展开（multi-word phrase 拆 token，详函数注释）。
-        // 2026-07-20：叠加启动期注入的全局复合条件匹配模式（daemon 无 settings.json，
-        // 一次性配置，见 `ServerConfig.match_mode`）。
-        let expanded = expand_intent_for_daemon(intent).with_match_mode(ctx.config.match_mode);
-
-        // 4) 逐 collection 跑链（各自独立候选链 / 独立 db —— 物理信息墙），命中
-        //    path → collection 建映射供 rank 后回标。
-        let cancel = CancellationToken::new();
-        let mut merged_all = Vec::new();
-        let mut path_to_collection: HashMap<String, String> = HashMap::new();
-        let mut served_any = false;
-        let mut used_hybrid = false;
-        for id in &target_ids {
-            let Some(rt) = ctx.collection(id) else {
-                continue; // resolve_target_ids 已校验存在性；防御性跳过
-            };
-            let candidates: Vec<Arc<dyn SearchableTool>> = (*rt.search_candidates).clone();
-            // BETA-40 收尾：候选链含语义臂（embedder 可用时 build 期注入）→ 走桌面同款
-            // 加权 RRF hybrid 融合；否则维持原 fallback chain（FTS-only，行为零变化）。
-            let has_semantic = candidates
-                .iter()
-                .any(|t| t.capability().backend_kind == Some(BackendKind::SemanticIndex));
-            let mut merged: Vec<MergedResult> = Vec::new();
-            if has_semantic {
-                used_hybrid = true;
-                let outcome = {
-                    let merged_ref = &mut merged;
-                    let mut on_result = |m: MergedResult| merged_ref.push(m);
-                    run_fanout_merge_rrf(
-                        &candidates,
-                        &expanded,
-                        cancel.clone(),
-                        &mut on_result,
-                        ctx.config.semantic_weight,
-                        ctx.config.cosine_threshold,
-                        &input.query,
-                    )
-                    .await
-                };
-                // 至少一臂干净跑完 → 本集合 served；部分臂失败仅记警告（与桌面容忍语义一致）。
-                if !outcome.sources_queried.is_empty() {
-                    served_any = true;
-                }
-                for (tool_id, err) in &outcome.errors {
-                    tracing::warn!(
-                        collection = %id,
-                        tool = %tool_id,
-                        error = %err,
-                        "hybrid 融合中单臂失败（其余臂结果保留）"
-                    );
-                }
-            } else {
-                let mut raw_results: Vec<SearchResult> = Vec::new();
-                let outcome = {
-                    let mut on_result = |r: SearchResult| {
-                        raw_results.push(r);
-                    };
-                    let mut on_switch = |_sw: scout_harness::BackendSwitch| {};
-                    run_fallback_chain(
-                        &candidates,
-                        &expanded,
-                        cancel.clone(),
-                        &mut on_result,
-                        &mut on_switch,
-                    )
-                    .await
-                };
-                if outcome.served_by.is_some() {
-                    served_any = true;
-                } else if let Some(err) = outcome.last_error.as_deref() {
-                    tracing::warn!(
-                        collection = %id,
-                        last_error = err,
-                        "collection 检索链失败（fallback chain exhausted）"
-                    );
-                }
-                merged = merge_results(raw_results);
-            }
-            for m in merged {
-                path_to_collection.insert(m.result.path.display().to_string(), id.clone());
-                merged_all.push(m);
-            }
-        }
-
-        // 5) 跨集合统一 rank（同一套 FTS/rank 逻辑、score 同源可比）+ 截断 limit。
-        let mut rank_ctx = RankContext::from_expanded(&expanded);
-        if used_hybrid {
-            rank_ctx = rank_ctx.preserve_existing_relevance();
-        }
-        let ranked = rank(merged_all, &rank_ctx);
-
-        // BETA-43 验收 ①：出处定位词条（组 head/synonyms，回退 query token）。
-        let terms = crate::provenance::query_terms(&input.query, &expanded.keyword_groups);
-
-        let mut hits: Vec<SearchHit> = Vec::with_capacity(ranked.len().min(limit));
-        for m in ranked.into_iter().take(limit) {
-            let r = m.result;
-            let path = r.path.display().to_string();
-            let collection = path_to_collection.get(&path).cloned().unwrap_or_default();
-            let (snippet, pages) = hit_provenance(&ctx, &collection, &path, &terms);
-            hits.push(SearchHit {
-                path,
-                name: r.name,
-                collection,
-                size: r.metadata.size_bytes,
-                mtime: r.metadata.modified_time.map(|t| t.timestamp()),
-                score: r.score.unwrap_or(0.0),
-                snippet,
-                pages,
-            });
-        }
-
-        // degraded：没有任何目标集合的链干净成功（db 不存在 / 无可用候选）。
-        let degraded = !served_any;
-
-        let elapsed_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
-        span.record("results", hits.len());
-        span.record("degraded", degraded);
-        span.record("elapsed_ms", elapsed_ms);
-        if degraded {
-            tracing::info!(
-                targets = target_ids.len(),
-                "search degraded, no candidate served"
-            );
-        } else {
-            tracing::info!(results = hits.len(), "search ok");
-        }
-
-        // 检索留痕（验收 ③：subject + collections + query + 命中数）。
-        let indexing_in_progress = ctx.indexing_in_progress();
-        ctx.audit.record(
-            &AuditRecord::now(&principal.subject, AuditAction::Search, target_ids.clone())
-                .with_query(&input.query, ctx.audit.log_query)
-                .with_results(hits.len())
-                .with_indexing_in_progress(indexing_in_progress),
-        );
-
-        let output = search_output(hits, degraded, indexing_in_progress);
+        let output = execute_search(ctx, principal, input).await?;
         serde_json::to_value(output).map_err(|e| ToolError::Internal(e.to_string()))
     }
+}
+
+/// `search` tool 核心执行逻辑——从 [`SearchTool::invoke`] 摘出，供 MCP 与 BETA-78
+/// 新增的 `POST /search` REST handler（`app.rs`）共用同一份 NL→intent→fallback/
+/// fanout→rank 全链路，避免两处实现漂移。
+#[tracing::instrument(
+    skip(ctx, principal, input),
+    fields(
+        subject = %principal.subject,
+        query_len = tracing::field::Empty,
+        limit = tracing::field::Empty,
+        targets = tracing::field::Empty,
+        results = tracing::field::Empty,
+        degraded = tracing::field::Empty,
+        elapsed_ms = tracing::field::Empty,
+    )
+)]
+#[allow(clippy::too_many_lines)] // 单次 collection fan-out 检索管线，拆分会引入跨函数状态传递、收益不明显。
+pub(crate) async fn execute_search(
+    ctx: Arc<ServerCtx>,
+    principal: Arc<AuthedPrincipal>,
+    input: SearchInput,
+) -> Result<SearchOutput, ToolError> {
+    // spec §6.2 隐私硬规则：不把 query 内容写进 ops log，仅记 query_len / limit / count。
+    // （audit.jsonl 专用留痕另一套规则，见 crate::audit——cycle 4。）
+    let started = std::time::Instant::now();
+    let span = tracing::Span::current();
+
+    if input.query.trim().is_empty() {
+        return Err(ToolError::InvalidParams("query 不能为空".into()));
+    }
+    let limit = input
+        .limit
+        .unwrap_or(DEFAULT_LIMIT)
+        .clamp(1, HARD_LIMIT_CAP);
+
+    // 越权 / 未知 collection → Denied + audit denied 留痕（验收 ④）。
+    let target_ids = match resolve_target_ids(&ctx, &principal, input.collections.as_deref()) {
+        Ok(ids) => ids,
+        Err(e) => {
+            if let ToolError::Denied(reason) = &e {
+                ctx.audit.record(
+                    &AuditRecord::now(
+                        &principal.subject,
+                        AuditAction::Denied,
+                        input.collections.clone().unwrap_or_default(),
+                    )
+                    .with_query(&input.query, ctx.audit.log_query)
+                    .with_denied_reason(reason),
+                );
+            }
+            return Err(e);
+        }
+    };
+
+    span.record("query_len", input.query.len());
+    span.record("limit", limit);
+    span.record("targets", target_ids.len());
+
+    // 1) NL → SearchIntent（rule parser；模型 fallback 不在 daemon 范围）
+    let intent: SearchIntent = scout_intent_parser::parse(&input.query);
+
+    // 2) Refine / FileAction / Clarify 在 daemon search 路径下不可执行 —— 返空。
+    if !matches!(
+        intent,
+        SearchIntent::FileSearch(_) | SearchIntent::MediaSearch(_)
+    ) {
+        span.record("results", 0);
+        span.record("degraded", false);
+        tracing::info!(
+            intent_variant = ?std::mem::discriminant(&intent),
+            "search short-circuited: intent variant not supported in daemon"
+        );
+        return Ok(search_output(Vec::new(), false, ctx.indexing_in_progress()));
+    }
+
+    // 3) daemon FTS-only 关键词展开（multi-word phrase 拆 token，详函数注释）。
+    // 2026-07-20：叠加启动期注入的全局复合条件匹配模式（daemon 无 settings.json，
+    // 一次性配置，见 `ServerConfig.match_mode`）。
+    let expanded = expand_intent_for_daemon(intent).with_match_mode(ctx.config.match_mode);
+
+    // 4) 逐 collection 跑链（各自独立候选链 / 独立 db —— 物理信息墙），命中
+    //    path → collection 建映射供 rank 后回标。
+    let cancel = CancellationToken::new();
+    let mut merged_all = Vec::new();
+    let mut path_to_collection: HashMap<String, String> = HashMap::new();
+    let mut served_any = false;
+    let mut used_hybrid = false;
+    for id in &target_ids {
+        let Some(rt) = ctx.collection(id) else {
+            continue; // resolve_target_ids 已校验存在性；防御性跳过
+        };
+        let candidates: Vec<Arc<dyn SearchableTool>> = (*rt.search_candidates).clone();
+        // BETA-40 收尾：候选链含语义臂（embedder 可用时 build 期注入）→ 走桌面同款
+        // 加权 RRF hybrid 融合；否则维持原 fallback chain（FTS-only，行为零变化）。
+        let has_semantic = candidates
+            .iter()
+            .any(|t| t.capability().backend_kind == Some(BackendKind::SemanticIndex));
+        let mut merged: Vec<MergedResult> = Vec::new();
+        if has_semantic {
+            used_hybrid = true;
+            let outcome = {
+                let merged_ref = &mut merged;
+                let mut on_result = |m: MergedResult| merged_ref.push(m);
+                run_fanout_merge_rrf(
+                    &candidates,
+                    &expanded,
+                    cancel.clone(),
+                    &mut on_result,
+                    ctx.config.semantic_weight,
+                    ctx.config.cosine_threshold,
+                    &input.query,
+                )
+                .await
+            };
+            // 至少一臂干净跑完 → 本集合 served；部分臂失败仅记警告（与桌面容忍语义一致）。
+            if !outcome.sources_queried.is_empty() {
+                served_any = true;
+            }
+            for (tool_id, err) in &outcome.errors {
+                tracing::warn!(
+                    collection = %id,
+                    tool = %tool_id,
+                    error = %err,
+                    "hybrid 融合中单臂失败（其余臂结果保留）"
+                );
+            }
+        } else {
+            let mut raw_results: Vec<SearchResult> = Vec::new();
+            let outcome = {
+                let mut on_result = |r: SearchResult| {
+                    raw_results.push(r);
+                };
+                let mut on_switch = |_sw: scout_harness::BackendSwitch| {};
+                run_fallback_chain(
+                    &candidates,
+                    &expanded,
+                    cancel.clone(),
+                    &mut on_result,
+                    &mut on_switch,
+                )
+                .await
+            };
+            if outcome.served_by.is_some() {
+                served_any = true;
+            } else if let Some(err) = outcome.last_error.as_deref() {
+                tracing::warn!(
+                    collection = %id,
+                    last_error = err,
+                    "collection 检索链失败（fallback chain exhausted）"
+                );
+            }
+            merged = merge_results(raw_results);
+        }
+        for m in merged {
+            path_to_collection.insert(m.result.path.display().to_string(), id.clone());
+            merged_all.push(m);
+        }
+    }
+
+    // 5) 跨集合统一 rank（同一套 FTS/rank 逻辑、score 同源可比）+ 截断 limit。
+    let mut rank_ctx = RankContext::from_expanded(&expanded);
+    if used_hybrid {
+        rank_ctx = rank_ctx.preserve_existing_relevance();
+    }
+    let ranked = rank(merged_all, &rank_ctx);
+
+    // BETA-43 验收 ①：出处定位词条（组 head/synonyms，回退 query token）。
+    let terms = crate::provenance::query_terms(&input.query, &expanded.keyword_groups);
+
+    let mut hits: Vec<SearchHit> = Vec::with_capacity(ranked.len().min(limit));
+    for m in ranked.into_iter().take(limit) {
+        let r = m.result;
+        let path = r.path.display().to_string();
+        let collection = path_to_collection.get(&path).cloned().unwrap_or_default();
+        let (snippet, pages) = hit_provenance(&ctx, &collection, &path, &terms);
+        hits.push(SearchHit {
+            path,
+            name: r.name,
+            collection,
+            size: r.metadata.size_bytes,
+            mtime: r.metadata.modified_time.map(|t| t.timestamp()),
+            score: r.score.unwrap_or(0.0),
+            snippet,
+            pages,
+        });
+    }
+
+    // degraded：没有任何目标集合的链干净成功（db 不存在 / 无可用候选）。
+    let degraded = !served_any;
+
+    let elapsed_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+    span.record("results", hits.len());
+    span.record("degraded", degraded);
+    span.record("elapsed_ms", elapsed_ms);
+    if degraded {
+        tracing::info!(
+            targets = target_ids.len(),
+            "search degraded, no candidate served"
+        );
+    } else {
+        tracing::info!(results = hits.len(), "search ok");
+    }
+
+    // 检索留痕（验收 ③：subject + collections + query + 命中数）。
+    let indexing_in_progress = ctx.indexing_in_progress();
+    ctx.audit.record(
+        &AuditRecord::now(&principal.subject, AuditAction::Search, target_ids.clone())
+            .with_query(&input.query, ctx.audit.log_query)
+            .with_results(hits.len())
+            .with_indexing_in_progress(indexing_in_progress),
+    );
+
+    Ok(search_output(hits, degraded, indexing_in_progress))
 }
 
 /// 单个命中的出处定位（BETA-43 验收 ①）：从该 collection 的文档索引取正文与

@@ -10,9 +10,10 @@
 
 ### 场景
 
-- **管理员一台机器**长跑 `scoutd`（macOS launchd / Linux systemd / Windows service），索引一份**单一固定目录**（例如 `/Volumes/Shared/departed-colleague-docs`）。
-- 在职同事在自己机器上**任意 MCP 客户端**（Claude Code / Codex / Cline / 自研 Agent）通过 `Authorization: Bearer <token>` + streamable-HTTP 连上、跑 `tools/list` + `tools/call search` 拿命中。
-- 团队不必每人本地灌一份大归档索引、节省磁盘 + 同步成本。
+`scoutd` 有两种部署形态，共用同一份代码/协议，区别只是配置来源与运行身份：
+
+- **团队/企业归档**（本文件 §2.4b）：**管理员一台机器**长跑 `scoutd`（macOS launchd / Linux systemd / Windows NSSM），索引一份**单一固定目录**（例如 `/Volumes/Shared/departed-colleague-docs`），多 collection + per-token 权限。在职同事在自己机器上**任意 MCP 客户端**（Claude Code / Codex / Cline / 自研 Agent）通过 `Authorization: Bearer <token>` + streamable-HTTP 连上、跑 `tools/list` + `tools/call search` 拿命中，不必每人本地灌一份大归档索引。
+- **个人模式**（BETA-78，本文件 §2.4）：Windows 桌面版安装器自动装好、注册为 Windows Service（`LocalSystem` 常驻）、自动启动——单 collection、覆盖用户默认目录，桌面 app 本身降级为经本机 HTTP 连它的瘦客户端。存在的原因：读取 NTFS MFT（内置原生索引后端）需要管理员权限，桌面进程本身满足不了，只能挪进一个特权服务里。
 
 ### 架构
 
@@ -114,7 +115,42 @@ sudo cp target/x86_64-apple-darwin/release/scoutd /usr/local/bin/
 
 之后按 §2.1 launchd 流程配置即可。Apple Silicon Mac 用户直接下 `scoutd-aarch64-apple-darwin` 即可，无需自编译。
 
-### 2.4 Windows — NSSM service
+### 2.4 Windows — 个人模式（随桌面安装器自动装，BETA-78）
+
+**普通个人用户不需要看这一节**——安装 Scout 桌面版时，安装器已经自动完成
+下面这几步：生成个人模式 `config.toml`（单 collection，覆盖
+Desktop/Documents/Downloads/Pictures/Music 五个默认目录）→ 注册
+`Scoutd` Windows Service（`LocalSystem` 账户、开机自启）→ 启动。这正是本节
+存在的原因：桌面进程本身以普通用户权限运行，读不了 NTFS MFT（内置原生索引
+`scout-native-index` 硬性要求管理员权限），把索引/检索整体挪进一个以
+`LocalSystem` 常驻的服务，桌面降级为经本机 HTTP（`127.0.0.1:8765`）连接它的
+瘦客户端（见 `apps/desktop/src-tauri/src/service_client.rs`）。
+
+**手动装 / 排障**（安装器自动装失败、或不经安装器单独装服务时）：
+
+```cmd
+:: 幂等：config.toml 已存在则跳过；不带 --data-dir 时默认
+:: %ProgramData%\Scout\scoutd，不带 --root 时默认扫五个系统默认目录。
+scoutd.exe bootstrap-personal-config
+
+:: 幂等：服务已存在则更新配置并确保处于 Running（LocalSystem、AutoStart）。
+scoutd.exe install-service
+
+:: 卸载：停止 + 删除服务注册（不删数据/配置）。
+scoutd.exe uninstall-service
+```
+
+服务发现文件 `%ProgramData%\Scout\scoutd\connection.json`（bind 地址 +
+bearer token）——桌面客户端启动时读它自动连接；手动重装/换端口后桌面下次
+健康探测（默认 5s 一次）会自动重新发现，不需要重启桌面。
+
+> `--install-service` 内部用 [`windows-service`](https://crates.io/crates/windows-service) crate 走标准 SCM 注册流程，服务启动期持续上报 `StartPending` + checkpoint（覆盖下面「故障排查 #3」提到的默认 30 秒超时风险，不需要再手改 `ServicesPipeTimeout`）。
+
+### 2.4b Windows — 团队/企业部署（NSSM，多 collection TOML 场景）
+
+个人模式（2.4）是单 collection、单机本地使用；团队归档场景（多
+collection + per-token 权限 + LAN 部署）仍走手动 NSSM 安装，`--config`
+指向 §3.3 的 collection 模式 TOML：
 
 下载 [NSSM](https://nssm.cc/) 后：
 

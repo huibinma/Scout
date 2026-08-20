@@ -1,6 +1,6 @@
 [package]
 name = "scout-desktop"
-version = "0.9.55"
+version = "0.9.56"
 description = "Scout Desktop App"
 authors = ["Scout Project"]
 edition = "2021"
@@ -70,7 +70,8 @@ getrandom = "0.2"
 # 走 Security.framework、Windows 走 Schannel，均为系统自带 API，不链 OpenSSL（只有
 # Linux 才需要 openssl-sys，而本项目明确不做 Linux 桌面分发，见 PROJECT.md）。
 # default-tls 读系统证书 store，与用户浏览器/系统信任链一致，是桌面客户端标准实践。
-reqwest = { version = "0.12", default-features = false, features = ["stream", "default-tls"] }
+# BETA-78：service_client.rs 用 json 特性直接 (反)序列化请求/响应体。
+reqwest = { version = "0.12", default-features = false, features = ["stream", "default-tls", "json"] }
 futures-util = "0.3"
 # Track A 搜索并发化：spawn_blocking 线程内用 futures_executor::block_on 驱动各后端
 # search_expanded 流（后端为同步阻塞体、无 tokio reactor 需求，故用 runtime 无关的

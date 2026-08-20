@@ -51,6 +51,12 @@ subtle = "2.6"
 parking_lot = "0.12"
 async-trait = "0.1"
 chrono = { version = "0.4", features = ["serde"] }
+futures-util = { version = "0.3", default-features = false, features = ["std"] }
+
+# BETA-78：`POST /search/quick` 的系统级原生文件名索引臂（MFT/USN，卷范围，
+# 不受任何 collection root 限制——只有 admin token 能触达，见 quick_search.rs）。
+[target.'cfg(windows)'.dependencies]
+scout-native-index = { path = "../search-backends/native-index" }
 
 [dev-dependencies]
 tempfile = "3"

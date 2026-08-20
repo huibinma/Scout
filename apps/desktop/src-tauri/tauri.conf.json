@@ -1,6 +1,6 @@
 {
   "productName": "Scout",
-  "version": "0.9.55",
+  "version": "0.9.56",
   "identifier": "ai.scout.desktop",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -48,7 +48,8 @@
     },
     "windows": {
       "nsis": {
-        "installerHooks": "./nsis/uninstall-hooks.nsh"
+        "installerHooks": "./nsis/hooks.nsh",
+        "installMode": "perMachine"
       }
     }
   }

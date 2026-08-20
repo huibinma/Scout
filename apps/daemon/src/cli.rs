@@ -1,25 +1,43 @@
 //! scoutd CLI 参数定义。
 //!
 //! BETA-32 T9 骨架：只定义 clap derive 结构；T10 起在 main.rs 消费。
+//!
+//! BETA-78：新增可选子命令（`command`），用于 Windows Service 化——桌面安装器
+//! 装机时调用 `bootstrap-personal-config` → `install-service`，SCM 之后经
+//! `service`（真正的服务入口，人不直接用）拉起 daemon。**不给子命令时行为与
+//! 今天完全一致**（顶层 flags 直接 serve，前台阻塞），现有团队部署（手动
+//! `scoutd --config ...` 或 NSSM 包装）零迁移。
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Parser, Subcommand};
 
-/// `Scout` 团队归档 MCP daemon 命令行参数。
+/// `Scout` 团队归档 MCP daemon / 个人后台服务命令行参数。
 ///
 /// BETA-36：两种启动形态二选一（互斥，main 里把守）——
 /// - **legacy 单根**：`--root` + `--token`（合成 default collection + 全权 admin token）；
 /// - **collection 模式**：`--config <TOML>`（`[[collections]]` + `[[tokens]]` + `[audit]`）。
+///
+/// BETA-78：`data_dir`/`model_path` 改为 `Option`——不给子命令（即今天的前台
+/// serve 用法）时二者仍是必填，main.rs 里手工校验补回（clap derive 无法表达
+/// "无子命令时必填、有子命令时不需要"这种依赖子命令的条件必填）。
 #[derive(Parser, Debug)]
-#[command(name = "scoutd", version, about = "Scout 团队归档 MCP daemon")]
+#[command(
+    name = "scoutd",
+    version,
+    about = "Scout 团队归档 MCP daemon / 个人后台服务"
+)]
 pub struct Cli {
+    /// 子命令（服务安装/卸载/个人模式引导）；不给则走今天的前台 serve 路径。
+    #[command(subcommand)]
+    pub command: Option<Command>,
+
     /// 索引根目录（legacy 单根模式；与 --config 互斥）。
     #[arg(long)]
     pub root: Option<PathBuf>,
 
-    /// 监听地址（默认 0.0.0.0:8765）。
+    /// 监听地址（默认 0.0.0.0:8765；个人模式子命令另有 loopback-only 默认值）。
     #[arg(long, default_value = "0.0.0.0:8765")]
     pub bind: SocketAddr,
 
@@ -27,13 +45,13 @@ pub struct Cli {
     #[arg(long, env = "SCOUTD_TOKEN")]
     pub token: Option<String>,
 
-    /// 索引 DB 目录。
+    /// 索引 DB 目录（无子命令时必填）。
     #[arg(long)]
-    pub data_dir: PathBuf,
+    pub data_dir: Option<PathBuf>,
 
-    /// embedder GGUF 文件路径。
+    /// embedder GGUF 文件路径（无子命令时必填）。
     #[arg(long, env = "SCOUTD_MODEL_PATH")]
-    pub model_path: PathBuf,
+    pub model_path: Option<PathBuf>,
 
     /// TOML 配置（collection 模式：[[collections]] + [[tokens]] + [audit]；与 --root/--token 互斥）。
     #[arg(long)]
@@ -68,4 +86,34 @@ pub struct Cli {
     /// 允许启动时检测到 `schema_meta` 不一致或残留 rebuild 文件时重建。
     #[arg(long)]
     pub allow_rebuild_schema: bool,
+}
+
+/// BETA-78 新增子命令：Windows Service 化 + 个人模式自举。
+#[derive(Subcommand, Debug, Clone)]
+pub enum Command {
+    /// 生成个人模式默认配置（幂等：`config.toml` 已存在即跳过）——安装器在
+    /// 注册服务前调用一次；`--root` 可重复传多个默认索引目录，不给则用
+    /// 当前用户的 Desktop/Documents/Downloads/Pictures/Music 五个系统默认目录。
+    BootstrapPersonalConfig {
+        /// 数据目录（缺省 `%ProgramData%\Scout\scoutd`）。
+        #[arg(long)]
+        data_dir: Option<PathBuf>,
+        /// 默认索引根目录（可重复；缺省用系统默认五个目录）。
+        #[arg(long = "root")]
+        roots: Vec<PathBuf>,
+    },
+    /// 注册 Windows Service（LocalSystem 账户、开机自启）。仅 Windows 支持。
+    InstallService {
+        /// 数据目录（缺省 `%ProgramData%\Scout\scoutd`，需已 bootstrap）。
+        #[arg(long)]
+        data_dir: Option<PathBuf>,
+    },
+    /// 停止并删除已注册的 Windows Service。仅 Windows 支持。
+    UninstallService,
+    /// 真正的 SCM 服务入口（由 Service Control Manager 派发拉起，不给人手工用）。
+    Service {
+        /// 数据目录（缺省 `%ProgramData%\Scout\scoutd`）。
+        #[arg(long)]
+        data_dir: Option<PathBuf>,
+    },
 }

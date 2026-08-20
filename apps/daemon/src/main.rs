@@ -18,16 +18,19 @@
 
 mod cli;
 mod lifecycle;
+mod personal;
 mod preflight;
+mod service;
 
 use std::collections::BTreeMap;
+use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use anyhow::{anyhow, Context, Result};
 use clap::Parser;
 use parking_lot::{Mutex, RwLock};
-use secrecy::SecretString;
+use secrecy::{ExposeSecret as _, SecretString};
 use tracing::{info, level_filters::LevelFilter, warn};
 use tracing_subscriber::EnvFilter;
 
@@ -44,10 +47,9 @@ use scout_server::config::{
 };
 use scout_server::ServerCtx;
 
-use crate::cli::Cli;
+use crate::cli::{Cli, Command};
 
-#[tokio::main]
-async fn main() -> Result<()> {
+fn main() -> Result<()> {
     // Windows llama.cpp 原生故障隔离 helper；必须在 clap 解析前截获内部参数。
     scout_model_runtime::run_model_worker_if_requested();
 
@@ -57,6 +59,54 @@ async fn main() -> Result<()> {
     let cli = Cli::parse();
 
     init_tracing(&cli.log_level, &cli.log_format)?;
+
+    // BETA-78：`service` 子命令必须**同步**调用 `service_dispatcher::start`——
+    // SCM 在拉起进程后只给很短的窗口接收控制权，这一步不能等 tokio runtime
+    // 起好、更不能等任何异步逻辑跑完。其余子命令 / 今天的前台模式都在各自
+    // 分支里按需建 runtime。
+    if let Some(Command::Service { data_dir }) = &cli.command {
+        let data_dir = data_dir.clone().unwrap_or_else(personal::default_data_dir);
+        return service::run_dispatcher(data_dir);
+    }
+
+    match cli.command.clone() {
+        Some(Command::BootstrapPersonalConfig { data_dir, roots }) => {
+            let data_dir = data_dir.unwrap_or_else(personal::default_data_dir);
+            let created = personal::bootstrap_config(&data_dir, &roots)?;
+            if created {
+                info!(path = %data_dir.join("config.toml").display(), "个人模式配置已生成");
+            } else {
+                info!(path = %data_dir.join("config.toml").display(), "个人模式配置已存在，跳过");
+            }
+            Ok(())
+        }
+        Some(Command::InstallService { data_dir }) => {
+            let data_dir = data_dir.unwrap_or_else(personal::default_data_dir);
+            service::install_service(&data_dir)
+        }
+        Some(Command::UninstallService) => service::uninstall_service(),
+        Some(Command::Service { .. }) => unreachable!("已在上面提前处理并 return"),
+        None => {
+            let runtime = tokio::runtime::Builder::new_multi_thread()
+                .enable_all()
+                .build()
+                .context("创建 tokio runtime 失败")?;
+            runtime.block_on(run_foreground(cli))
+        }
+    }
+}
+
+/// 今天的前台 serve 路径（团队/企业部署：`--root`+`--token` 或 `--config`），
+/// 行为与 BETA-78 之前完全一致——现有部署零迁移。
+async fn run_foreground(cli: Cli) -> Result<()> {
+    let data_dir = cli
+        .data_dir
+        .clone()
+        .ok_or_else(|| anyhow!("前台模式必须给 --data-dir"))?;
+    let model_path = cli
+        .model_path
+        .clone()
+        .ok_or_else(|| anyhow!("前台模式必须给 --model-path"))?;
 
     // ---- BETA-36：解析访问模型（--config TOML 与 --root/--token 互斥）----
     let access = resolve_access_config(&cli)?;
@@ -68,11 +118,11 @@ async fn main() -> Result<()> {
                 .with_context(|| format!("collection {} 的 root 检查失败", c.id))?;
         }
     }
-    preflight::check_data_dir(&cli.data_dir)?;
-    preflight::check_model(&cli.model_path)?;
+    preflight::check_data_dir(&data_dir)?;
+    preflight::check_model(&model_path)?;
     // reindex 中断残留按 collection db 目录逐一检查（legacy default = data_dir 平铺）。
     for c in &access.collections {
-        let db = collection_db_path(&cli.data_dir, &c.id);
+        let db = collection_db_path(&data_dir, &c.id);
         if let Some(dir) = db.parent() {
             if dir.exists() {
                 preflight::check_rebuild_leftover(dir, cli.allow_rebuild_schema)?;
@@ -88,7 +138,7 @@ async fn main() -> Result<()> {
     // （保证 ServerConfig 里存的阈值与 embedder 实际加载后 `model_id()` 对应的是同一条
     // 校准记录）。未收录模型回落 DEFAULT_COSINE_ROUTING_THRESHOLD 并告警——阈值与模型版本
     // 结构化绑定，取代此前 harness 内部写死的全局常量。
-    let model_id_for_threshold = derive_model_id(&cli.model_path);
+    let model_id_for_threshold = derive_model_id(&model_path);
     let cosine_threshold =
         scout_result_normalizer::cosine_threshold_for_model(&model_id_for_threshold)
             .unwrap_or_else(|| {
@@ -103,8 +153,8 @@ async fn main() -> Result<()> {
 
     let config = ServerConfig {
         bind_addr: cli.bind,
-        data_dir: cli.data_dir,
-        model_path: cli.model_path,
+        data_dir,
+        model_path,
         log_level,
         semantic_weight: cli
             .semantic_weight
@@ -125,6 +175,61 @@ async fn main() -> Result<()> {
     // ---- 装配 Router + 跑 server（阻塞到信号）----
     let app = build_app(ctx.clone());
     lifecycle::serve(ctx, app).await
+}
+
+/// BETA-78：个人模式 `service` 子命令用——读 `<data_dir>/config.toml`（假定
+/// `bootstrap-personal-config` 已跑过）、按需下载 embedding 模型、构造
+/// `ServerCtx`。与 [`run_foreground`] 的关键区别：bind 地址固定
+/// [`personal::DEFAULT_PERSONAL_BIND`]（loopback-only）、`data_dir`/token 都
+/// 从个人模式配置文件推导，不接受 CLI flags。
+///
+/// 返回 `(ctx, bind_addr, token明文)`——token 明文只为回写 `connection.json`
+/// 供桌面客户端发现服务用，真正鉴权由 ctx 内部已解析的 `TokenConfig` 生效。
+pub(crate) async fn build_personal_service(
+    data_dir: PathBuf,
+) -> Result<(Arc<ServerCtx>, SocketAddr, String)> {
+    let config_path = data_dir.join("config.toml");
+    let text = std::fs::read_to_string(&config_path).with_context(|| {
+        format!(
+            "读取个人模式配置失败（需先跑 bootstrap-personal-config）：{}",
+            config_path.display()
+        )
+    })?;
+    let access = parse_config_toml(&text)
+        .with_context(|| format!("个人模式配置非法：{}", config_path.display()))?;
+    let token = access
+        .tokens
+        .first()
+        .ok_or_else(|| anyhow!("个人模式配置无任何 token：{}", config_path.display()))?
+        .token
+        .expose_secret()
+        .to_string();
+
+    let model_path = personal::ensure_embedding_model(&data_dir)
+        .await
+        .context("准备 embedding 模型失败")?;
+
+    let model_id_for_threshold = derive_model_id(&model_path);
+    let cosine_threshold =
+        scout_result_normalizer::cosine_threshold_for_model(&model_id_for_threshold)
+            .unwrap_or(scout_result_normalizer::DEFAULT_COSINE_ROUTING_THRESHOLD);
+
+    let bind_addr: SocketAddr = personal::personal_bind_addr();
+
+    let config = ServerConfig {
+        bind_addr,
+        data_dir,
+        model_path,
+        log_level: LevelFilter::INFO,
+        semantic_weight: scout_server::tools::search::DEFAULT_SEMANTIC_WEIGHT,
+        cosine_threshold,
+        embed_images: true,
+        match_mode: scout_search_backend::MatchMode::All,
+        access,
+    };
+
+    let ctx = Arc::new(build_runtime_ctx(config).await?);
+    Ok((ctx, bind_addr, token))
 }
 
 /// 解析访问模型：`--config` TOML（collection 模式）或 `--root`+`--token`（legacy）。

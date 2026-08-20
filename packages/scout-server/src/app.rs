@@ -29,10 +29,14 @@ use rmcp::transport::streamable_http_server::{
 };
 use tokio::net::TcpListener;
 
-use crate::admin::{admin_audit, admin_audit_report, admin_reindex, health};
+use crate::admin::{
+    admin_audit, admin_audit_report, admin_reindex, admin_status, admin_update_personal_roots,
+    health,
+};
 use crate::auth::require_bearer;
 use crate::config::ServerCtx;
 use crate::mcp::ScoutMcpHandler;
+use crate::search_http;
 
 /// 组装 axum `Router`。
 ///
@@ -73,11 +77,22 @@ pub fn build_app(ctx: Arc<ServerCtx>) -> Router {
         .nest_service("/mcp", mcp_service)
         .route_layer(from_fn_with_state(auth_ctx.clone(), require_bearer));
 
-    // ---- /admin/*：bearer 保护（handler 内另有 admin 标志门 → 403）----
+    // ---- /admin/*：bearer 保护（handler 内另有 admin 标志门 → 403；
+    // `/admin/status` 是例外——鉴权即可读，不要求 admin 标志，见其文档注释）----
     let admin_router: Router<Arc<ServerCtx>> = Router::new()
         .route("/admin/reindex", post(admin_reindex))
         .route("/admin/audit", get(admin_audit))
         .route("/admin/audit/report", get(admin_audit_report))
+        .route("/admin/status", get(admin_status))
+        .route("/admin/personal/roots", post(admin_update_personal_roots))
+        .route_layer(from_fn_with_state(auth_ctx.clone(), require_bearer));
+
+    // ---- BETA-78：/search + /search/quick：bearer 保护，供桌面瘦客户端用
+    // （不走 /mcp 的 JSON-RPC framing，普通 JSON request/response）----
+    let search_router: Router<Arc<ServerCtx>> = Router::new()
+        .route("/search", post(search_http::search))
+        .route("/search/quick", post(search_http::quick))
+        .route("/backend/search", post(search_http::backend_search))
         .route_layer(from_fn_with_state(auth_ctx, require_bearer));
 
     // ---- /health：无鉴权 ----
@@ -86,6 +101,7 @@ pub fn build_app(ctx: Arc<ServerCtx>) -> Router {
     Router::new()
         .merge(public)
         .merge(admin_router)
+        .merge(search_router)
         .merge(mcp_router)
         .with_state(ctx)
 }

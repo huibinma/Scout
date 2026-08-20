@@ -273,6 +273,109 @@ pub fn parse_config_toml(text: &str) -> Result<DaemonConfigFile, ConfigError> {
     Ok(cfg)
 }
 
+/// BETA-78：`/admin/personal/roots` 用——原地重写 `config.toml` 里
+/// `LEGACY_COLLECTION_ID`（个人模式 `default`）collection 的 `roots`，其余
+/// collection（正常个人模式下没有）与全部 token 原样保留。
+///
+/// 手写序列化（不给 [`CollectionConfig`]/[`TokenConfig`] 加 `Serialize`）：
+/// `TokenConfig.token` 是 `SecretString`，故意不让这两个类型具备"整体可被
+/// 序列化回明文"的通用能力——只在本函数这一处刻意 `expose_secret()`，且
+/// 只为原样回写已经在这份配置文件里的同一个 token，不生成新 token。
+///
+/// # Errors
+///
+/// 读取 / 解析 / 序列化 / 写盘任一步失败都返回 `Err`。
+pub fn rewrite_personal_roots(
+    config_path: &std::path::Path,
+    roots: &[std::path::PathBuf],
+) -> anyhow::Result<()> {
+    use anyhow::Context as _;
+    use secrecy::ExposeSecret as _;
+
+    #[derive(serde::Serialize)]
+    struct OutCollection {
+        id: String,
+        display_name: Option<String>,
+        subject_kind: SubjectKind,
+        roots: Vec<String>,
+        read_only: bool,
+        audit_tags: Vec<String>,
+        allow_full_read: bool,
+    }
+    #[derive(serde::Serialize)]
+    struct OutToken {
+        token: String,
+        subject: String,
+        collections: Vec<String>,
+        admin: bool,
+    }
+    #[derive(serde::Serialize)]
+    struct OutAudit {
+        log_query: bool,
+    }
+    #[derive(serde::Serialize)]
+    struct OutFile {
+        collections: Vec<OutCollection>,
+        tokens: Vec<OutToken>,
+        audit: OutAudit,
+    }
+
+    let text = std::fs::read_to_string(config_path)
+        .with_context(|| format!("读取配置文件失败：{}", config_path.display()))?;
+    let cfg = parse_config_toml(&text)
+        .with_context(|| format!("配置文件非法：{}", config_path.display()))?;
+
+    let out = OutFile {
+        collections: cfg
+            .collections
+            .into_iter()
+            .map(|c| {
+                let effective_roots = if c.id == LEGACY_COLLECTION_ID {
+                    roots
+                        .iter()
+                        .map(|p| p.to_string_lossy().into_owned())
+                        .collect()
+                } else {
+                    c.roots
+                        .iter()
+                        .map(|p| p.to_string_lossy().into_owned())
+                        .collect()
+                };
+                OutCollection {
+                    id: c.id,
+                    display_name: c.display_name,
+                    subject_kind: c.subject_kind,
+                    roots: effective_roots,
+                    read_only: c.read_only,
+                    audit_tags: c.audit_tags,
+                    allow_full_read: c.allow_full_read,
+                }
+            })
+            .collect(),
+        tokens: cfg
+            .tokens
+            .into_iter()
+            .map(|t| OutToken {
+                token: t.token.expose_secret().to_string(),
+                subject: t.subject,
+                collections: t.collections,
+                admin: t.admin,
+            })
+            .collect(),
+        audit: OutAudit {
+            log_query: cfg.audit.log_query,
+        },
+    };
+
+    let toml_text = toml::to_string_pretty(&out).context("序列化配置为 TOML 失败")?;
+    let tmp_path = config_path.with_extension("toml.tmp");
+    std::fs::write(&tmp_path, toml_text.as_bytes())
+        .with_context(|| format!("写入临时配置文件失败：{}", tmp_path.display()))?;
+    std::fs::rename(&tmp_path, config_path)
+        .with_context(|| format!("替换配置文件失败：{}", config_path.display()))?;
+    Ok(())
+}
+
 fn validate(cfg: &DaemonConfigFile) -> Result<(), ConfigError> {
     use secrecy::ExposeSecret;
 

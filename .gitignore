@@ -55,6 +55,9 @@ yarn.lock
 src-tauri/target/
 src-tauri/Cargo.lock
 src-tauri/WixTools/
+# BETA-78：CI 把带 llama-cpp 的 scoutd.exe 拷到这里再打进桌面 NSIS 安装包
+# （tauri.conf.json bundle.resources），本地不追踪。
+apps/desktop/src-tauri/service/
 
 # ===== Python (训练侧) =====
 __pycache__/
