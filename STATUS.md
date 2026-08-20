@@ -7,26 +7,25 @@
 ## 📍 速览
 
 - **阶段**：B（Beta）进行中；P ✅ / M 代码层 ✅，M→B 正式切换仍待 [ROADMAP §8](./ROADMAP.md) 长周期项；总体 parser-only evals 已达 99.4%（994/6/0、fail=0）。
-- **版本**：**v0.9.55 发布中**（BETA-76+77 已合入，正走 CI/Release 流水线，见下方「当前 Task」）。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
+- **版本**：**v0.9.55 已发布**（BETA-76+77 已合入，CI/Release 三个 workflow 全绿，本机已装包验收）。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
 - **定位**：开源免费（MIT）本地语义检索底座——**面向 agent 的本地文件搜索工具**（经 MCP 接入 Claude Code / Codex 等），同时提供桌面应用供人直接使用；不做分析层，分析经 MCP daemon + 外部 LLM 组合。口号 **Deep Local Search**。以 [PROJECT.md](./PROJECT.md) 为准。
-- **当前 task**：**v0.9.55 发版：BETA-76+77 + 完整 CI/Release + 本地验收**——详见下方「当前 Task」节。
-- **下一步 top-3**：① CI/Release 三个 workflow 跑绿确认；② 本地下载安装包做完整验收（含管理员权限 quick_search 真机延迟）；③ 验收发现的 bug 就地修复。
-- **阻塞**：无（BETA-76/77 已提交并 push，v0.9.55 CI/Release 进行中）；Class A 仅剩双平台 evals 真机；Class B 已清零。
+- **当前 task**：**v0.9.55 发版收尾**——详见下方「当前 Task」节。
+- **下一步 top-3**：① 管理员权限下真机走查原生索引/quick_search（本轮非管理员会话+无桌面自动化工具，未覆盖）；② 桌面 GUI 快速查找/深度检索下拉人工点击复测；③ 继续 BETA-64~75 真机验证积压。
+- **阻塞**：无；Class A 仅剩双平台 evals 真机；Class B 已清零。
 
 ## 当前 Task
 
-**2026-08-20（最新，Claude Code）— v0.9.55 发版：BETA-76+77 完整提交 + CI/Release + 本地验收**
+**2026-08-20（最新，Claude Code）— v0.9.55 发版：BETA-76+77 完整提交 + CI/Release + 本地验收，已完成**
 
-用户经 `/goal` 下达："完整commit一次，并完成一轮CI和Release，并对release结果在本地进行完整验收、对验收发现的bug进行修改"。BETA-76（原生 MFT/USN 索引替代外部 Everything）与 BETA-77（找文件双模式检索：找文件搜索框支持"快速查找"输入即按元数据索引出结果 + "深度检索"回车后元数据+语义全量检索；desktop 启动期元数据索引常驻内存极速启动、语义索引后台准备不卡顿）此前已分别提交（`11cfd7e`/`b6d1165`）。本轮：bump `tauri.conf.json`/`Cargo.toml`/`Cargo.lock` 到 v0.9.55 → 全量本地校验（workspace fmt/clippy -D warnings/7 crate test 全绿、desktop 211 测试全绿、`tsc --noEmit` 全绿）→ push `main` 触发 CI → push `v0.9.55` tag 触发 Release macOS/Windows/daemon 三个 workflow → 本地下载 Windows 安装包做完整功能验收。完整实现细节见 [ROADMAP BETA-76](./ROADMAP.md)/[BETA-77](./ROADMAP.md)。
+用户经 `/goal` 下达："完整commit一次，并完成一轮CI和Release，并对release结果在本地进行完整验收、对验收发现的bug进行修改"。流程：bump 版本到 v0.9.55 → 本地全量校验 → push main（`538bd52`）+ push tag → **CI 首次失败**（Linux runner 编译 `scout-native-index` 触发 clippy 死代码/未用 import 错误——`record.rs` 的 USN 解析函数与 `service.rs` 的 `use crate::sys` 只在 `#[cfg(windows)]` 生产路径里被引用，本机 Windows 开发环境的 clippy 永远看不到非 Windows 编译分支，这类 bug 只有真正在非 Windows CI 上编译才会暴露）→ 定位后修复（`10e673c`：`record.rs` 加 `#![cfg_attr(not(windows), allow(dead_code))]` 说明性豁免、`service.rs` 的 `use crate::sys` 补 `#[cfg(windows)]`、`needless_return` 顺手改掉）→ 重新 push，CI/Release macOS/Release Windows 三个 workflow 全绿（Windows 产物 `dumpbin` 无动态 CRT 导入闸门通过）→ 本地下载真实 Release 安装包（`gh release download`，SHA256/体积核对一致）静默安装 → 启动验证：4 个 backend（local-index/semantic/windows-search/**native_file_index**）全部注册成功，原生索引后台预热按设计在非管理员会话优雅降级（`available=false, elapsed_ms=0`）、后台 FTS reindex 正常完成、无异常日志；进程稳定运行 2 分钟后正常退出，Windows 事件日志无崩溃记录 → `gh release edit` 补真实 changelog（替换模板占位文案）。**本轮验收范围边界**：当前会话无原生 Windows 桌面自动化工具（仅有网页浏览器自动化），且非管理员会话无法弹 UAC 提权（无人可点确认），故管理员权限下的真实 MFT 全盘枚举/USN 实时监控行为、以及桌面 GUI 快速查找下拉的真机点击交互，本轮**未做**端到端验证——这一限制已如实记录，不是遗漏后佯装完成。
 
 ## 下一步
 
-1. **CI/Release 结果确认**：ci.yml / release-macos.yml / release-windows.yml（release-daemon.yml 视配置）跑绿，Windows 产物 `dumpbin` 无动态 CRT 导入闸门通过。
-2. **本地完整验收**：下载 Windows 安装包实机安装，验证 BETA-76 原生索引（管理员权限下 MFT 全盘枚举 + USN 实时监控）与 BETA-77 快速查找/深度检索双模式 + 启动预热，发现的 bug 就地修复、必要时补发 patch 版本。
-3. **changelog 补全**：`gh release edit` 按 CONVENTIONS §8 补真实 changelog（替换模板占位文案）。
-4. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
+1. **管理员权限真机验收**：以管理员身份运行 Scout，验证 native_file_index 真实可用（`available=true`）、全盘枚举/USN tail 实际耗时与延迟、quick_search 响应速度。
+2. **桌面 GUI 人工复测**：快速查找防抖下拉、Enter 切换深度检索、Escape/点击行为——开发期已用浏览器 stub 注入方式验证过逻辑，仍建议在真实安装包上人工点一遍。
+3. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
 
-**流程备忘**：桌面发版 = bump `apps/desktop/src-tauri/tauri.conf.json` + `apps/desktop/src-tauri/Cargo.toml` + `Cargo.lock` → 推 `main` → 推 `v*` tag → Release 产物完成后补真实 changelog。Windows 编带 llama 的 scoutd 使用 `scripts\build-scoutd-llama.bat`。**本机 Rust/Node 工具链路径（2026-08-20，Windows 实机）**：`cargo`/`rustc` 在 `%USERPROFILE%\.cargo\bin`、`node`/`npm` 在 `%ProgramFiles%\nodejs`、`gh` 在 `C:\Program Files\GitHub CLI`，均不在默认 PATH，需显式补全后才能跑 `cargo`/`npm`/`npx`/`gh`。
+**流程备忘**：桌面发版 = bump `apps/desktop/src-tauri/tauri.conf.json` + `apps/desktop/src-tauri/Cargo.toml` + `Cargo.lock` → 推 `main` → 推 `v*` tag → Release 产物完成后补真实 changelog。**Windows-only 代码的 cfg 分支不会被本机 Windows clippy 看到**——`#[cfg(not(windows))]` 分支的 lint 问题（未用 import、needless_return 等）只有 Linux CI 编译到该分支时才会现形，发布前无法在本机 100% 预判，需要接受 CI 红了再修一轮的可能性。Windows 编带 llama 的 scoutd 使用 `scripts\build-scoutd-llama.bat`。**本机 Rust/Node 工具链路径（2026-08-20，Windows 实机）**：`cargo`/`rustc` 在 `%USERPROFILE%\.cargo\bin`、`node`/`npm` 在 `%ProgramFiles%\nodejs`、`gh` 在 `C:\Program Files\GitHub CLI`，均不在默认 PATH，需显式补全后才能跑 `cargo`/`npm`/`npx`/`gh`。
 
 ## 阻塞 / 待用户决策
 
@@ -37,6 +36,10 @@
 ## 会话日志
 
 > 摘要 ≤5 条；更早历史见 `git log`。
+
+### 2026-08-20 — Claude Code (Sonnet 5) — v0.9.55 发版：BETA-76+77 完整提交 + CI/Release + 本地验收
+
+**承接**：用户经 `/goal` 下达"完整commit一次，并完成一轮CI和Release，并对release结果在本地进行完整验收、对验收发现的bug进行修改"，承接前两轮已提交但未 push 的 BETA-76/77。**关键决策/发现**：push 后 CI 首次红——Linux runner 真正编译到 `scout-native-index`（经 `scout-indexer` 依赖）才暴露 `record.rs` 的 USN 解析函数与 `service.rs` 的 `use crate::sys` 只在 `#[cfg(windows)]` 生产路径引用，非 Windows 编译时判定死代码/未用 import，这类 bug 本机 Windows clippy 原理上不可能发现（cfg 分支决定代码是否被编译）；用 `#![cfg_attr(not(windows), allow(dead_code))]`（带说明为何刻意跨平台保留纯函数解析测试）+ 给 `use crate::sys` 补 `#[cfg(windows)]` 修复，顺手改掉一处只在该分支可见的 `needless_return`。**产出**：版本 bump 到 v0.9.55（`538bd52`）+ CI 修复（`10e673c`）已 push；`v0.9.55` tag 触发 Release macOS/Windows，三个 workflow（CI/Release macOS/Release Windows）全绿，`dumpbin` 无动态 CRT 导入闸门通过；`gh release download` 下载真实安装包（SHA256/体积核对一致）本机静默安装、启动验证——4 个 backend 含 `native_file_index` 全部注册成功，原生索引后台预热在非管理员会话按设计优雅降级，无异常日志，稳定运行后正常退出，无 Windows 崩溃事件；`gh release edit` 补真实 changelog。**未尽事宜**：当前会话无原生桌面自动化工具、且无法交互式弹 UAC 提权，管理员权限下原生索引真实行为与桌面 GUI 快速查找下拉的人工点击复测均未覆盖，已在 STATUS「下一步」如实记录，非佯装完成。
 
 ### 2026-08-20 — Claude Code (Sonnet 5) — BETA-77：找文件双模式检索 + 启动期原生索引预热
 
@@ -49,9 +52,5 @@
 ### 2026-08-11 — Codex — BETA-75：v0.9.54 Windows/“找文件”四项缺陷收口
 
 **承接**：用户连续反馈结果清单“在文件夹中显示”定位错误、`\\?\` 路径前缀、内容匹配缺文件大小，以及其它 Windows 机器操作时 `MSVCP140.dll` 闪退，并要求完整提交、启动 CI/Release。**关键决策**：前三项在 common/path metadata 层统一修；闪退没有 crash dump，按 faulting module + release `/MD` 配置 + 仓库既有 llama native crash 证据锁定最高概率路径，同时做根因缓解（静态 CRT、去 `mtmd`）和故障隔离（常驻 helper），避免仅靠安装 VC++ Runtime 掩盖。**产出**：详见 [ROADMAP BETA-75](./ROADMAP.md)，v0.9.54 已发布，macOS/Windows 三项资产齐全，真实 changelog 已补全。**验证**：workspace fmt/clippy/build 通过；沙箱外 desktop 210/210；Windows GNU desktop feature check + model-runtime clippy 通过；llama tests 31 pass/3 ignored；synonym recall 100%/FP 0%；tsc/vite 通过；GitHub CI、Release macOS、Release Windows 全绿，`dumpbin /DEPENDENTS` 确认最终 EXE 不导入 `MSVCP*` / `VCRUNTIME*`。workspace 仅 `scoutd` 3 个既有正文读取 e2e 失败，串行复现、与本轮模块无关且远端 CI 不运行该 binary e2e。**未尽事宜**：仍需原问题 Windows 真机复测四项缺陷；无 dump 前根因结论保持“高概率”而非绝对定论。
-
-### 2026-08-09 — Claude Code (Sonnet 5) — BETA-74：桌面自动更新（提前实现 V10-04），发布 v0.9.50
-
-**承接**：用户要求给桌面端做自动更新——定期检查 GitHub 新 Release、左下角提醒、点更新后台下载静默安装、保留配置数据 MCP token、装完自动重启；随后追加要求把「自动更新」「轮询间隔」做成设置项（默认开 + 4 小时，允许关闭 + 30 分钟~24 小时可调，原始需求是 8 小时后改 4 小时）。**关键决策**：技术方案用 AskUserQuestion 向用户核实后选「轻量自研」而非 `tauri-plugin-updater`——后者需生成新签名密钥对存 GitHub secret、且要改两个 Release workflow 生成合并 `latest.json`，两个 workflow 都标 `prerelease: true` 导致 GitHub `/releases/latest` 别名不可用还得另建固定 tag 托管 manifest，工作量和对发布流水线的改动明显更大；轻量方案直接调 GitHub Releases API + 下载既有安装包静默装，不碰 CI、不需要签名密钥。走读代码发现 `nsis/uninstall-hooks.nsh` 本就有 `$UpdateMode` 守卫，静默重装本就是官方支持的原地升级路径，settings.json/index.db/models/MCP token 全部自动保留，不需要自己另写保留逻辑。**产出**：新增 `update.rs`（镜像 `model_download.rs` 既有约定：reqwest stream 下载 + 进度 event + in-flight 守卫）+ `UpdateToast.tsx`/`useAutoUpdate.ts`（左下角四态 toast）；`settings.rs` 新增 `auto_update_enabled`/`auto_update_interval_minutes`（默认开 + 240 分钟，读取 clamp [30,1440]）+ `GeneralPane.tsx` 新增开关与间隔下拉，联动禁用。bump v0.9.50，push + tag，CI/Release macOS/Release Windows 三个 workflow 全部成功，`gh release edit` 补全真实 changelog。**插曲**：release 进行中用户提出"SignPath 签名暂时搁置，disable 掉 release workflow 里的签名 action"——排查发现 SignPath 集成从未提交/推送（只是 working tree 里一份未 commit 的 120 行 diff，此前 STATUS「下一步」条目已记录留给用户），实际跑在 CI 上的 `release-windows.yml` 本就是未签名版本（committed HEAD 从未含 SignPath 引用），无需任何改动，已向用户说明并保持原状不动。**验证**：Rust 新增 12 个单测全绿（版本比较/资产平台匹配/mock GitHub 响应解析/settings 默认值与 clamp 边界），`cargo test -p scout-desktop` 211 全绿，`clippy -D warnings`/`fmt --check` 在 macOS 与 `--target x86_64-pc-windows-gnu` 两目标均净；`tsc`/`vite build` 全绿；浏览器预览注入 `window.__TAURI_INTERNALS__` invoke/事件 stub，逐一截图验证左下角提醒四态定位与交互、设置页开关联动禁用、`update_settings` 保存回传正确值；针对真实 `api.github.com/repos/huibinma/Scout/releases` 拉取核对资产命名与匹配规则一致。**未尽事宜**：自动更新「发现新版本」真实路径未做端到端真机验证（需下一个真实版本发布后用旧版本装包测）；未加「手动检查更新」按钮、也未做失败时的权限提升重试，均超出用户原始需求范围、保持最小实现；SignPath 集成仍保持未提交搁置状态，等用户重新推进证书申请后再处理。
 
 
