@@ -165,8 +165,14 @@ mod imp {
     pub fn run_dispatcher(data_dir: PathBuf) -> Result<()> {
         // 忽略 set 失败（同进程只应调用一次；重复调用是编程错误而非运行时故障）。
         let _ = DATA_DIR.set(data_dir);
-        service_dispatcher::start(SERVICE_NAME, ffi_service_main)
-            .context("向 SCM 注册 service_main 失败（本进程是否由 SCM 直接拉起？手动前台调试请直接跑今天的 --config/--root 前台模式，或先 --install-service 走正规安装再由 SCM 拉起）")
+        service_dispatcher::start(SERVICE_NAME, ffi_service_main).inspect_err(|e| {
+            // 调用方 `main()` 只把这个 Err 交给 Rust 运行时默认打印到 stderr——
+            // service 模式下 stderr 没人看。这里补一条 `tracing::error!`，让它也能
+            // 落进 `init_tracing_to_file` 已经指好的 `scoutd.log`（此时 subscriber
+            // 与 guard 均已就绪）。
+            error!(error = %e, "向 SCM 注册 service_main 失败");
+        })
+        .context("向 SCM 注册 service_main 失败（本进程是否由 SCM 直接拉起？手动前台调试请直接跑今天的 --config/--root 前台模式，或先 --install-service 走正规安装再由 SCM 拉起）")
     }
 
     fn run_service() -> Result<()> {

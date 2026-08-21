@@ -33,6 +33,14 @@ pub fn personal_bind_addr() -> SocketAddr {
 /// 保持一致（故意本地重声明一份，避免 daemon 反向依赖桌面 crate）。
 const EMBED_MODEL_FILE: &str = "embeddinggemma-300m-q8_0.gguf";
 const EMBEDDING_HF_URL: &str = "https://huggingface.co/ggml-org/embeddinggemma-300M-qat-q8_0-gguf/resolve/main/embeddinggemma-300m-qat-Q8_0.gguf?download=true";
+/// HF 主源在部分网络（尤其中国大陆）直连挂起/超时/被拦——`hf-mirror.com` 是同路径
+/// 结构的公开镜像，与桌面端 `model_download.rs::ModelKind::urls()` 同款兜底策略。
+/// `LocalSystem` 服务进程的网络路径（代理/DNS）往往不同于交互用户会话（真机反馈：
+/// 用户本人网络能连 HF，服务账户下却不通），主源必挂一次镜像更是刚需，非锦上添花。
+fn embedding_urls() -> [&'static str; 2] {
+    const MIRROR: &str = "https://hf-mirror.com/ggml-org/embeddinggemma-300M-qat-q8_0-gguf/resolve/main/embeddinggemma-300m-qat-Q8_0.gguf?download=true";
+    [EMBEDDING_HF_URL, MIRROR]
+}
 
 /// 个人模式默认数据目录：`%ProgramData%\Scout\scoutd`（Windows）；非 Windows
 /// 回退临时目录（个人模式 service 化本期只做 Windows，非 Windows 分支只为让
@@ -200,8 +208,12 @@ fn write_atomic(path: &Path, contents: &[u8]) -> Result<()> {
 
 /// 确保 embedding 模型文件存在于 `<data_dir>/models/<file>.gguf`；不存在则
 /// 同步阻塞下载（调用方已在 `spawn_blocking` 或专用线程里跑，避免占用
-/// tokio worker）。**不做镜像重试**（v1 简化，桌面端才有 HF 主源 + `hf-mirror.com`
-/// 镜像兜底那套；scoutd 首启下载失败只 warn + 退化 FTS-only，不阻塞服务启动）。
+/// tokio worker）。主源 + `hf-mirror.com` 镜像依次重试（见 [`embedding_urls`]）。
+///
+/// **下载失败不阻塞服务启动**：两个源都失败只 warn，返回目标路径本身（文件可能
+/// 不存在）——调用方（`build_personal_service`）据此继续走 FTS-only 降级路径，而
+/// 不是让整个 Windows Service 因为一次网络请求失败而无法启动。这是本函数唯一
+/// 会返回 `Err` 的分支收窄到"本地模型目录都建不出来"这类真正致命的情形。
 pub async fn ensure_embedding_model(data_dir: &Path) -> Result<PathBuf> {
     let models_dir = data_dir.join("models");
     let target = models_dir.join(EMBED_MODEL_FILE);
@@ -210,17 +222,45 @@ pub async fn ensure_embedding_model(data_dir: &Path) -> Result<PathBuf> {
     }
     std::fs::create_dir_all(&models_dir)
         .with_context(|| format!("创建模型目录失败：{}", models_dir.display()))?;
-    info!(
-        url = EMBEDDING_HF_URL,
-        "个人模式首启：本地无 embedding 模型，开始下载"
-    );
 
+    match download_embedding_model(&target).await {
+        Ok(()) => info!(path = %target.display(), "embedding 模型下载完成"),
+        Err(e) => warn!(
+            error = %e,
+            "embedding 模型下载失败（主源 + hf-mirror 均已尝试）；服务将以 FTS-only \
+             模式启动（语义召回禁用），不影响关键词检索。可稍后重启服务自动重试下载，\
+             或手动放置模型文件到：{}",
+            target.display()
+        ),
+    }
+    Ok(target)
+}
+
+/// 依次尝试 [`embedding_urls`] 的每个源，全部失败才返回 `Err`（聚合最后一个错误，
+/// 调用方只 warn 不中断，具体哪个源失败对用户没有可操作价值、不逐个保留）。
+async fn download_embedding_model(target: &Path) -> Result<()> {
     let client = reqwest::Client::builder()
         .timeout(std::time::Duration::from_secs(600))
         .build()
         .context("构造下载 HTTP client 失败")?;
+
+    let mut last_err = None;
+    for url in embedding_urls() {
+        info!(url, "个人模式首启：本地无 embedding 模型，开始下载");
+        match try_download(&client, url, target).await {
+            Ok(()) => return Ok(()),
+            Err(e) => {
+                warn!(url, error = %e, "该源下载失败，尝试下一个源（如有）");
+                last_err = Some(e);
+            }
+        }
+    }
+    Err(last_err.unwrap_or_else(|| anyhow::anyhow!("无可用下载源")))
+}
+
+async fn try_download(client: &reqwest::Client, url: &str, target: &Path) -> Result<()> {
     let resp = client
-        .get(EMBEDDING_HF_URL)
+        .get(url)
         .send()
         .await
         .context("下载模型请求失败")?
@@ -241,11 +281,10 @@ pub async fn ensure_embedding_model(data_dir: &Path) -> Result<PathBuf> {
         }
         file.flush().await.context("flush 模型文件失败")?;
     }
-    tokio::fs::rename(&tmp_path, &target)
+    tokio::fs::rename(&tmp_path, target)
         .await
         .context("重命名下载完成的模型文件失败")?;
-    info!(path = %target.display(), "embedding 模型下载完成");
-    Ok(target)
+    Ok(())
 }
 
 #[cfg(test)]

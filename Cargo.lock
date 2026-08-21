@@ -5326,7 +5326,7 @@ dependencies = [
 
 [[package]]
 name = "scout-desktop"
-version = "0.9.58"
+version = "0.9.59"
 dependencies = [
  "chrono",
  "dirs 5.0.1",
@@ -5623,6 +5623,7 @@ dependencies = [
  "tokio",
  "toml 0.8.2",
  "tracing",
+ "tracing-appender",
  "tracing-subscriber",
  "windows-service",
 ]

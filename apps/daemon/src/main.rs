@@ -58,16 +58,26 @@ fn main() -> Result<()> {
 
     let cli = Cli::parse();
 
-    init_tracing(&cli.log_level, &cli.log_format)?;
-
     // BETA-78：`service` 子命令必须**同步**调用 `service_dispatcher::start`——
     // SCM 在拉起进程后只给很短的窗口接收控制权，这一步不能等 tokio runtime
     // 起好、更不能等任何异步逻辑跑完。其余子命令 / 今天的前台模式都在各自
     // 分支里按需建 runtime。
+    //
+    // 日志目的地在这里分叉：service 模式下 stdout/stderr 没有任何东西在另一端
+    // 读——SCM 拉起的进程没有 console，Windows 也不会把它们收进事件日志。此前
+    // `service` 走的是和其它子命令一样的 stdout tracing，导致真实故障（如个人
+    // 模式首启下载 embedding 模型失败）虽然被 `error!` 记录了，这条记录却写进了
+    // 空气——这正是"服务启动失败、Windows 事件里却查不到具体原因"的根因之一。
+    // service 模式改写文件（daily 滚动，`<data_dir>\scoutd.log`），并装一个 panic
+    // hook 兜底把 panic 也落盘。
     if let Some(Command::Service { data_dir }) = &cli.command {
         let data_dir = data_dir.clone().unwrap_or_else(personal::default_data_dir);
+        let _guard = init_tracing_to_file(&data_dir, &cli.log_level);
+        install_panic_log_hook();
         return service::run_dispatcher(data_dir);
     }
+
+    init_tracing(&cli.log_level, &cli.log_format)?;
 
     match cli.command.clone() {
         Some(Command::BootstrapPersonalConfig { data_dir, roots }) => {
@@ -287,6 +297,49 @@ fn init_tracing(level: &str, format: &str) -> Result<()> {
     Ok(())
 }
 
+/// service 模式专用：日志写 `<data_dir>\scoutd.log`（daily 滚动），不写 stdout——
+/// Windows Service 进程没有 console，写 stdout 等于写进空气。镜像桌面端
+/// `apps/desktop/src-tauri/src/main.rs::init_tracing` 同款 tracing-appender 用法。
+///
+/// 返回的 `WorkerGuard` **必须**存活到进程退出（`service::run_dispatcher` 全程
+/// 阻塞在其调用栈上）——否则 worker 线程提前退出、尾部日志会丢。调用方用
+/// `let _guard = init_tracing_to_file(...)` 绑到 `main()` 的栈帧上：`return
+/// service::run_dispatcher(..)` 触发的作用域展开会在它返回后才 drop 这个 guard。
+fn init_tracing_to_file(
+    data_dir: &Path,
+    log_level: &str,
+) -> tracing_appender::non_blocking::WorkerGuard {
+    let _ = std::fs::create_dir_all(data_dir); // 失败时下方 appender 自己会报；不阻塞启动
+    let appender = tracing_appender::rolling::daily(data_dir, "scoutd.log");
+    let (file_writer, guard) = tracing_appender::non_blocking(appender);
+
+    let filter = EnvFilter::try_new(log_level).unwrap_or_else(|_| EnvFilter::new("info"));
+    let builder = tracing_subscriber::fmt()
+        .with_env_filter(filter)
+        .with_writer(file_writer)
+        .with_target(true)
+        .with_thread_ids(true)
+        .with_ansi(false); // 文件不要 ANSI 颜色码
+    if let Err(e) = builder.try_init() {
+        // 走到这说明已有 subscriber 抢先注册（理论上不会，同进程 init 一次）；
+        // stderr 在 service 模式下同样没人看，纯兜底。
+        eprintln!("[scoutd] tracing subscriber (file) init 失败：{e}");
+    }
+    guard
+}
+
+/// service 模式的 panic 兜底：默认 panic hook 只写 stderr（service 模式下等于
+/// 写进空气），这里额外把 panic 信息经 tracing 落盘（[`init_tracing_to_file`]
+/// 已把 subscriber 指到 `scoutd.log`），保证"进程为什么死了"不会比一次网络请求
+/// 失败更难查。
+fn install_panic_log_hook() {
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        tracing::error!(panic = %info, "scoutd service 进程 panic");
+        default_hook(info);
+    }));
+}
+
 /// 解析 log level 字符串到 [`LevelFilter`]。
 fn parse_log_level(level: &str) -> LevelFilter {
     match level.to_ascii_lowercase().as_str() {
@@ -311,14 +364,26 @@ async fn build_runtime_ctx(config: ServerConfig) -> Result<ServerCtx> {
     }
 
     info!(model_path = %config.model_path.display(), "加载 embedder 模型");
-    let embedder = load_embedder(&config.model_path)?;
+    // 模型文件缺失/损坏（如个人模式首启下载失败后仍以目标路径继续，见
+    // `personal::ensure_embedding_model`）不应该拖垮整个服务——降级为一个恒不可用
+    // 的 embedder，走下面既有的 `semantic_ready` 探测→FTS-only 降级路径，而不是
+    // `?` 直接终止 daemon（BETA-79 之后真机反馈：service 模式下这一步曾是唯一
+    // 会让整个 Windows Service 起不来的失败点）。
+    let embedder = load_embedder(&config.model_path).unwrap_or_else(|e| {
+        warn!(
+            error = %e,
+            model_path = %config.model_path.display(),
+            "加载 embedder 模型失败，语义召回禁用、降级为 FTS-only 运行"
+        );
+        Arc::new(UnavailableEmbedder) as Arc<dyn TextEmbedder>
+    });
 
     // reviewer M-6：默认 daemon binary 不开 llama-cpp feature → ModelDaemon 走
     // StubLoader、`embed()` 返 Err。真启动跑一次 ping probe 发 warn、让 ops
     // 立刻知道运行在 FTS-only 降级模式。
     // BETA-40 收尾：probe 结果同时决定 ① 索引期是否跑 embed pass（写
     // document_vectors）② 候选链是否装语义臂——此前二者都缺席，daemon 实为 FTS-only。
-    let semantic_ready = embedder.embed("ping").is_ok();
+    let semantic_ready = embedder.is_ready() && embedder.embed("ping").is_ok();
     if !semantic_ready {
         warn!(
             "embedder 不支持 embed()（默认 stub backend）；语义召回已禁用、\
@@ -602,6 +667,29 @@ impl TextEmbedder for DaemonEmbedder {
 
     fn model_id(&self) -> &str {
         &self.model_id
+    }
+}
+
+/// `load_embedder` 失败时的降级占位——恒 `is_ready() == false`，让候选链装配
+/// 阶段直接跳过语义臂（不进查询链），语义与"stub backend `embed()` 返 Err"一致，
+/// 但省一次必败的 `embed()` 调用。
+#[derive(Debug)]
+struct UnavailableEmbedder;
+
+impl TextEmbedder for UnavailableEmbedder {
+    fn embed(&self, _text: &str) -> Result<Vec<f32>, IndexError> {
+        Err(IndexError::Io {
+            path: "<embedder>".to_owned(),
+            detail: "embedder 模型未加载（模型文件缺失或加载失败）".to_owned(),
+        })
+    }
+
+    fn model_id(&self) -> &'static str {
+        "unavailable"
+    }
+
+    fn is_ready(&self) -> bool {
+        false
     }
 }
 
