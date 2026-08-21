@@ -161,6 +161,13 @@ fn populate_full_index(
 #[cfg(windows)]
 const POLL_INTERVAL: Duration = Duration::from_millis(500);
 
+/// 单次读失败后连续重试的上限（仅计瞬时错误，`JournalInvalidated` 不计入、
+/// 直接终止）——超过则放弃 tail 并记录终态日志，避免对一个已经彻底坏掉的卷
+/// 无限重试空转；正常瞬时 I/O 故障（网络卷抖动、句柄短暂繁忙）预期在几次
+/// 退避内自愈，一旦某次成功即清零计数（见调用处）。
+#[cfg(windows)]
+const MAX_CONSECUTIVE_TRANSIENT_FAILURES: u32 = 5;
+
 #[cfg(windows)]
 fn spawn_tail_worker(
     volume: VolumeHandle,
@@ -172,9 +179,11 @@ fn spawn_tail_worker(
     std::thread::spawn(move || {
         let mut cursor = start_usn;
         let mut buf = vec![0u8; sys::IO_BUFFER_SIZE].into_boxed_slice();
+        let mut consecutive_failures = 0u32;
         while !stop.load(Ordering::SeqCst) {
             match sys::read_usn_journal(&volume, journal_id, cursor, &mut buf) {
                 Ok((next_usn, bytes)) => {
+                    consecutive_failures = 0;
                     if bytes.is_empty() {
                         std::thread::sleep(POLL_INTERVAL);
                         continue;
@@ -196,11 +205,34 @@ fn spawn_tail_worker(
                     }
                     cursor = next_usn;
                 }
-                Err(_) => {
-                    // Journal 被删除重建（id 失效）等不可恢复错误：停止 tail，索引
-                    // 停留在最后一次成功状态（不完全但仍可用）——调用方若需要严格
+                Err(NativeIndexError::JournalInvalidated { detail }) => {
+                    // Journal 被删除重建（id 失效）：不可恢复，重试无意义，直接停止。
+                    // 索引停留在最后一次成功状态（不完全但仍可用）——调用方若需要严格
                     // 一致性应重新 `NativeIndexService::start` 触发一次全量重建。
+                    tracing::error!(
+                        detail,
+                        "USN journal 已失效，tail 线程停止；索引停留在最后一次成功状态，\
+                         需重新全量重建才能恢复实时增量"
+                    );
                     break;
+                }
+                Err(e) => {
+                    consecutive_failures += 1;
+                    if consecutive_failures >= MAX_CONSECUTIVE_TRANSIENT_FAILURES {
+                        tracing::error!(
+                            error = %e,
+                            consecutive_failures,
+                            "USN journal 读取连续失败超过上限，tail 线程放弃重试并停止；\
+                             索引停留在最后一次成功状态"
+                        );
+                        break;
+                    }
+                    tracing::warn!(
+                        error = %e,
+                        consecutive_failures,
+                        "USN journal 读取失败（判定为瞬时错误），退避后重试"
+                    );
+                    std::thread::sleep(POLL_INTERVAL);
                 }
             }
         }

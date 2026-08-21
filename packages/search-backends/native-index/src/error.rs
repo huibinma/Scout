@@ -26,6 +26,16 @@ pub enum NativeIndexError {
         detail: String,
     },
 
+    /// USN Journal 已失效（被删除重建、正在删除中等）——旧 `journal_id` 永久
+    /// 读取失败，与瞬时 I/O 错误不同，重试无意义，唯一恢复手段是重新
+    /// `query_usn_journal` 拿新 id 并触发一次全量重建。与 [`Self::Ioctl`] 区分
+    /// 开是为了让 [`crate::service`] 的 tail 线程能分类处理（见该模块文档）。
+    #[error("USN journal 已失效（{detail}），需要重新全量重建")]
+    JournalInvalidated {
+        /// 底层 Win32 错误描述。
+        detail: String,
+    },
+
     /// 路径不含合法本地盘符（如 UNC 网络路径），无法定位所属卷。
     #[error("路径 {0:?} 不含本地盘符，无法定位所属卷")]
     NoLocalDrive(std::path::PathBuf),

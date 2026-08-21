@@ -13,7 +13,10 @@ use std::os::windows::ffi::OsStrExt;
 use std::path::Path;
 
 use windows::core::PCWSTR;
-use windows::Win32::Foundation::{CloseHandle, ERROR_HANDLE_EOF, ERROR_MORE_DATA, HANDLE};
+use windows::Win32::Foundation::{
+    CloseHandle, ERROR_HANDLE_EOF, ERROR_JOURNAL_DELETE_IN_PROGRESS, ERROR_JOURNAL_ENTRY_DELETED,
+    ERROR_JOURNAL_NOT_ACTIVE, ERROR_MORE_DATA, HANDLE,
+};
 use windows::Win32::Storage::FileSystem::{
     CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_READ, FILE_SHARE_READ, FILE_SHARE_WRITE,
     OPEN_EXISTING,
@@ -207,6 +210,11 @@ pub(crate) fn read_usn_journal<'buf>(
         // ERROR_MORE_DATA：缓冲区被填满但仍有更多数据——调用方按返回的记录处理后
         // 用新 start_usn 继续读即可，不是错误（与 EOF 语义不同，这里仍有有效负载）。
         if e.code() != ERROR_MORE_DATA.to_hresult() {
+            if is_journal_invalidated(&e) {
+                return Err(NativeIndexError::JournalInvalidated {
+                    detail: e.to_string(),
+                });
+            }
             return Err(NativeIndexError::Ioctl {
                 operation: "FSCTL_READ_USN_JOURNAL",
                 detail: e.to_string(),
@@ -220,6 +228,18 @@ pub(crate) fn read_usn_journal<'buf>(
     let next_usn = i64::from_ne_bytes(buf[0..8].try_into().unwrap_or([0; 8]));
     let records = &buf[8..returned as usize];
     Ok((next_usn, records))
+}
+
+/// 判断 `FSCTL_READ_USN_JOURNAL` 失败是否属于"journal 已失效"——被删除、
+/// 正在删除、或其记录已被裁剪，均意味着旧 `journal_id`/游标永久不可用，
+/// 与瞬时 I/O 错误（网络卷抖动、句柄暂时繁忙等，重试通常能恢复）性质不同。
+/// 调用方（[`crate::service`] 的 tail 线程）据此决定"直接停止待全量重建"还是
+/// "退避重试几次"。
+fn is_journal_invalidated(e: &windows::core::Error) -> bool {
+    let code = e.code();
+    code == ERROR_JOURNAL_DELETE_IN_PROGRESS.to_hresult()
+        || code == ERROR_JOURNAL_NOT_ACTIVE.to_hresult()
+        || code == ERROR_JOURNAL_ENTRY_DELETED.to_hresult()
 }
 
 /// 从 `\\?\C:\...` / `C:\...` 形式的绝对路径取盘符（大写）。非绝对路径 /
@@ -246,5 +266,32 @@ mod tests {
         assert_eq!(drive_letter_of(Path::new(r"\\?\D:\x")), Some('D'));
         assert_eq!(drive_letter_of(Path::new(r"\\server\share\x")), None);
         assert_eq!(drive_letter_of(Path::new("relative")), None);
+    }
+
+    #[test]
+    fn journal_invalidated_recognizes_all_three_terminal_codes() {
+        for code in [
+            ERROR_JOURNAL_DELETE_IN_PROGRESS,
+            ERROR_JOURNAL_NOT_ACTIVE,
+            ERROR_JOURNAL_ENTRY_DELETED,
+        ] {
+            let err = windows::core::Error::from_hresult(code.to_hresult());
+            assert!(
+                is_journal_invalidated(&err),
+                "{code:?} 应被判定为 journal 已失效"
+            );
+        }
+    }
+
+    #[test]
+    fn journal_invalidated_rejects_transient_io_errors() {
+        // 任取几个与 journal 失效无关的错误码，代表典型瞬时 I/O 故障。
+        for code in [ERROR_HANDLE_EOF, ERROR_MORE_DATA] {
+            let err = windows::core::Error::from_hresult(code.to_hresult());
+            assert!(
+                !is_journal_invalidated(&err),
+                "{code:?} 不应被误判为 journal 已失效"
+            );
+        }
     }
 }

@@ -23,9 +23,8 @@
 
 1. **v0.9.59 真机验证**：请用户重新安装真机验证 `Scoutd` 服务能否自启动 Running、手动"启动"是否成功；若仍失败，检查本轮新增的 `%ProgramData%\Scout\scoutd\scoutd.log` 并反馈内容以便继续诊断。
 2. **connection.json ACL 加固**（BETA-79 评审发现，未修）：明文 admin token 当前继承 `%ProgramData%` 默认 ACL，本机任意标准用户可读；正确修法需按装机时的交互用户 SID 精确授权（简单粗暴的"仅 SYSTEM+Administrators"方案会因 UAC token 过滤反而连桌面客户端自己都读不到，已验证过不可行），需要真实多用户/提权环境验证。
-3. **USN tail 线程健壮性**（BETA-79 评审发现，未修）：遇任意错误永久停止且无日志，索引会静默停留在旧快照；需要错误分类（journal 失效 vs 瞬时 I/O）+ 可观测性。
-4. **BETA-78 后续任务**：本地 reindex 循环 / `mcp_service.rs` / 设置页 roots 编辑迁移到调用 scoutd；desktop 原生窗口人工点击复测。
-5. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
+3. **BETA-78 后续任务**：本地 reindex 循环 / `mcp_service.rs` / 设置页 roots 编辑迁移到调用 scoutd；desktop 原生窗口人工点击复测。
+4. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
 
 **流程备忘**：桌面发版 = bump `apps/desktop/src-tauri/tauri.conf.json` + `apps/desktop/src-tauri/Cargo.toml` + `Cargo.lock` → 推 `main` → 推 `v*` tag → Release 产物完成后补真实 changelog。**Windows-only 代码的 cfg 分支不会被本机 Windows clippy 看到**——`#[cfg(not(windows))]` 分支的 lint 问题只有 Linux CI 编译到该分支时才会现形。Windows 编带 llama 的 scoutd 用 `scripts\build-scoutd-llama.bat`（本机开发态）；CI release-windows.yml 现在也会编一份带 llama-cpp 的 scoutd.exe 打进桌面安装包（BETA-78）。**本机 Rust/Node 工具链路径（2026-08-20，Windows 实机）**：`cargo`/`rustc` 在 `%USERPROFILE%\.cargo\bin`、`node`/`npm` 在 `%ProgramFiles%\nodejs`、`gh` 在 `C:\Program Files\GitHub CLI`，均不在默认 PATH，需显式补全后才能跑 `cargo`/`npm`/`npx`/`gh`。
 
@@ -38,6 +37,10 @@
 ## 会话日志
 
 > 摘要 ≤5 条；更早历史见 `git log`。
+
+### 2026-08-21 — Claude Code (Sonnet 5) — BETA-81：USN tail 线程错误分类 + 可观测性
+
+**承接**：v0.9.59 已发布、等待用户真机验证 BETA-80 修复期间，鉴于 `/goal` 原文"彻底检查Windows Scout Service的问题"覆盖范围不止服务启动本身，顺带处理 BETA-79 评审已记录但未修的另一项发现：`spawn_tail_worker`（`packages/search-backends/native-index/src/service.rs`）遇任意 `read_usn_journal` 错误一律永久 `break` 且零日志，journal 真失效（不可恢复）与瞬时 I/O 抖动（该重试）被同等对待。**修复**：`NativeIndexError` 新增 `JournalInvalidated` 变体；`sys::read_usn_journal` 新增 `is_journal_invalidated` 分类函数，精确识别 `ERROR_JOURNAL_DELETE_IN_PROGRESS`/`ERROR_JOURNAL_NOT_ACTIVE`/`ERROR_JOURNAL_ENTRY_DELETED` 三个 Win32 错误码；tail 线程据此分流——journal 失效直接 `tracing::error!` 后停止（语义不变，只是从静默变可观测），其余错误退避重试、连续失败 5 次才放弃并记终态日志。新增 `tracing` 依赖到该 crate。**验证**：`is_journal_invalidated` 用 `windows::core::Error::from_hresult` 构造合成错误码单测覆盖，不需要真实 USN Journal 环境即可在本机（真实 Windows 11，非交叉编译）跑通；`scout-native-index` 30→31 单测；workspace `check/clippy -D warnings/fmt --check/test` 全绿。详见 [ROADMAP BETA-81](./ROADMAP.md)。**未尽事宜**：退避重试上限/判定边界为保守默认值，未在真实抖动场景校准；放弃 tail 后不会自动触发全量重建，仍需手动重启服务。
 
 ### 2026-08-21 — Claude Code (Sonnet 5) — BETA-80：修复 v0.9.58 真机反馈的 Scoutd 服务启动失败
 
