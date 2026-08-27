@@ -591,7 +591,11 @@ pub struct GgufCandidate {
 #[serde(rename_all = "snake_case")]
 pub enum ScanBackend {
     /// Windows 内置原生索引（MFT 枚举 + USN Journal 全盘发现，最快最全，
-    /// 零安装但需管理员权限）。
+    /// 零安装但需管理员权限）。**注意**：与 `search.native_file_index`
+    /// 搜索后端不同，本发现功能是桌面进程内直接调用 `scout_native_index`
+    /// （未经 BETA-78 的 scoutd 服务代理），因此这里的「需管理员权限」在桌面
+    /// 进程本身不提权运行时是真实限制，不要与已经服务化、不再需要桌面进程
+    /// 提权的主搜索路径混为一谈（审计发现，2026-08-25）。
     NativeFileIndex,
     /// Windows 自带 `SystemIndex`，零安装，但只覆盖系统「索引选项」纳入的目录。
     WindowsSearch,

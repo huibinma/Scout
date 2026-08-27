@@ -32,6 +32,11 @@ const USN_REASON_FILE_DELETE: u32 = 0x0000_0200;
 #[derive(Debug)]
 pub struct NativeIndexService {
     drive_letter: char,
+    /// 启动时刻的卷序列号快照（`GetVolumeInformationW`），`None` 表示非 Windows
+    /// 平台或查询失败。供 [`crate::Manager::service_for`] 判断缓存的服务实例是否
+    /// 仍对应同一物理卷——物理卷更换（如 U 盘拔出后另一设备复用同一盘符）后
+    /// 序列号会变化，据此失效重建，避免向调用方返回属于旧卷的陈旧结果。
+    volume_serial: Option<u32>,
     index: Arc<RwLock<MemIndex>>,
     stop: Arc<AtomicBool>,
     worker: Option<JoinHandle<()>>,
@@ -56,6 +61,7 @@ impl NativeIndexService {
         {
             let volume = sys::open_volume(drive_letter)?;
             let journal = sys::query_usn_journal(&volume)?;
+            let volume_serial = sys::volume_serial(drive_letter);
 
             let mut index = MemIndex::new();
             populate_full_index(&volume, &mut index)?;
@@ -72,6 +78,7 @@ impl NativeIndexService {
 
             Ok(Self {
                 drive_letter,
+                volume_serial,
                 index,
                 stop,
                 worker: Some(worker),
@@ -83,6 +90,12 @@ impl NativeIndexService {
     #[must_use]
     pub const fn drive_letter(&self) -> char {
         self.drive_letter
+    }
+
+    /// 启动时刻捕获的卷序列号快照，见字段文档。
+    #[must_use]
+    pub const fn volume_serial(&self) -> Option<u32> {
+        self.volume_serial
     }
 
     /// 当前索引记录数（近似值——读锁获取瞬间的快照，后台线程可能同时在写）。

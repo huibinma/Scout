@@ -1,6 +1,7 @@
 // 快速入门 Windows 独有步骤：内置原生文件索引（MFT 枚举 + USN Journal）检测。
-// 重构：不再集成外部 Everything（es.exe），改用内置服务，无需安装——唯一前置条件是
-// Scout 需以管理员权限运行（Win32 打开 NTFS 卷句柄的硬性要求）。
+// 重构：不再集成外部 Everything（es.exe），改用内置服务，无需安装。BETA-78 后
+// 索引跑在后台 scoutd 服务（LocalSystem 常驻，能读 NTFS MFT），桌面本身是非管理员
+// 瘦客户端——「可用」= 是否连上 scoutd，与桌面进程自身的权限无关。
 // 复用 `get_backend_status`（后端已注册 search.native_file_index），前端 filter 判 is_available。
 import React, { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -18,7 +19,7 @@ export interface NativeIndexCheckStepProps {
 }
 
 export const NativeIndexCheckStep: React.FC<NativeIndexCheckStepProps> = () => {
-  // null = 首次加载中；true = 可用；false = 不可用（多半是未以管理员权限运行）。
+  // null = 首次加载中；true = 可用；false = 不可用（后台服务 Scoutd 尚未连接）。
   const [available, setAvailable] = useState<boolean | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -87,8 +88,8 @@ export const NativeIndexCheckStep: React.FC<NativeIndexCheckStepProps> = () => {
         变更日志，无需安装第三方软件），能加速<strong>按文件名找文件</strong>、
         并在 Windows 索引未覆盖的路径下兜底（如 <code>%TEMP%</code>、外接盘）。
         <span style={{ color: "var(--status-warn-fg)" }}>
-          当前不可用，最常见原因是 Scout 未以管理员权限运行——这是 Windows
-          系统本身的要求，不影响语义/关键词搜索照常使用。
+          当前不可用，后台服务 Scoutd 尚未连接——可能是刚装好还在启动，
+          稍等片刻会自动重连；不影响语义/关键词搜索照常使用。
         </span>
       </p>
 
@@ -102,8 +103,8 @@ export const NativeIndexCheckStep: React.FC<NativeIndexCheckStepProps> = () => {
           lineHeight: 1.55,
         }}
       >
-        右键 Scout 图标 →「以管理员身份运行」，或在设置里重启前先临时以管理员权限
-        启动一次；本步可跳过，不影响后续引导。
+        若长时间仍未连接，可打开「服务」（services.msc）确认「Scout
+        后台索引与检索服务」是否在运行；本步可跳过，不影响后续引导。
       </div>
 
       <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>

@@ -43,6 +43,13 @@ mod sys {
         let letter = chars.next()?.to_ascii_uppercase();
         (letter.is_ascii_alphabetic() && chars.next() == Some(':')).then_some(letter)
     }
+
+    /// 非 Windows 平台没有卷序列号概念——`NativeIndexService::start` 在这些平台
+    /// 上恒失败，`Manager` 缓存里不会有需要判活的 `Some` 条目，此函数只是让
+    /// `service_for` 能跨平台编译，返回值本身不参与任何决策。
+    pub(crate) const fn volume_serial(_drive_letter: char) -> Option<u32> {
+        None
+    }
 }
 
 pub mod backend;
@@ -69,9 +76,24 @@ impl Manager {
         INSTANCE.get_or_init(Manager::default)
     }
 
+    /// 按需返回指定盘符的索引服务，命中缓存前先核对卷身份（[`volume_identity_unchanged`]）——
+    /// 物理卷更换（如 U 盘拔出后另一设备复用同一盘符）后旧的 `NativeIndexService`
+    /// 仍指向已经不存在的卷，若不失效重建，会向调用方静默返回属于旧卷的陈旧结果。
+    /// 只对"曾经启动成功"的缓存条目做这层核对；"启动失败"（多为无管理员权限/非
+    /// NTFS，进程生命周期内通常不变）的 `None` 条目维持原"永久缓存"行为不变。
     fn service_for(&self, drive_letter: char) -> Option<Arc<NativeIndexService>> {
+        let current_serial = sys::volume_serial(drive_letter);
         if let Some(existing) = self.services.read().ok()?.get(&drive_letter) {
-            return existing.clone();
+            match existing {
+                Some(svc) if volume_identity_unchanged(svc.volume_serial(), current_serial) => {
+                    return Some(Arc::clone(svc));
+                }
+                Some(_) => {
+                    // 序列号与缓存时不同：卷已更换，落到下面重新 start 一份新索引，
+                    // 覆盖旧缓存条目。
+                }
+                None => return None,
+            }
         }
         let started = NativeIndexService::start(drive_letter).ok().map(Arc::new);
         if let Ok(mut map) = self.services.write() {
@@ -133,6 +155,17 @@ impl Manager {
         Self::known_drives()
             .into_iter()
             .any(|letter| self.service_for(letter).is_some())
+    }
+}
+
+/// 判断缓存的卷身份是否仍与当前一致：序列号不同即视为"物理卷已更换"。任一次
+/// 查询失败（`None`，如瞬时 I/O 故障）时保守地视为未变——避免单次查询失败就
+/// 误判缓存失效、频繁重建索引；真正的卷更换会在序列号双方都查询成功时被
+/// 稳定检测到（下一次查询通常就会成功）。
+fn volume_identity_unchanged(cached: Option<u32>, current: Option<u32>) -> bool {
+    match (cached, current) {
+        (Some(a), Some(b)) => a == b,
+        _ => true,
     }
 }
 
@@ -203,6 +236,27 @@ mod tests {
     #[test]
     fn drive_letter_of_extracts_plain_path() {
         assert_eq!(drive_letter_of(Path::new(r"C:\a\b")), Some('C'));
+    }
+
+    #[test]
+    fn volume_identity_unchanged_same_serial_is_unchanged() {
+        assert!(volume_identity_unchanged(Some(42), Some(42)));
+    }
+
+    #[test]
+    fn volume_identity_unchanged_different_serial_is_changed() {
+        // 核心回归场景：物理卷更换后同一盘符的序列号不同，必须判定为"已变"，
+        // 让 `Manager::service_for` 重建索引而不是继续把旧卷的缓存结果当新卷用。
+        assert!(!volume_identity_unchanged(Some(42), Some(99)));
+    }
+
+    #[test]
+    fn volume_identity_unchanged_missing_reading_is_conservative() {
+        // 任一次查询失败时保守地视为"未变"，不能因为一次瞬时查询失败就误判卷
+        // 已更换、频繁重建索引。
+        assert!(volume_identity_unchanged(None, Some(1)));
+        assert!(volume_identity_unchanged(Some(1), None));
+        assert!(volume_identity_unchanged(None, None));
     }
 
     #[cfg(not(windows))]

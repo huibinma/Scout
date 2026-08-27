@@ -253,8 +253,10 @@ export function SemanticPane({
           扫描本机已有的 gguf 模型文件，选用后回填到下方「语义 / 生成模型路径覆盖」——
           用于切换到更强的本地模型或局域网可信模型。请自行确认所选模型与用途匹配
           （embedding 模型用于语义、生成模型用于复杂查询解析）。按可用性依次尝试
-          内置原生索引（Windows，全盘扫描，需管理员权限）→ Windows 搜索（Windows
-          自带，仅覆盖系统索引范围）→ Spotlight（macOS 自带，默认全盘扫描）。
+          内置原生索引（Windows，桌面进程直接扫描，全盘但需要 Scout 本身以管理员权限
+          运行——与主搜索不同，这一项自动发现功能暂未经后台服务代理）→ Windows
+          搜索（Windows 自带，仅覆盖系统索引范围）→ Spotlight（macOS 自带，默认全盘
+          扫描）。
         </p>
         <button
           type="button"
@@ -266,16 +268,17 @@ export function SemanticPane({
         </button>
         {discovered && discovered.backend === "none" && (
           <p className="prefs-hint status-text-warn">
-            当前不可用：Windows 上内置原生索引不可用（多半未以管理员权限运行）
-            且拿不到系统搜索服务；非 Windows/macOS 平台无自动发现能力。请在下方
-            手动浏览选择模型文件。
+            当前不可用：Windows 上该发现功能需要 Scout 本身以管理员权限运行才能扫描
+            内置原生索引，且拿不到系统搜索服务兜底；非 Windows/macOS 平台无自动发现
+            能力。这不影响正常搜索——只影响这个「扫一遍全盘找模型文件」的便利功能。
+            请在下方手动浏览选择模型文件。
           </p>
         )}
         {discovered && discovered.backend === "windows_search" && (
           <p className="prefs-hint status-text-warn">
             经 Windows 搜索扫描——只覆盖系统「索引选项」纳入的目录，不在索引范围内的
-            文件（如另一块盘、临时下载目录）扫不到；以管理员权限运行 Scout 启用
-            内置原生索引可获得全盘覆盖。
+            文件（如另一块盘、临时下载目录）扫不到；以管理员权限运行 Scout 本身可让
+            这个发现功能改用全盘覆盖的内置原生索引（仅影响本功能，不影响正常搜索）。
           </p>
         )}
         {discovered && discovered.backend !== "none" && discovered.candidates.length === 0 && (

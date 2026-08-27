@@ -56,9 +56,18 @@ export const StatusIndicator: React.FC = () => {
     return <div className="backend-loading">正在检查…</div>;
   }
 
+  // 顶栏「本机服务」只做最扼要的总览，不需要把每个内部 backend 都摆出来——
+  // `search.native_file_index`（内置原生索引）是"本地索引"/"语义召回"背后
+  // 共享的同一个 scoutd 连接，且它是可关闭的加速项而非独立能力，跟其余三个
+  // 摆在一起会显得冗余；其可用性检测已经有专门位置（设置页「内置原生索引」
+  // 面板 + 快速入门第 2 步），此处过滤掉，不重复展示。
+  const visibleBackends = backends.filter(
+    (backend) => backend.id !== "search.native_file_index",
+  );
+
   return (
     <div className="backend-status-list">
-      {backends.map((backend) => {
+      {visibleBackends.map((backend) => {
         let dotColor = "var(--status-neutral)"; // Default gray (unavailable)
         let statusText = "不可用";
 

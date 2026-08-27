@@ -7,24 +7,26 @@
 ## 📍 速览
 
 - **阶段**：B（Beta）进行中；P ✅ / M 代码层 ✅，M→B 正式切换仍待 [ROADMAP §8](./ROADMAP.md) 长周期项；总体 parser-only evals 已达 99.4%（994/6/0、fail=0）。
-- **版本**：**v0.9.59 已发布**（CI/Release macOS/Release Windows 三个 workflow 全绿，`gh release edit` 已补真实 changelog）——BETA-80 修复 v0.9.58 真机反馈的 Scoutd 服务启动失败问题，待用户真机验证。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
+- **版本**：**v0.9.60 发布中**（BETA-82 三路评审修复，用户已确认提交并要求走一轮 CI/Release）；v0.9.59 待用户真机验证 Scoutd 服务能否正常自启动（v0.9.60 新增的 SCM 失败恢复策略同样待真机验证）。仓库：[github.com/huibinma/Scout](https://github.com/huibinma/Scout)（public，完整历史归档于 private 的 `huibinma/scout-archive`）。
 - **定位**：开源免费（MIT）本地语义检索底座——**面向 agent 的本地文件搜索工具**（经 MCP 接入 Claude Code / Codex 等），同时提供桌面应用供人直接使用；不做分析层，分析经 MCP daemon + 外部 LLM 组合。口号 **Deep Local Search**。以 [PROJECT.md](./PROJECT.md) 为准。
-- **当前 task**：**BETA-80 已完成并随 v0.9.59 发布，待用户真机验证**——详见下方「当前 Task」节。
-- **下一步 top-3**：① 用户重装 v0.9.59 真机验证 `Scoutd` 服务能否自启动/手动启动成功（若仍失败，检查新增的 `%ProgramData%\Scout\scoutd\scoutd.log` 并反馈内容以便继续诊断）；② connection.json 明文 token 的 ACL 加固（需按装机用户 SID 精确授权，需真机多用户环境验证，本会话条件不具备）；③ 继续 BETA-64~75 真机验证积压。
-- **阻塞**：无；Class A 仅剩双平台 evals 真机 + BETA-80 v0.9.59 真机装机验证。
+- **当前 task**：**BETA-82 已提交，v0.9.60 发布流程进行中**——详见下方「当前 Task」节。
+- **下一步 top-3**：① 确认 CI/Release Windows/macOS 三个 workflow 全绿，补真实 changelog；② 用户重装真机验证 v0.9.60（`Scoutd` 服务自启动/崩溃自愈、物理卷更换后索引重建、设置页检测文案）；③ connection.json 明文 token 的 ACL 加固（仍未修，需真机多用户/提权环境）。
+- **阻塞**：无；Class A 仅剩双平台 evals 真机 + v0.9.60 改动的真机验证（服务崩溃自愈、卷更换后索引重建）。
 
 ## 当前 Task
 
-**2026-08-21（最新，Claude Code (Sonnet 5)）— BETA-80：修复 v0.9.58 真机反馈的 Scoutd 服务启动失败（已正确注册但拉不起来、Windows 事件无具体错误）**
+**2026-08-25（最新，Claude Code (Sonnet 5)）— BETA-82：用户 `/goal` 驱动的三路深度评审（对照 Everything 完整性 / scoutd 启动阻塞 / Desktop UI 梳理）**
 
-用户经 `/goal` 下达真机反馈："v0.9.58 真机测试windows服务拉起失败，'Scout 后台索引与检索服务'已正确注册、但启动失败，手动拉起也失败，在Windows Events中未找到具体的错误信息。彻底检查Windows Scout Service的问题、确保安装后服务可以正常自启动。"会话开始 `git status` 时发现 `apps/daemon/src/{main.rs,service.rs,personal.rs}` 已有一份**未提交**的本地改动（推测是上一轮真机反馈后诊断到一半、未收尾提交就结束的会话遗留）——诊断结论与本次症状高度吻合：v0.9.58 实际发布版里 `load_embedder(&config.model_path)` 用硬 `?`，个人模式首次启动要下载约 300MB embedding 模型，`LocalSystem` 服务账户网络路径常与交互用户会话不同、下载更易失败，一旦失败直接终止整个 service_main；而 service 模式当时的 tracing 只写 stdout——Windows Service 进程没有 console，真实报错完整丢失，只剩"启动失败、事件查看器无具体信息"。**本轮工作**：补完+验证这份遗留改动（file-based tracing 到 `<data_dir>\scoutd.log` + panic hook 兜底、embedder 加载失败降级 `UnavailableEmbedder` 而非 `?` 终止、embedding 下载增加 `hf-mirror.com` 镜像兜底）；新增 `run_dispatcher` 的 SCM 握手失败分支也补 `tracing::error!`；修复遗留代码里 3 处 clippy 违规（这正是此前未提交的原因之一）。**验证**：workspace `cargo check/clippy --all-targets -D warnings/fmt --check/test` 全绿（仅 `scout-platform-macos` 2 个既有失败，`git stash` 确认在干净 HEAD 上同样失败，与本轮无关）。bump 到 v0.9.59 → 用户确认后 push main + tag → CI/Release macOS/Release Windows 三个 workflow 全绿（Windows 23m、macOS 8m）→ `gh release edit` 补真实 changelog（含根因说明 + `scoutd.log` 排查指引）。详见 [ROADMAP BETA-80](./ROADMAP.md)。
+并行派发三个子会话独立评审+验证，本会话逐项复核 diff 并独立重跑 build/clippy/fmt/test 确认无回归后收口。**① native-index**：修复真实 bug——`Manager.services` 按盘符永久缓存，物理卷更换（如 U 盘拔出后另一设备复用同一盘符）后旧索引不失效，改为命中缓存前核对 `GetVolumeInformationW` 卷序列号，不一致则重建；新发现 journal 失效后无自动重建（tail 线程停但缓存条目仍被当"可用"返回，索引静默冻结），记录为后续任务未修；确认 BETA-81 的 USN 错误分类修复仍生效，BETA-79 的 connection.json ACL 缺口仍未修。**② scoutd 启动**：新增 SCM 失败恢复策略（崩溃后 10s/30s 自动重启，此前完全未配置、崩溃后只能等下次开机）；修复 `run_service` 恒报成功 exit code 给 SCM 的问题（失败时正确上报非零，配合恢复策略才能被识别为一次失败）；`load_embedder` 补齐 `spawn_blocking`（避免阻塞 checkpoint ticker 所在 worker 线程）；确认 SCM 30s 超时 checkpoint 机制与"MFT 全量枚举不在启动同步路径"均设计自洽。NSIS 安装器吞掉 `install-service` 失败返回码——记录建议未修（需 NSIS 工具链验证）。**③ Desktop UI**：修复核心 bug——设置页/快速入门检测「内置原生索引」可用性的命令仍在**桌面进程自己**内探测管理员权限（BETA-78 之前的判据），桌面进程按新架构设计恒无管理员权限，导致长期误报"不可用"并指导用户做无效操作；改为消费 `service_connection_status`（scoutd 连接态，与实际可用性语义一致）。「自动发现本机模型」功能确认仍是桌面进程内直接探测（未经 scoutd 代理，功能上"需管理员权限"仍真实存在）——本轮只改文案不改功能，避免误导性建议扩散到主搜索但也不假装问题已解决。**验证**：`cargo fmt --all --check`/`clippy --workspace --all-targets -D warnings`/`check --workspace --all-targets` 全绿；`scout-native-index`（36 测试）、`scoutd`（25 测试）单独全绿；`cargo test --workspace` 210 passed，唯一失败（`mcp_service::bind_with_retry_recovers_after_port_frees`）隔离重跑后通过，确认是既有端口竞态 flaky test、与本轮无关；桌面 `tsc --noEmit` 全绿。详见 [ROADMAP BETA-82](./ROADMAP.md)。**追加**：用户直接反馈顶栏「本机服务」面板列出 NativeFileIndex 与其余三项冗余，改为渲染前过滤掉该行（纯显示层，不动 backend 注册/开关逻辑）。**发布**：用户确认后 bump 到 v0.9.60，提交 + push main + tag，CI/Release 进行中。
 
 ## 下一步
 
-1. **v0.9.59 真机验证**：请用户重新安装真机验证 `Scoutd` 服务能否自启动 Running、手动"启动"是否成功；若仍失败，检查本轮新增的 `%ProgramData%\Scout\scoutd\scoutd.log` 并反馈内容以便继续诊断。
-2. **connection.json ACL 加固**（BETA-79 评审发现，未修）：明文 admin token 当前继承 `%ProgramData%` 默认 ACL，本机任意标准用户可读；正确修法需按装机时的交互用户 SID 精确授权（简单粗暴的"仅 SYSTEM+Administrators"方案会因 UAC token 过滤反而连桌面客户端自己都读不到，已验证过不可行），需要真实多用户/提权环境验证。
-3. **BETA-78 后续任务**：本地 reindex 循环 / `mcp_service.rs` / 设置页 roots 编辑迁移到调用 scoutd；desktop 原生窗口人工点击复测。
-4. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
+1. **用户确认本会话改动**：审阅 `git diff` 后决定是否提交、是否需要 bump 版本发布。
+2. **真机验证 BETA-82 改动**：`Scoutd` 服务崩溃后能否按新配置的恢复策略自动重启；物理卷更换（如拔插 U 盘复用盘符）后内置原生索引是否正确重建而非返回旧卷陈旧结果；设置页「内置原生索引」检测是否正确反映 scoutd 连接态而非再误报"需管理员权限"。
+3. **connection.json ACL 加固**（BETA-79 评审发现，仍未修）：明文 admin token 当前继承 `%ProgramData%` 默认 ACL，本机任意标准用户可读；正确修法需按装机时的交互用户 SID 精确授权（简单粗暴的"仅 SYSTEM+Administrators"方案会因 UAC token 过滤反而连桌面客户端自己都读不到，已验证过不可行），需要真实多用户/提权环境验证。
+4. **BETA-82 记录的后续项**：journal 失效自动重建（native-index）、桌面-scoutd 连接状态专门 UI（区分"启动中"与"确实挂了"）、NSIS 安装失败用户可见提示。
+5. **BETA-78 后续任务**：本地 reindex 循环 / `mcp_service.rs` / 设置页 roots 编辑迁移到调用 scoutd；desktop 原生窗口人工点击复测。
+6. **真机验证积压（BETA-64~75）**：按各 ROADMAP 卡片清单走查。
 
 **流程备忘**：桌面发版 = bump `apps/desktop/src-tauri/tauri.conf.json` + `apps/desktop/src-tauri/Cargo.toml` + `Cargo.lock` → 推 `main` → 推 `v*` tag → Release 产物完成后补真实 changelog。**Windows-only 代码的 cfg 分支不会被本机 Windows clippy 看到**——`#[cfg(not(windows))]` 分支的 lint 问题只有 Linux CI 编译到该分支时才会现形。Windows 编带 llama 的 scoutd 用 `scripts\build-scoutd-llama.bat`（本机开发态）；CI release-windows.yml 现在也会编一份带 llama-cpp 的 scoutd.exe 打进桌面安装包（BETA-78）。**本机 Rust/Node 工具链路径（2026-08-20，Windows 实机）**：`cargo`/`rustc` 在 `%USERPROFILE%\.cargo\bin`、`node`/`npm` 在 `%ProgramFiles%\nodejs`、`gh` 在 `C:\Program Files\GitHub CLI`，均不在默认 PATH，需显式补全后才能跑 `cargo`/`npm`/`npx`/`gh`。
 
@@ -38,6 +40,10 @@
 
 > 摘要 ≤5 条；更早历史见 `git log`。
 
+### 2026-08-25 — Claude Code (Sonnet 5) — BETA-82：三路深度评审（对照 Everything / scoutd 启动 / Desktop UI）
+
+**承接**：用户经 `/goal` 下达"做3个深度Review和优化"，覆盖对照 Everything 的完整性审计、scoutd 服务启动阻塞排查、Desktop UI 梳理。**方法**：三方向并行派发子会话独立评审+验证，本会话逐项复核 diff 并独立重跑 `fmt`/`clippy -D warnings`/`check`/`test` 确认无回归。**产出**（均属真实缺陷非文案问题，详见 [ROADMAP BETA-82](./ROADMAP.md)）：native-index 修复物理卷更换后陈旧缓存不失效；scoutd 新增 SCM 失败恢复策略（崩溃后 10s/30s 自动重启）+ 修复恒报成功 exit code；Desktop 修复"内置原生索引可用性检测"仍探测桌面进程自身管理员权限（BETA-78 前的过期判据）导致长期误导用户的核心 bug。**未尽事宜**：connection.json ACL、journal 失效自动重建、连接状态专门 UI、NSIS 失败提示——均记录未做；本会话改动尚未 bump 版本/提交，待用户确认。
+
 ### 2026-08-21 — Claude Code (Sonnet 5) — BETA-81：USN tail 线程错误分类 + 可观测性
 
 **承接**：v0.9.59 已发布、等待用户真机验证 BETA-80 修复期间，鉴于 `/goal` 原文"彻底检查Windows Scout Service的问题"覆盖范围不止服务启动本身，顺带处理 BETA-79 评审已记录但未修的另一项发现：`spawn_tail_worker`（`packages/search-backends/native-index/src/service.rs`）遇任意 `read_usn_journal` 错误一律永久 `break` 且零日志，journal 真失效（不可恢复）与瞬时 I/O 抖动（该重试）被同等对待。**修复**：`NativeIndexError` 新增 `JournalInvalidated` 变体；`sys::read_usn_journal` 新增 `is_journal_invalidated` 分类函数，精确识别 `ERROR_JOURNAL_DELETE_IN_PROGRESS`/`ERROR_JOURNAL_NOT_ACTIVE`/`ERROR_JOURNAL_ENTRY_DELETED` 三个 Win32 错误码；tail 线程据此分流——journal 失效直接 `tracing::error!` 后停止（语义不变，只是从静默变可观测），其余错误退避重试、连续失败 5 次才放弃并记终态日志。新增 `tracing` 依赖到该 crate。**验证**：`is_journal_invalidated` 用 `windows::core::Error::from_hresult` 构造合成错误码单测覆盖，不需要真实 USN Journal 环境即可在本机（真实 Windows 11，非交叉编译）跑通；`scout-native-index` 30→31 单测；workspace `check/clippy -D warnings/fmt --check/test` 全绿。详见 [ROADMAP BETA-81](./ROADMAP.md)。**未尽事宜**：退避重试上限/判定边界为保守默认值，未在真实抖动场景校准；放弃 tail 后不会自动触发全量重建，仍需手动重启服务。
@@ -49,8 +55,4 @@
 ### 2026-08-20 — Claude Code (Sonnet 5) — BETA-79：全面评审 native-index/scoutd 重构对照 Everything
 
 **承接**：用户经 `/goal` 下达全面评审要求，对照 Everything 公开功能/关键技术实现逐项核对 BETA-76~78 是否构成完整替换。**方法**：WebSearch/WebFetch 核实 voidtools 官方 FAQ/searching 文档（而非仅凭训练知识），逐项比对现有代码。**结论**：核心索引机制（MFT 批量枚举+USN Journal tail）与 ReFS 不支持均确认对等（Everything 自身也不支持 ReFS）；评审开始时判断的"最大缺口"——桌面进程本身需要管理员权限——核对后发现 BETA-78 已解决（scoutd LocalSystem service + 桌面非管理员经 token 连接，对齐 Everything Service 免 UAC 模式）；查询语法（通配符/正则/布尔 NOT）判定为跨 backend 抽象的设计取舍，非缺口。**修复的真实 bug**：`MemIndex::full_path`（`packages/search-backends/native-index/src/index.rs`）祖先链断裂时静默拼出看似合法实则错误的路径（如误报到卷根），而非返回"未找到"——修复为断链一律 `None`，新增回归测试，环状防御性熔断分支保持不变（不破坏既有测试契约）。**评审中发现但审慎未修的两项**：connection.json 明文 token 的 ACL 加固（验证过"仅 SYSTEM+Administrators"方案会因 UAC token 过滤反而打断桌面客户端自己的读取，需按装机用户 SID 精确授权，需真机多用户环境验证）；USN tail 线程遇任意错误永久停止且无日志（需错误分类+可观测性）——均判断为"记录待跟进优于无法验证的仓促修复"，非疏漏。**验证**：workspace `cargo check/clippy -D warnings/test/fmt --check` 全绿（native-index 30 单测）。
-
-### 2026-08-20 — Claude Code (Sonnet 5) — v0.9.57：修复 v0.9.56 装机后 Scoutd 服务未注册
-
-**承接**：用户真机装完 v0.9.56 反馈 `services.msc` 里找不到 `Scoutd` 服务。**排查**：先读 `hooks.nsh`/`service.rs`/`cli.rs`/`main.rs` 全链路代码逻辑，均无问题（子命令 kebab-case 匹配、`ServiceManager::create_service` 调用、`LocalSystem` 账户配置都对），怀疑过未签名二进制被 Defender 拦截；让用户实机核对三件事：安装目录下有没有 `resources` 子目录、`scoutd.exe` 实际在哪、Windows 安全中心有没有相关拦截记录。**根因**：用户回报安装目录下根本没有 `resources` 子目录，`scoutd.exe` 直接躺在 `Scout` 安装目录根——即 Tauri NSIS 打包器把 `bundle.resources` 平铺到 `$INSTDIR` 根，而 `hooks.nsh` 里两处 `nsExec::ExecToLog` 硬编码的路径是 `$INSTDIR\resources\scoutd.exe`，根本不存在；`nsExec` 找不到文件直接失败，紧接着 `Pop $0` 又把返回码扔掉不检查（设计上"失败只记日志、不中断安装"），导致装机界面完全正常，服务却从未被创建。桌面自身加载同义词词典的代码（`main.rs` 的 `resource_dir().join("synonyms/zh.yaml")`）本来就没加 `resources/` 前缀，是对的；`hooks.nsh` 是唯一一处路径拼错的地方。**修复**：`hooks.nsh` 两处路径去掉多余的 `resources\` 前缀，改成 `$INSTDIR\scoutd.exe`；bump `apps/desktop/src-tauri/{Cargo.toml,tauri.conf.json}` + `Cargo.lock` 到 v0.9.57。**未尽事宜**：本次修复未经真机验证（本环境无 Windows 管理员会话），需要用户重新下载 v0.9.57 安装包实机确认 `services.msc` 能看到 `Scoutd` 服务且 Running。
 

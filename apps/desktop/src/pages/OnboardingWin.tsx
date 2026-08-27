@@ -1,6 +1,6 @@
 // Windows 版快速入门（6 步）：
 // 1. 优化 Windows 搜索索引
-// 2. 检测内置原生文件索引（可选加速，需管理员权限）
+// 2. 检测内置原生文件索引（可选加速，由后台服务 Scoutd 提供）
 // 3. 下载嵌入模型（必需，语义召回底座）
 // 4. 下载生成模型 Qwen3-0.6B（可选，复杂 NL 查询解析）
 // 5. 配置索引目录
@@ -149,7 +149,7 @@ export const OnboardingWin: React.FC = () => {
           totalSteps={TOTAL_STEPS}
           currentStep={2}
           title="第 2 步：可选加速组件"
-          subtitle="可选 · 内置文件名搜索加速（管理员权限）+ 扫描版 PDF OCR（poppler）"
+          subtitle="可选 · 内置文件名搜索加速（后台服务）+ 扫描版 PDF OCR（poppler）"
           primaryAction={{
             label: '下一步',
             onClick: () => goTo(3),

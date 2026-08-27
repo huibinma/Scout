@@ -364,19 +364,7 @@ async fn build_runtime_ctx(config: ServerConfig) -> Result<ServerCtx> {
     }
 
     info!(model_path = %config.model_path.display(), "加载 embedder 模型");
-    // 模型文件缺失/损坏（如个人模式首启下载失败后仍以目标路径继续，见
-    // `personal::ensure_embedding_model`）不应该拖垮整个服务——降级为一个恒不可用
-    // 的 embedder，走下面既有的 `semantic_ready` 探测→FTS-only 降级路径，而不是
-    // `?` 直接终止 daemon（BETA-79 之后真机反馈：service 模式下这一步曾是唯一
-    // 会让整个 Windows Service 起不来的失败点）。
-    let embedder = load_embedder(&config.model_path).unwrap_or_else(|e| {
-        warn!(
-            error = %e,
-            model_path = %config.model_path.display(),
-            "加载 embedder 模型失败，语义召回禁用、降级为 FTS-only 运行"
-        );
-        Arc::new(UnavailableEmbedder) as Arc<dyn TextEmbedder>
-    });
+    let embedder = load_embedder_or_degrade(&config.model_path).await?;
 
     // reviewer M-6：默认 daemon binary 不开 llama-cpp feature → ModelDaemon 走
     // StubLoader、`embed()` 返 Err。真启动跑一次 ping probe 发 warn、让 ops
@@ -614,6 +602,36 @@ fn spawn_background_embedding(
             ),
         }
     });
+}
+
+/// [`load_embedder`] 的 async 包装：真正的模型加载（mmap GGUF 文件 + 初始化
+/// llama.cpp 推理线程池，真机上可能耗时数秒到数十秒）是同步阻塞调用，此前直接
+/// 摆在 async fn 里跑会占住 tokio worker 线程。`service::run_async` 靠一个跟本
+/// 任务共用 runtime 的独立 ticker task 给 SCM 发 `StartPending` checkpoint 兜底
+/// 30s 启动超时（见该文件注释）——本调用摞在同一 worker 线程上不至于致命
+/// （work-stealing 调度器通常会把 ticker 挪到别的空闲线程执行），但在核心数很少
+/// 的机器上仍有让 checkpoint 迟发的风险。首次全量索引等其它耗时步骤都已经走
+/// `spawn_blocking`（见 [`run_initial_collection_index`]），这里补齐同样处理，
+/// 保持"async runtime worker 线程上不跑任何长阻塞调用"这条既有约定一致。
+///
+/// 模型文件缺失/损坏（如个人模式首启下载失败后仍以目标路径继续，见
+/// `personal::ensure_embedding_model`）不应该拖垮整个服务——降级为一个恒不可用
+/// 的 [`UnavailableEmbedder`]，走既有的 `semantic_ready` 探测→FTS-only 降级路径，
+/// 而不是 `?` 直接终止 daemon（BETA-79 之后真机反馈：service 模式下这一步曾是
+/// 唯一会让整个 Windows Service 起不来的失败点）。
+async fn load_embedder_or_degrade(model_path: &Path) -> Result<Arc<dyn TextEmbedder>> {
+    let owned = model_path.to_path_buf();
+    let loaded = tokio::task::spawn_blocking(move || load_embedder(&owned))
+        .await
+        .context("加载 embedder 模型任务 panic 或被取消")?;
+    Ok(loaded.unwrap_or_else(|e| {
+        warn!(
+            error = %e,
+            model_path = %model_path.display(),
+            "加载 embedder 模型失败，语义召回禁用、降级为 FTS-only 运行"
+        );
+        Arc::new(UnavailableEmbedder) as Arc<dyn TextEmbedder>
+    }))
 }
 
 /// 加载 embedder：调 [`ModelDaemon::load_blocking`]（model-runtime 自动按

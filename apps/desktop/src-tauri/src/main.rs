@@ -994,7 +994,6 @@ fn main() {
             permissions::open_macos_fda_settings,
             permissions::check_windows_search_indexed,
             permissions::open_windows_indexing_options,
-            permissions::check_native_file_index_available,
             permissions::check_pdftoppm_available,
             permissions::get_onboarding_state,
             permissions::complete_onboarding,

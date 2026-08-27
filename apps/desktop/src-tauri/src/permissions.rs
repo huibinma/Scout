@@ -146,25 +146,13 @@ pub fn check_windows_search_indexed() -> Result<WindowsIndexStatus, String> {
     }
 }
 
-/// 重构（原 BETA-47 `check_everything_available`）：探测内置原生索引（MFT 枚举 +
-/// USN Journal）当前是否可用（选项页「内置原生索引」tab 检测行）。与
-/// `enable_native_file_index` 设置**无关**——集成关闭时也要能告知「能不能用」，
-/// 供用户决定开关。检测会真的尝试为本机每个已知盘符启动一次索引服务（打开卷句柄 +
-/// 查询 USN Journal），最常见的失败原因是**进程未以管理员权限运行**——这是 Win32
-/// 打开卷句柄的硬性要求，不是本实现的选择。`scout-native-index` 是 Windows
-/// target-gated 依赖，非 Windows 恒 false（v0.9.16 macOS CI E0433 踩坑口径，同
-/// model_download.rs shim）。
-#[tauri::command]
-pub fn check_native_file_index_available() -> bool {
-    #[cfg(target_os = "windows")]
-    {
-        scout_native_index::native_index_available()
-    }
-    #[cfg(not(target_os = "windows"))]
-    {
-        false
-    }
-}
+// 已删除：`check_native_file_index_available`（原 BETA-47 `check_everything_available`
+// 沿用改名）。BETA-78 把内置原生索引挪到 `scoutd`（`LocalSystem` 服务）之后，这个命令
+// 仍在**桌面进程自己**内直接探测 `scout_native_index::native_index_available()`——桌面
+// 进程按新架构设计恒不再具备管理员权限，这里恒返回 false，与
+// `search.native_file_index` 实际是否可用（取决于是否连上 scoutd，见
+// `service_client::service_connection_status` / `get_backend_status`）完全脱节，是一处
+// 审计发现的过期逻辑。前端改直接消费 `service_connection_status`（`NativeIndexPane.tsx`）。
 
 /// BETA-35 cycle 6：探测本机是否有可用的 `pdftoppm`（poppler-utils）——扫描版 PDF
 /// OCR 管线的页渲染依赖。**跨平台**：Windows 走 poppler-windows / winget，

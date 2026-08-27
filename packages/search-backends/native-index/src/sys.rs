@@ -18,8 +18,8 @@ use windows::Win32::Foundation::{
     ERROR_JOURNAL_NOT_ACTIVE, ERROR_MORE_DATA, HANDLE,
 };
 use windows::Win32::Storage::FileSystem::{
-    CreateFileW, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_READ, FILE_SHARE_READ, FILE_SHARE_WRITE,
-    OPEN_EXISTING,
+    CreateFileW, GetVolumeInformationW, FILE_ATTRIBUTE_NORMAL, FILE_GENERIC_READ, FILE_SHARE_READ,
+    FILE_SHARE_WRITE, OPEN_EXISTING,
 };
 use windows::Win32::System::Ioctl::{
     FSCTL_ENUM_USN_DATA, FSCTL_QUERY_USN_JOURNAL, FSCTL_READ_USN_JOURNAL, MFT_ENUM_DATA_V0,
@@ -242,6 +242,36 @@ fn is_journal_invalidated(e: &windows::core::Error) -> bool {
         || code == ERROR_JOURNAL_ENTRY_DELETED.to_hresult()
 }
 
+/// 查询卷序列号（`GetVolumeInformationW`）：用于识别"这是不是缓存时的同一个
+/// 物理卷"——物理卷更换（如 U 盘拔出后另一设备复用同一盘符）后序列号会变化，
+/// 与 [`query_usn_journal`] 的 `UsnJournalID` 语义类似但更轻量：只需卷根路径
+/// （`C:\`），不需要打开卷句柄、不需要管理员权限，代价足够低到可以在每次缓存
+/// 命中时都查一次（[`crate::Manager::service_for`]）。
+/// 查询失败（卷不存在/瞬时 I/O 错误）返回 `None`，调用方按"无法判断，保守地
+/// 视为未变"处理，不因一次查询失败就误判缓存失效。
+pub(crate) fn volume_serial(drive_letter: char) -> Option<u32> {
+    let path = format!(r"{drive_letter}:\");
+    let wide: Vec<u16> = std::ffi::OsStr::new(&path)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let mut serial = 0u32;
+
+    // SAFETY：`wide` 是以 NUL 结尾、生命周期覆盖调用本身的合法 UTF-16 缓冲区；
+    // `serial` 是本地变量，`&mut serial` 指针有效且在调用期间唯一可写。
+    let result = unsafe {
+        GetVolumeInformationW(
+            PCWSTR(wide.as_ptr()),
+            None,
+            Some(&mut serial),
+            None,
+            None,
+            None,
+        )
+    };
+    result.ok().map(|()| serial)
+}
+
 /// 从 `\\?\C:\...` / `C:\...` 形式的绝对路径取盘符（大写）。非绝对路径 /
 /// 无盘符（如 UNC 网络路径）返回 `None`——USN Journal 只对本地 NTFS 卷有效。
 pub(crate) fn drive_letter_of(path: &Path) -> Option<char> {
@@ -266,6 +296,27 @@ mod tests {
         assert_eq!(drive_letter_of(Path::new(r"\\?\D:\x")), Some('D'));
         assert_eq!(drive_letter_of(Path::new(r"\\server\share\x")), None);
         assert_eq!(drive_letter_of(Path::new("relative")), None);
+    }
+
+    /// 不需要管理员权限（与 `open_volume` 不同），CI/开发机上都能直接跑：
+    /// C 盘序列号查询应当成功且两次查询一致（同一物理卷）。
+    #[test]
+    fn volume_serial_reads_c_drive_consistently() {
+        let first = volume_serial('C');
+        assert!(first.is_some(), "C 盘序列号查询不应失败");
+        assert_eq!(first, volume_serial('C'), "同一卷两次查询序列号应一致");
+    }
+
+    /// 不存在的盘符应返回 `None` 而不是 panic——从 Z 向 A 找第一个本机不存在的
+    /// 盘符（比伪造一个不合法路径更贴近真实调用场景）。
+    #[test]
+    fn volume_serial_missing_drive_returns_none() {
+        for letter in ('A'..='Z').rev() {
+            if !Path::new(&format!("{letter}:\\")).exists() {
+                assert_eq!(volume_serial(letter), None);
+                return;
+            }
+        }
     }
 
     #[test]

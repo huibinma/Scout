@@ -25,7 +25,8 @@ mod imp {
     use anyhow::{Context, Result};
     use tracing::{error, info, warn};
     use windows_service::service::{
-        ServiceAccess, ServiceControl, ServiceControlAccept, ServiceErrorControl, ServiceExitCode,
+        ServiceAccess, ServiceAction, ServiceActionType, ServiceControl, ServiceControlAccept,
+        ServiceErrorControl, ServiceExitCode, ServiceFailureActions, ServiceFailureResetPeriod,
         ServiceInfo, ServiceStartType, ServiceState, ServiceStatus, ServiceType,
     };
     use windows_service::service_control_handler::{self, ServiceControlHandlerResult};
@@ -93,6 +94,40 @@ mod imp {
         };
         if let Err(e) = service.set_description(SERVICE_DESCRIPTION) {
             warn!(error = %e, "设置服务描述失败（不影响服务本身可用性）");
+        }
+
+        // 崩溃/异常退出后自动恢复：此前完全未配置（SCM 默认三次失败都"不采取操作"）——
+        // 一次性的启动失败已经靠上面几处改动尽量收窄，但进程崩溃这类真正意外情况
+        // （如 llama.cpp 原生代码 abort、栈溢出等 Rust panic hook 都兜不住的失败）此前
+        // 只会让服务停在 Stopped、开机前都不会再自己起来。配置为：失败后 10s / 30s 重启，
+        // 第三次起彻底不再自动重启（避免真正持续性故障时无限重启刷日志/占资源）、
+        // 24 小时内无新失败则计数器清零。`set_failure_actions_on_non_crash_failures(true)`
+        // 让"进程正常退出但 exit code 非零"（见上面 `run_service` 的 `ServiceSpecific(1)`）
+        // 也纳入这套 recovery——不加这一步，同款失败在部分 Windows 版本上不会触发 restart。
+        let failure_actions = ServiceFailureActions {
+            reset_period: ServiceFailureResetPeriod::After(Duration::from_secs(24 * 60 * 60)),
+            reboot_msg: None,
+            command: None,
+            actions: Some(vec![
+                ServiceAction {
+                    action_type: ServiceActionType::Restart,
+                    delay: Duration::from_secs(10),
+                },
+                ServiceAction {
+                    action_type: ServiceActionType::Restart,
+                    delay: Duration::from_secs(30),
+                },
+                ServiceAction {
+                    action_type: ServiceActionType::None,
+                    delay: Duration::default(),
+                },
+            ]),
+        };
+        if let Err(e) = service.update_failure_actions(failure_actions) {
+            warn!(error = %e, "配置服务失败恢复策略失败（不影响服务本身可用性，仅崩溃后不会自动重启）");
+        }
+        if let Err(e) = service.set_failure_actions_on_non_crash_failures(true) {
+            warn!(error = %e, "开启「非崩溃失败也触发恢复策略」失败");
         }
 
         let needs_start = match service.query_status() {
@@ -212,6 +247,7 @@ mod imp {
             ServiceControlAccept::empty(),
             1,
             Duration::from_secs(15),
+            ServiceExitCode::NO_ERROR,
         );
 
         let runtime = tokio::runtime::Builder::new_multi_thread()
@@ -221,12 +257,24 @@ mod imp {
 
         let result = runtime.block_on(run_async(data_dir, status_handle, stop_rx));
 
+        // 之前这里恒报 Win32(0)（成功），哪怕 `result` 是 `Err`——SCM/`sc query`/事件查看器
+        // 侧看到的是一次"干净退出"，唯一能看出真失败的地方只有 `scoutd.log`（需要先知道
+        // 去查）。这本身不影响本轮排查的"服务起不来"场景（那类失败根本到不了这里），
+        // 但一旦真出现"启动后又迅速自己退出"的故障，如实报非零 exit code 能让 SCM 的
+        // failure actions（见 `install_service` 里新增的 `update_failure_actions`）正确
+        // 识别为一次失败、以及让 Windows 侧工具看到"服务不是正常停止"。
+        let exit_code = if result.is_ok() {
+            ServiceExitCode::NO_ERROR
+        } else {
+            ServiceExitCode::ServiceSpecific(1)
+        };
         set_status(
             status_handle,
             ServiceState::Stopped,
             ServiceControlAccept::empty(),
             0,
             Duration::default(),
+            exit_code,
         );
         result
     }
@@ -237,12 +285,13 @@ mod imp {
         controls_accepted: ServiceControlAccept,
         checkpoint: u32,
         wait_hint: Duration,
+        exit_code: ServiceExitCode,
     ) {
         let status = ServiceStatus {
             service_type: ServiceType::OWN_PROCESS,
             current_state: state,
             controls_accepted,
-            exit_code: ServiceExitCode::Win32(0),
+            exit_code,
             checkpoint,
             wait_hint,
             process_id: None,
@@ -273,6 +322,7 @@ mod imp {
                         ServiceControlAccept::empty(),
                         cp,
                         Duration::from_secs(15),
+                        ServiceExitCode::NO_ERROR,
                     );
                 }
             })
@@ -295,6 +345,7 @@ mod imp {
             ServiceControlAccept::STOP,
             0,
             Duration::default(),
+            ServiceExitCode::NO_ERROR,
         );
 
         scout_server::app::serve_bound(listener, ctx, async move {
